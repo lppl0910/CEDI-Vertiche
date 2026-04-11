@@ -1,1 +1,14 @@
-@lppl0910
+* @lppl0910
+
+/backend/backend-rfid/ @AdriPprgm
+/iot/iot-rfid/ @AdriPprgm
+
+/backend/backend-ventas/ @Milllll000
+/data/db-ventas/ @Milllll000
+/frontend/dashboard-ventas/ @Milllll000
+
+/backend/backend-monitoreo/ @mikeargu
+/data/db-monitoreo/ @mikeargu
+/frontend/dashboard-monitoreo/ @mikeargu
+
+/iot/iot-sorter/ @PeritiaCodex
