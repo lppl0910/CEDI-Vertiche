@@ -1,0 +1,16 @@
+# Default: el lead aprueba cualquier archivo no cubierto abajo
+*                               @LEAD_GITHUB_USERNAME
+
+# Equipo RFID — su líder debe aprobar todos los PRs que toquen esta carpeta
+src/features/rfid/              @LIDER_RFID_GITHUB
+
+# Equipo Ventas — su líder debe aprobar todos los PRs que toquen esta carpeta
+src/features/ventas/            @LIDER_VENTAS_GITHUB
+
+# Equipo Monitoreo — su líder debe aprobar todos los PRs que toquen esta carpeta
+src/features/monitoreo/         @LIDER_MONITOREO_GITHUB
+
+# Shared y punto de entrada — solo el lead aprueba
+src/shared/                     @LEAD_GITHUB_USERNAME
+src/App.jsx                     @LEAD_GITHUB_USERNAME
+src/main.jsx                    @LEAD_GITHUB_USERNAME

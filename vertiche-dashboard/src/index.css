@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* Base */
+  --bg-main:        #F8F6F3;
+  --bg-card:        #FFFFFF;
+  --text-primary:   #1F1F1F;
+  --text-secondary: #6B6B6B;
+  --border:         #E7E2DC;
+
+  /* Acentos de marca */
+  --accent-black:  #111111;
+  --accent-beige:  #D8C3A5;
+  --accent-blush:  #D9B8B0;
+  --accent-taupe:  #A48F7A;
+
+  /* Funcionales */
+  --success: #6E8B6B;
+  --warning: #C9963B;
+  --error:   #B65E4A;
+  --info:    #7C8A96;
+
+  /* Tipografía */
+  --font:        'Inter', sans-serif;
+  --radius-card: 14px;
+  --shadow-card: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg-main);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 20px 24px;
+}
+
+.btn-primary {
+  background: var(--accent-black);
+  color: #FFFFFF;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  font-family: var(--font);
+}
+.btn-primary:hover { opacity: 0.85; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font);
+  border-radius: 8px;
+  transition: background 0.1s;
+}
+.btn-ghost:hover { background: var(--bg-main); }

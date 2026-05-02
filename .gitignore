@@ -1,32 +1,23 @@
-# ── Dependencias ──────────────────────────────
+# Dependencias
 node_modules/
-.pnp
-.pnp.js
 
-# ── Build / compilados ────────────────────────
+# Build
 dist/
-build/
-out/
+dist-ssr/
 
-# ── TypeScript compilado ──────────────────────
-*.js.map
-*.d.ts.map
-tsconfig.tsbuildinfo
+# macOS
+.DS_Store
+.DS_Store?
+._*
 
-# ── Vite ──────────────────────────────────────
-.vite/
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
-
-# ── Variables de entorno ──────────────────────
+# Variables de entorno
 .env
 .env.local
-.env.development
-.env.production
-.env.test
-.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# ── Logs ──────────────────────────────────────
+# Logs
 logs/
 *.log
 npm-debug.log*
@@ -34,16 +25,15 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# ── macOS ──────────────────────────────────────
-.DS_Store
-.AppleDouble
-
-# ── Editores ──────────────────────────────────
+# Editor
 .vscode/
 .idea/
-*.swp
-*.swo
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# ── Testing ───────────────────────────────────
-coverage/
-.nyc_output/
+# Cache
+.eslintcache
+.cache/
