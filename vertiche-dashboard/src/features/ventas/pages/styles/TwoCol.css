@@ -1,0 +1,6 @@
+/* ── TwoCol — layout de dos columnas iguales ────────────────── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
