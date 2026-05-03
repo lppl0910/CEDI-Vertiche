@@ -34,7 +34,7 @@ app.post('/api/rfid/scan', (req, res) => {
     }
 
     //Emitir evento de WebSocket para actualizar el progreso en tiempo real
-    io.emit('progresoActualizado', {
+    io.emit('orden:progreso:actualizado', {
         orderId: resultado.orderId,
         progreso: resultado.progreso
     });
