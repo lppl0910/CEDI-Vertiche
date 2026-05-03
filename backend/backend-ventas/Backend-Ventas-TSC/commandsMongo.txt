@@ -1,0 +1,36 @@
+sudo touch /etc/yum.repos.d/mongodb-org-7.0.repo
+sudo vim /etc/yum.repos.d/mongodb-org-7.0.repo
+
+[mongodb-org-7.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/amazon/2023/mongodb-org/7.0/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://pgp.mongodb.com/server-7.0.asc
+
+sudo yum install -y mongodb-org
+sudo systemctl start mongod
+sudo systemctl status mongod
+sudo systemctl enable mongod
+
+mongosh
+
+show dbs
+
+use admin
+
+db.createUser(
+    {
+        user:"admin",
+        pwd:passwordPrompt(),
+        roles:[{role:"userAdminAnyDatabase",db:"admin"}]
+    }
+)
+Password1234
+
+sudo vim /etc/mongod.conf
+binfIp: 0.0.0.0
+security:
+    autorization: "enabled"
+
+    sudo systemctl restart mongod
