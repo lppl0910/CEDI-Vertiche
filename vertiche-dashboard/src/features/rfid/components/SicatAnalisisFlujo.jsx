@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import BahiasPopup from './BahiasPopup';
 import PrepPackModal from './PrepPackModal';
+import OrdenesFilterBar from './OrdenesFilterBar';
 
 const ETAPAS = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
-const ETAPA_IDX = Object.fromEntries(ETAPAS.map((e, i) => [e, i]));
 
 function cellBg(percentage) {
   if (percentage >= 100) return 'var(--error)';
@@ -126,18 +126,8 @@ function ExpandedRow({ orden, onOpenModal }) {
   );
 }
 
-const selStyle = {
-  height: 30, padding: '0 26px 0 10px', border: '1px solid var(--border)',
-  borderRadius: 6, fontSize: 11, fontFamily: 'var(--font)', color: 'var(--text-primary)',
-  background: '#FFFFFF', cursor: 'pointer', outline: 'none', appearance: 'none',
-  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5' fill='%236B6B6B'%3E%3Cpath d='M0 0l4.5 5L9 0z'/%3E%3C/svg%3E")`,
-  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center',
-};
-
 export default function AnalisisFlujo({ ordenes = [] }) {
-  const [sort,        setSort]        = useState('id-asc');
-  const [etapaFilter, setEtapaFilter] = useState('');
-  const [searchQ,     setSearchQ]     = useState('');
+  const [filtered,    setFiltered]    = useState([]);
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [bahiaPopup,  setBahiaPopup]  = useState(null);
   const [modal,       setModal]       = useState(null);
@@ -156,32 +146,6 @@ export default function AnalisisFlujo({ ordenes = [] }) {
     setBahiaPopup({ orden, rect });
   };
 
-  const getFiltered = () => {
-    let res = [...ordenes];
-
-    if (etapaFilter) {
-      res = res.filter(o =>
-        o.prepacks?.some(pp => pp.currentEtapa === etapaFilter)
-      );
-    }
-    if (searchQ) {
-      const q = searchQ.toLowerCase();
-      res = res.filter(o =>
-        o.orderId.toLowerCase().includes(q) ||
-        o.prepacks?.some(pp => pp.id.toLowerCase().includes(q))
-      );
-    }
-
-    if (sort === 'id-asc')   res.sort((a, b) => a.orderId.localeCompare(b.orderId));
-    if (sort === 'id-desc')  res.sort((a, b) => b.orderId.localeCompare(a.orderId));
-    if (sort === 'adv-desc') res.sort((a, b) => maxEtapaIdx(b) - maxEtapaIdx(a));
-    if (sort === 'adv-asc')  res.sort((a, b) => maxEtapaIdx(a) - maxEtapaIdx(b));
-
-    return res;
-  };
-
-  const filtered = getFiltered();
-
   const modalOrden   = modal ? ordenes.find(o => o.orderId === modal.orderId) : null;
   const modalPrepack = modalOrden ? modalOrden.prepacks?.find(p => p.id === modal.ppId) : null;
 
@@ -195,28 +159,9 @@ export default function AnalisisFlujo({ ordenes = [] }) {
         </div>
       </div>
 
-      {/* Filter bar */}
-      <div style={{ padding: '0 24px 12px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '.5px' }}>Ordenar:</span>
-        <select style={selStyle} value={sort} onChange={e => setSort(e.target.value)}>
-          <option value="id-asc">Hora de llegada</option>
-          <option value="adv-desc">Mas avanzada primero</option>
-          <option value="id-desc">ID Orden ↓</option>
-          <option value="adv-asc">Menos avanzada</option>
-        </select>
-        <div style={{ width: 1, height: 18, background: 'var(--border)', margin: '0 2px' }} />
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '.5px' }}>Etapa:</span>
-        <select style={selStyle} value={etapaFilter} onChange={e => setEtapaFilter(e.target.value)}>
-          <option value="">Todas</option>
-          {ETAPAS.map(e => <option key={e} value={e}>{e}</option>)}
-        </select>
-        <input
-          style={{ ...selStyle, padding: '0 10px', width: 140 }}
-          placeholder="Buscar orden o prepack..."
-          value={searchQ}
-          onChange={e => setSearchQ(e.target.value)}
-        />
-        <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-secondary)', background: '#F8F6F3', border: '1px solid var(--border)', borderRadius: 20, padding: '2px 10px' }}>
+      <OrdenesFilterBar ordenes={ordenes} onChange={setFiltered} />
+      <div style={{ padding: '0 24px 8px', display: 'flex', justifyContent: 'flex-end' }}>
+        <span style={{ fontSize: 11, color: 'var(--text-secondary)', background: '#F8F6F3', border: '1px solid var(--border)', borderRadius: 20, padding: '2px 10px' }}>
           {filtered.length} orden{filtered.length !== 1 ? 'es' : ''}
         </span>
       </div>
