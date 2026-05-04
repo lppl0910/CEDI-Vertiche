@@ -1,0 +1,220 @@
+@import url('variables.css');
+/* ── ChatFAB — botón flotante de chat y panel de mensajes ───── */
+@keyframes chatFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Panel de chat ── */
+.chat-fab__panel {
+  position: fixed;
+  bottom: 88px;
+  right: 24px;
+  width: 340px;
+  max-height: 60vh;
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000;
+  animation: chatFadeIn 0.18s ease;
+}
+
+/* ── Encabezado ── */
+.chat-fab__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--c-border);
+  flex-shrink: 0;
+}
+
+.chat-fab__header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-fab__avatar {
+  width: 28px;
+  height: 28px;
+  background: var(--c-black);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chat-fab__bot-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.chat-fab__status {
+  font-size: 10px;
+  color: var(--c-success);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chat-fab__status-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--c-success);
+}
+
+.chat-fab__close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--c-muted);
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Área de mensajes ── */
+.chat-fab__messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-fab__message {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 86%;
+}
+
+.chat-fab__message--bot {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.chat-fab__message--user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.chat-fab__message-author {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--c-muted);
+  padding: 0 4px;
+}
+
+.chat-fab__bubble {
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.chat-fab__bubble--bot {
+  background: var(--c-bg);
+  color: #1F1F1F;
+  border: 1px solid var(--c-border);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-fab__bubble--user {
+  background: var(--c-black);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-fab__message-time {
+  font-size: 9px;
+  color: var(--c-muted);
+  padding: 0 4px;
+}
+
+/* ── Input de texto ── */
+.chat-fab__input-area {
+  padding: 10px 12px;
+  border-top: 1px solid var(--c-border);
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  flex-shrink: 0;
+  background: var(--c-card);
+}
+
+.chat-fab__textarea {
+  flex: 1;
+  resize: none;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-family: var(--font);
+  outline: none;
+  color: #1F1F1F;
+  background: var(--c-bg);
+  line-height: 1.4;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.chat-fab__send-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.chat-fab__send-btn--active {
+  background: var(--c-black);
+  cursor: pointer;
+}
+
+.chat-fab__send-btn--inactive {
+  background: var(--c-border);
+  cursor: default;
+}
+
+/* ── Botón FAB flotante ── */
+.chat-fab__trigger {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.chat-fab__trigger--open {
+  background: var(--c-taupe);
+  transform: rotate(180deg) scale(0.92);
+}
+
+.chat-fab__trigger--closed {
+  background: var(--c-black);
+  transform: rotate(0deg) scale(1);
+}

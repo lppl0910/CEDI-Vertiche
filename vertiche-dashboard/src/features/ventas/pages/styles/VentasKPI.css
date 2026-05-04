@@ -1,0 +1,58 @@
+@import url('variables.css');
+/* ── VentasKPI — tarjeta de indicador clave de ventas ──────── */
+.ventas-kpi {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* El color de la barra es dinámico (KPI_COLORS[kpi.cl]),
+   se inyecta vía inline style `background` */
+.ventas-kpi__color-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.ventas-kpi__label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--c-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 5px;
+}
+
+.ventas-kpi__value {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.ventas-kpi__sub {
+  font-size: 9px;
+  color: var(--c-muted);
+  margin-bottom: 4px;
+}
+
+.ventas-kpi__delta {
+  font-size: 11px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.ventas-kpi__delta--positive {
+  color: var(--c-success);
+}
+
+.ventas-kpi__delta--negative {
+  color: var(--c-error);
+}

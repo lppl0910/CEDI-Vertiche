@@ -1,0 +1,14 @@
+/* ── Design Tokens — espejo de CONSTANTES.js ──────────────────── */
+:root {
+  --c-black:   #111111;
+  --c-taupe:   #A48F7A;
+  --c-beige:   #D8C3A5;
+  --c-blush:   #E8A0A0;
+  --c-card:    #FFFFFF;
+  --c-border:  #EAE4DC;
+  --c-bg:      #F7F4F0;
+  --c-muted:   #9A9087;
+  --c-success: #4CAF79;
+  --c-error:   #E05C5C;
+  --c-warning: #E89A4A;
+}

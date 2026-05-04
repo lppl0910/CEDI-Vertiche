@@ -1,0 +1,9 @@
+/* ── Ventas — contenedor principal del dashboard de ventas ───── */
+.ventas {
+  flex: 1;
+  overflow: auto;
+  padding: 16px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
