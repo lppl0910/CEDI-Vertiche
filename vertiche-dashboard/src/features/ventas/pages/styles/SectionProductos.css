@@ -1,0 +1,17 @@
+@import url('variables.css');
+/* ── SectionProductos — análisis de catálogo de producto ───── */
+.section-productos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-productos__legend {
+  font-size: 10px;
+  color: var(--c-muted);
+  margin-bottom: 8px;
+}
+
+.section-productos__legend-item {
+  margin-right: 10px;
+}

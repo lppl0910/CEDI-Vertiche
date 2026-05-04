@@ -1,0 +1,49 @@
+@import url('variables.css');
+/* ── SectionTendencias — gráficas de tendencia temporal ─────── */
+.section-tendencias {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-tendencias__legend {
+  font-size: 10px;
+  color: var(--c-muted);
+  margin-bottom: 8px;
+}
+
+/* Grid 2×2 para tarjetas de días festivos vs normales */
+.section-tendencias__festivos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.section-tendencias__festivo-card {
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.section-tendencias__festivo-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--c-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+/* color dinámico (f.color) se inyecta vía inline style */
+.section-tendencias__festivo-value {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.section-tendencias__festivo-sub {
+  font-size: 9px;
+  color: var(--c-muted);
+  margin-top: 3px;
+}

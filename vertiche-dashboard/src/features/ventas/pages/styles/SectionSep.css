@@ -1,0 +1,23 @@
+@import url('variables.css');
+/* ── SectionSep — separador de sección con etiqueta y línea ─── */
+.section-sep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.section-sep__label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--c-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.section-sep__line {
+  flex: 1;
+  height: 1px;
+  background: var(--c-border);
+}
