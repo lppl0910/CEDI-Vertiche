@@ -26,6 +26,7 @@ export enum TiempoDiaSemana {
 export enum TiempoTemporada {
   BUEN_FIN = 'Buen Fin',
   LIQUIDACION = 'Liquidación de Temporada',
+  MADRES = 'Día de las madres',
   REGULAR = 'Temporada Regular',
   PRIMAVERA = 'Primavera',
   VERANO = 'Verano',

@@ -151,6 +151,7 @@ const TEMPORADA_MES: Record<number, string> = {
 // Temporada comercial según mes
 function temporadaComercial(mes: number, dia: number): string {
   if (mes === 1) return 'Liquidación de Temporada';
+  if (mes === 5 && dia >= 1 && dia <= 15) return 'Día de las madres';
   if (mes === 11 && dia >= 15 && dia <= 20) return 'Buen Fin';
   if (mes === 12) return 'Navidad';
   if (mes >= 2 && mes <= 3) return 'Temporada Regular';
@@ -173,6 +174,7 @@ function esFestivo(mes: number, dia: number): boolean {
 function factorVentas(mes: number, dia: number): number {
   if (mes === 11 && dia >= 15 && dia <= 20) return 3.5; // Buen Fin
   if (mes === 12) return 2.5;                            // Navidad
+  if (mes === 5 && dia >= 8 && dia <= 10) return 2.0;  // dia de las madres
   if (mes === 1) return 0.6;                             // Liquidación
   if (mes === 2) return 0.8;
   if ([5, 6, 7].includes(mes)) return 1.3;               // Verano
