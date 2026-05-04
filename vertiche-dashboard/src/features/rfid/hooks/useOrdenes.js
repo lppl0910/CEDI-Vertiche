@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'http://localhost:3001';
 
 export function useOrdenes() {
   const [ordenes, setOrdenes] = useState([]);
