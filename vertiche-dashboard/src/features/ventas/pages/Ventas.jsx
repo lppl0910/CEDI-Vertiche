@@ -1,14 +1,24 @@
-import { SECTIONS } from './CONSTANTES';
 import { SectionPerformance } from './SectionPerformance';
 import { SectionTendencias } from './SectionTendencias';
 import { ChatFAB } from './ChatFAB';
 import ComponenteEsquina from './components/ComponenteEsquina';
 import './styles/Ventas.css';
+import { SectionProductos } from './SectionProductos';
+import { SectionTiendas } from './SectionTiendas';
+import { useEffect } from 'react';
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const SECTIONS = {
+  tendencias: SectionTendencias,
+  productos: SectionProductos,
+  tiendas: SectionTiendas,
+};
 
 export default function Ventas({
   section  = 'tendencias',
   filters  = { period: '30d', zona: 'all', temporada: 'all' },
 }) {
+  
   const objFechaHoy     = new Date();
   const CurrentDateInMs = objFechaHoy.getTime();
   const msPerDay        = 8.64e7;
@@ -24,6 +34,26 @@ export default function Ventas({
 
   console.log("Componente actualizado!")
 
+  useEffect(() => {
+    const test = async () => {
+      const params = {
+        periodo: periodo,
+        region: filters.zona
+      }
+      const baseUrl = 'http://localhost:8080/ventas/ventasPorTalla?';
+      try {
+        const response =  await fetch(`${baseUrl}${new URLSearchParams(params).toString()}`);
+        if (!response.ok) {
+          throw new Error(`Error HTTP! ${response.status}`);
+        }
+        console.log(await response.json());
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    test();
+  }, [filters])
+
   return (
     <div className="ventas">
       <ComponenteEsquina fechaPeriodo={strFechaPeriodo} fechaHoy={strFechaHoy} />
@@ -32,4 +62,6 @@ export default function Ventas({
       <ChatFAB />
     </div>
   );
-}
+}// ── Main export ─────────────────────────────────────────────────
+
+

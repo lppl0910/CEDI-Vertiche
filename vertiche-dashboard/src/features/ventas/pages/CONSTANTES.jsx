@@ -1,6 +1,3 @@
-import { SectionProductos } from "./SectionProductos";
-import { SectionTendencias } from "./SectionTendencias";
-import { SectionTiendas } from './SectionTiendas';
 
 // Colores
 export const C = {
@@ -15,10 +12,3 @@ export const KPI_COLORS = { c1: C.black, c2: C.taupe, c3: C.blush, c4: C.success
 export const ax = { fontSize: 11, fill: C.muted, fontFamily: 'Inter, sans-serif' };
 
 export const grid = { stroke: 'rgba(0,0,0,0.04)' };
-// ── Main export ─────────────────────────────────────────────────
-export const SECTIONS = {
-  tendencias: SectionTendencias,
-  productos: SectionProductos,
-  tiendas: SectionTiendas,
-};
-
