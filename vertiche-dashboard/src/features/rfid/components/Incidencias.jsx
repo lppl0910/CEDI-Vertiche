@@ -1,53 +1,15 @@
-import { useState, useMemo } from 'react';
-import { detectarPrepacksDetenidos, SLA_POR_ETAPA } from '../utils/alertas';
+import { useState } from 'react';
+import { timeAgo } from '../data/sicatMockData';
 
 const STATUS_LABEL = { open: 'Abierta', escalated: 'Escalada', resolved: 'Resuelta' };
 const STATUS_STYLE = {
-  open:      { background: 'rgba(182,94,74,.12)',   color: '#B65E4A' },
-  escalated: { background: 'rgba(201,150,59,.15)',  color: '#C9963B' },
-  resolved:  { background: 'rgba(110,139,107,.12)', color: '#6E8B6B' },
+  open:      { background: 'rgba(182,94,74,.12)',  color: '#B65E4A' },
+  escalated: { background: 'rgba(201,150,59,.15)', color: '#C9963B' },
+  resolved:  { background: 'rgba(110,139,107,.12)',color: '#6E8B6B' },
 };
 
-function elapsedMinPp(pp) {
-  const events = (pp.historial ?? [])
-    .filter(e => e.etapa === pp.currentEtapa)
-    .map(e => new Date(e.timestamp).getTime());
-  if (events.length === 0) return 0;
-  return (Date.now() - Math.max(...events)) / 60000;
-}
-
-function lastTsForEtapa(pp) {
-  const events = (pp.historial ?? [])
-    .filter(e => e.etapa === pp.currentEtapa)
-    .map(e => new Date(e.timestamp).getTime());
-  return events.length > 0 ? Math.max(...events) : null;
-}
-
-function timeAgo(ts) {
-  if (!ts) return 'ahora mismo';
-  const min = Math.floor((Date.now() - ts) / 60000);
-  if (min < 1)  return 'ahora mismo';
-  if (min < 60) return `hace ${min}min`;
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return `hace ${h}h${m > 0 ? ` ${m}min` : ''}`;
-}
-
-function genDesc(pp) {
-  const el  = Math.round(elapsedMinPp(pp));
-  const sla = SLA_POR_ETAPA[pp.currentEtapa] ?? 0;
-  if (el >= sla * 2) return `Prepack crítico — detenido ${el}min en ${pp.currentEtapa}, supera 2x SLA`;
-  return `Prepack detenido ${el}min en ${pp.currentEtapa} — revisar lectora RFID`;
-}
-
-function initialStatus(pp) {
-  const el  = elapsedMinPp(pp);
-  const sla = SLA_POR_ETAPA[pp.currentEtapa] ?? 0;
-  return el > sla * 2 ? 'escalated' : 'open';
-}
-
 function IncModal({ inc, onClose, onSave, onEscalate, onResolve }) {
-  const [causa, setCausa] = useState(inc.causa ?? '');
+  const [causa, setCausa] = useState(inc.causa);
 
   return (
     <div
@@ -106,27 +68,9 @@ function IncModal({ inc, onClose, onSave, onEscalate, onResolve }) {
   );
 }
 
-export default function Incidencias({ prepacks = [] }) {
-  const [overrides,   setOverrides]   = useState({});
+export default function Incidencias({ incidencias, onUpdateIncidencia }) {
   const [filter,      setFilter]      = useState('');
   const [activeModal, setActiveModal] = useState(null);
-
-  const detected = useMemo(() => detectarPrepacksDetenidos(prepacks), [prepacks]);
-
-  // Construir lista de incidencias con IDs generados
-  const incidencias = detected.map((pp, i) => {
-    const ov = overrides[pp.id] ?? {};
-    return {
-      id:      `INC-${String(i + 1).padStart(3, '0')}`,
-      ppId:    pp.id,
-      orderId: pp.orderId,
-      stage:   pp.currentEtapa,
-      desc:    genDesc(pp),
-      ts:      lastTsForEtapa(pp),
-      causa:   ov.causa ?? '',
-      status:  ov.status ?? initialStatus(pp),
-    };
-  });
 
   const open      = incidencias.filter(i => i.status === 'open').length;
   const escalated = incidencias.filter(i => i.status === 'escalated').length;
@@ -136,18 +80,15 @@ export default function Incidencias({ prepacks = [] }) {
   const modalInc  = activeModal ? incidencias.find(i => i.id === activeModal) : null;
 
   const handleSave = (incId, causa) => {
-    const inc = incidencias.find(i => i.id === incId);
-    if (inc) setOverrides(prev => ({ ...prev, [inc.ppId]: { ...prev[inc.ppId], causa } }));
+    onUpdateIncidencia(incId, { causa });
     setActiveModal(null);
   };
   const handleEscalate = (incId, causa) => {
-    const inc = incidencias.find(i => i.id === incId);
-    if (inc) setOverrides(prev => ({ ...prev, [inc.ppId]: { ...prev[inc.ppId], causa, status: 'escalated' } }));
+    onUpdateIncidencia(incId, { causa, status: 'escalated' });
     setActiveModal(null);
   };
   const handleResolve = (incId, causa) => {
-    const inc = incidencias.find(i => i.id === incId);
-    if (inc) setOverrides(prev => ({ ...prev, [inc.ppId]: { ...prev[inc.ppId], causa, status: 'resolved' } }));
+    onUpdateIncidencia(incId, { causa, status: 'resolved', resolvedAt: Date.now() });
     setActiveModal(null);
   };
 
@@ -208,7 +149,7 @@ export default function Incidencias({ prepacks = [] }) {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 700 }}>
               <thead>
                 <tr>
-                  {['INC ID', 'ORDEN', 'ETAPA', 'DESCRIPCIÓN', 'DETECTADA', 'ESTADO'].map(h => (
+                  {['INC ID','ORDEN','ETAPA','DESCRIPCIÓN','DETECTADA','ESTADO'].map(h => (
                     <th key={h} style={thStyle}>{h}</th>
                   ))}
                 </tr>
