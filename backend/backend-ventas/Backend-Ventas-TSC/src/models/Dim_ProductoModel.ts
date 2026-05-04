@@ -16,13 +16,20 @@ interface ProductoAtributos {
 }
 
 export enum ProductoTalla {
+  T3 = '3',
+  T5 = '5',
+  T7 = '7',
+  T9 = '9',
+  T11 = '11',
+  T13 = '13',
+  T15 = '15',
   T34 = '34',
   T36 = '36',
   T38 = '38',
   T40 = '40',
   T42 = '42',
-  T44 = '44',
   UNITALLA = 'Unitalla',
+  XCH = 'XCH',
   CH = 'CH',
   M = 'M',
   G = 'G',
@@ -37,14 +44,19 @@ export enum ProductoTemporada {
 }
 
 export enum ProductoCategoria {
-  VESTIDO = 'Vestido',
-  PLAYERA = 'Playera',
-  PANTALON = 'Pantalón',
-  SUDADERA = 'Sudadera',
-  CHAMARRA = 'Chamarra',
-  BLUSA = 'Blusa',
-  CONJUNTO = 'Conjunto',
-  JEAN = 'Jean',
+  BLUSA = 'Blusas',
+  PLAYERA = 'Playeras',
+  VESTIDO = 'Vestidos y Palazzos',
+  PANTALON = 'Pantalones y Leggings',
+  SUDADERA = 'Sudaderas y Suéteres',
+  CHAMARRA = 'Chamarras y Chalecos',
+  SACO = 'Sacos y Túnicas',
+  CONJUNTO = 'Conjuntos',
+  JEAN = 'Jeans',
+  PIJAMA = 'Pijamas',
+  ABRIGO = 'Abrigos y Ponchos',
+  FALDA = 'Faldas y Shorts',
+  
 }
 
 export enum ProductoFit {

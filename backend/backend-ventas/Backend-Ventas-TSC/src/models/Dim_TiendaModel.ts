@@ -52,11 +52,11 @@ module.exports = (sequelize: any, DataTypes: any) => {
         allowNull: false,
       },
       latitud: {
-        type: DataTypes.DECIMAL(10, 8),
+        type: DataTypes.DECIMAL(11, 8),
         allowNull: false,
       },
       longitud: {
-        type: DataTypes.DECIMAL(10, 8),
+        type: DataTypes.DECIMAL(11, 8),
         allowNull: false,
       },
       ciudad: {
