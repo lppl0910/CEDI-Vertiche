@@ -2,6 +2,7 @@ import { useState } from 'react';
 import BahiasPopup from './BahiasPopup';
 import PrepPackModal from './PrepPackModal';
 import OrdenesFilterBar from './OrdenesFilterBar';
+import OrdenTimeline from './OrdenTimeline';
 
 const ETAPAS = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
 
@@ -206,6 +207,12 @@ export default function AnalisisFlujo({ ordenes = [] }) {
                     {ETAPAS.map(etapa => (
                       <StageCell key={etapa} orden={orden} etapa={etapa} onBahiaClick={handleBahiaClick} />
                     ))}
+                  </tr>,
+
+                  <tr key={`tl-${orden.orderId}`}>
+                    <td colSpan={8} style={{ padding: '0 10px 2px', borderBottom: isOpen ? 'none' : '1px solid var(--border)' }}>
+                      <OrdenTimeline orden={orden} />
+                    </td>
                   </tr>,
 
                   isOpen && (
