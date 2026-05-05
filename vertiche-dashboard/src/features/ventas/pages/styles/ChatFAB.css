@@ -218,3 +218,51 @@
   background: var(--c-black);
   transform: rotate(0deg) scale(1);
 }
+/* ── Sugerencias ── */
+.chat-fab__suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.chat-fab__suggestion-btn {
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-family: var(--font);
+  color: var(--c-black);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.chat-fab__suggestion-btn:hover {
+  background: var(--c-border);
+}
+
+/* ── Loading dots ── */
+.chat-fab__bubble--loading {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 10px 14px;
+}
+
+.chat-fab__bubble--loading span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-muted);
+  animation: loadingDot 1.2s infinite ease-in-out;
+}
+
+.chat-fab__bubble--loading span:nth-child(2) { animation-delay: 0.2s; }
+.chat-fab__bubble--loading span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loadingDot {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40%           { transform: scale(1);   opacity: 1; }
+}
