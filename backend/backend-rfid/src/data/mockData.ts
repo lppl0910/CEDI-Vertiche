@@ -18,7 +18,7 @@ function generarPrepack(orderId: string, count: number): Prepack[] {
     return Array.from({ length: count }, (_, i) => ({
         id: `PP-${orderId}-${String(i + 1).padStart(3, '0')}`,
         orderId,
-        currentEtapa: etapaRandom(ETAPAS.length),
+        currentEtapa: '', // Se asigna etapa cuando llega el primer escaneo
         historial: []
     }));
 }
@@ -35,8 +35,5 @@ function generarPrepack(orderId: string, count: number): Prepack[] {
 */
 
 export const ordenesPrueba: Record<string, Prepack[]> = {
-    'ORD-001': generarPrepack('ORD-001', 10),
-    'ORD-002': generarPrepack('ORD-002', 8),
-    'ORD-003': generarPrepack('ORD-003', 15)
+    'ORD-001': generarPrepack('ORD-001', 1)
 };
-

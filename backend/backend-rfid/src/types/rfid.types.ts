@@ -14,6 +14,7 @@
 */
 
 export type Etapa = 
+    | '' // Etapa vacía para prepacks que aún no han sido escaneados
     | 'Preregistro'
     | 'QA'
     | 'Registro'
