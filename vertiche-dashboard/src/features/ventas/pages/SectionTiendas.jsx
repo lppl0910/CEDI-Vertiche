@@ -1,4 +1,5 @@
-import { TICKET_ZONA, TIENDAS } from '../data/ventasData';
+import { useState, useEffect } from 'react';
+import { fetchTicketZona, fetchRankingTiendas } from '../data/ventasApi';
 import { SectionSep } from './SectionSep';
 import { TwoCol } from './TwoCol';
 import { TicketPromedioZonaChart } from './charts/TicketPromedioZonaChart';
@@ -7,11 +8,25 @@ import { RankingTiendasTable } from './charts/RankingTiendasTable';
 import './styles/SectionTiendas.css';
 
 export function SectionTiendas() {
-  const ticketData = TICKET_ZONA.labels.map((mes, i) => ({
-    mes,
-    Norte: TICKET_ZONA.norte[i],
-    Sur:   TICKET_ZONA.sur[i],
-  }));
+  const [ticketData, setTicketData] = useState([]);
+  const [tiendas, setTiendas] = useState([]);
+
+  useEffect(() => {
+    fetchTicketZona()
+      .then(data => {
+        const mapped = data.labels.map((mes, i) => ({
+          mes,
+          Norte: data.norte[i],
+          Sur:   data.sur[i],
+        }));
+        setTicketData(mapped);
+      })
+      .catch(err => console.error('fetchTicketZona:', err));
+
+    fetchRankingTiendas()
+      .then(setTiendas)
+      .catch(err => console.error('fetchRankingTiendas:', err));
+  }, []);
 
   return (
     <div className="section-tiendas">
@@ -19,10 +34,10 @@ export function SectionTiendas() {
 
       <TwoCol>
         <TicketPromedioZonaChart ticketData={ticketData} />
-        <DistribucionZonaTable tiendas={TIENDAS} />
+        <DistribucionZonaTable tiendas={tiendas} />
       </TwoCol>
 
-      <RankingTiendasTable tiendas={TIENDAS} />
+      <RankingTiendasTable tiendas={tiendas} />
     </div>
   );
 }

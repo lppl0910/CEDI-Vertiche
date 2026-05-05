@@ -13,17 +13,14 @@ import { grid, ax } from '../CONSTANTES';
  * @param {{ season: string, [cat: string]: number }[]} stackedData
  *   Cada objeto tiene la temporada como key y las categorías como keys dinámicas.
  */
-export function VentasTemporadaChart({ stackedData }) {
+export function VentasTemporadaChart({ stackedData, cats, colors }) {
   return (
     <Card>
-      <ChartTitle
-        title="Ventas por Temporada y Categoría"
-        sub="Primavera / Verano / Otoño / Invierno"
-      />
+      <ChartTitle title="Ventas por Temporada y Categoría" sub="Primavera / Verano / Otoño / Invierno" />
       <div className="section-productos__legend">
-        {SEASON_DATA.cats.map((c, i) => (
+        {cats.map((c, i) => (
           <span key={i} className="section-productos__legend-item">
-            <LegendDot color={SEASON_DATA.colors[i]} />{c}
+            <LegendDot color={colors[i]} />{c}
           </span>
         ))}
       </div>
@@ -33,11 +30,11 @@ export function VentasTemporadaChart({ stackedData }) {
           <XAxis dataKey="season" tick={ax} axisLine={false} tickLine={false} />
           <YAxis tick={ax} axisLine={false} tickLine={false} tickFormatter={v => `$${v}K`} />
           <Tooltip />
-          {SEASON_DATA.cats.map((cat, i) => (
+          {cats.map((cat, i) => (
             <Bar
               key={cat} dataKey={cat} stackId="s"
-              fill={SEASON_DATA.colors[i]}
-              radius={i === SEASON_DATA.cats.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+              fill={colors[i]}
+              radius={i === cats.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
             />
           ))}
         </BarChart>

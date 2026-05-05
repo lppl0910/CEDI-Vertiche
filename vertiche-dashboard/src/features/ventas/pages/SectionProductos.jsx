@@ -1,4 +1,5 @@
-import { TOP_PRODS, SEASON_DATA, TALLAS } from '../data/ventasData';
+import { useState, useEffect } from 'react';
+import { fetchTallas, fetchTemporadasCategoria, fetchTopProductos } from '../data/ventasApi';
 import { SectionSep } from './SectionSep';
 import { TwoCol } from './TwoCol';
 import { TopProductosChart } from './charts/TopProductosChart';
@@ -7,7 +8,6 @@ import { VentasTemporadaChart } from './charts/VentasTemporadaChart';
 import { UnidadesTallaChart } from './charts/UnidadesTallaChart';
 import './styles/SectionProductos.css';
 
-/** Calcula los datos del análisis de Pareto a partir de TOP_PRODS. */
 function buildParetoData(products) {
   const sorted = [...products].sort((a, b) => b.rev - a.rev);
   const total  = sorted.reduce((sum, p) => sum + p.rev, 0);
@@ -22,33 +22,41 @@ function buildParetoData(products) {
   });
 }
 
-/** Pivotea SEASON_DATA al formato { season, [cat]: value } que usa recharts. */
-function buildStackedData() {
-  const labels = ['Primavera', 'Verano', 'Otoño', 'Invierno'];
-  return labels.map((season, si) => {
-    const row = { season };
-    SEASON_DATA.cats.forEach((cat, ci) => { row[cat] = SEASON_DATA.data[si][ci]; });
-    return row;
-  });
-}
-
 export function SectionProductos() {
-  const paretoData   = buildParetoData(TOP_PRODS);
-  const stackedData  = buildStackedData();
-  const totalTallas  = TALLAS.reduce((sum, t) => sum + t.value, 0);
+  const [topProductos, setTopProductos] = useState([]);
+  const [tallas, setTallas] = useState([]);
+  const [seasonData, setSeasonData] = useState({ cats: [], colors: [], stackedData: [] });
+
+  useEffect(() => {
+    fetchTallas()
+      .then(setTallas)
+      .catch(err => console.error('fetchTallas:', err));
+
+    fetchTemporadasCategoria()
+      .then(setSeasonData)
+      .catch(err => console.error('fetchTemporadasCategoria:', err));
+
+    fetchTopProductos()
+      .then(setTopProductos)
+      .catch(err => console.error('fetchTopProductos:', err));
+  }, []);
 
   return (
     <div className="section-productos">
       <SectionSep label="Análisis de Producto" />
 
       <TwoCol>
-        <TopProductosChart products={TOP_PRODS} />
-        <ParetoSKUChart paretoData={paretoData} />
+        <TopProductosChart products={topProductos} />
+        <ParetoSKUChart paretoData={buildParetoData(topProductos)} />
       </TwoCol>
 
       <TwoCol>
-        <VentasTemporadaChart stackedData={stackedData} />
-        <UnidadesTallaChart tallas={TALLAS} totalUnidades={totalTallas} />
+        <VentasTemporadaChart
+          stackedData={seasonData.stackedData}
+          cats={seasonData.cats}
+          colors={seasonData.colors}
+        />
+        <UnidadesTallaChart tallas={tallas} />
       </TwoCol>
     </div>
   );
