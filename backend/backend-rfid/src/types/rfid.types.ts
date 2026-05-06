@@ -14,7 +14,7 @@
 */
 
 export type Etapa = 
-    | '' // Etapa vacía para prepacks que aún no han sido escaneados
+    | ''
     | 'Preregistro'
     | 'QA'
     | 'Registro'
@@ -61,7 +61,7 @@ export interface EventoEtapa {
 export interface Prepack {
     id: string;
     orderId: string;
-    currentEtapa: Etapa;
+    currentEtapa: Etapa; // Se asigna etapa cuando llega el primer escaneo
     historial: EventoEtapa[];
 }
 
