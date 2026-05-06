@@ -7,6 +7,7 @@ const tabs = [
   { id: 'flujo',       label: 'Análisis de flujo' },
   { id: 'historial',   label: 'Historial' },
   { id: 'incidencias', label: 'Incidencias', badge: true },
+  { id: 'alertas',     label: 'Historial Alertas' },
 ];
 
 const interfaces = [

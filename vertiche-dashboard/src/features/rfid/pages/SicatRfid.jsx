@@ -1,9 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import SicatHeader from '../components/SicatHeader';
 import AnalisisFlujo from '../components/SicatAnalisisFlujo';
 import Historial from '../components/Historial';
 import Incidencias from '../components/Incidencias';
+import HistorialAlertas from '../components/HistorialAlertas';
 import { useOrdenes } from '../hooks/useOrdenes';
+import { useAlertas } from '../hooks/useAlertas';
 import { SLA_POR_ETAPA } from '../utils/alertas';
 
 // Maps real API etapa names to the original stage keys
@@ -123,6 +125,7 @@ export default function SicatRfid({ onInterfaceChange, onProfileOpen }) {
   const [currentTab,   setCurrentTab]   = useState('flujo');
   const [incOverrides, setIncOverrides] = useState({}); // keyed by ppId
   const { ordenes, loading, error }     = useOrdenes();
+  const { alertasBD, sendAlertas }      = useAlertas();
 
   const adaptedOrders = useMemo(() => ordenes.map(adaptOrden), [ordenes]);
   const allPrepacks   = useMemo(() => ordenes.flatMap(o => o.prepacks ?? []), [ordenes]);
@@ -132,6 +135,13 @@ export default function SicatRfid({ onInterfaceChange, onProfileOpen }) {
     () => baseIncidencias.map(inc => ({ ...inc, ...(incOverrides[inc.ppId] || {}) })),
     [baseIncidencias, incOverrides],
   );
+
+  // Sincronizar las incidencias detectadas dinámicamente con la BD
+  useEffect(() => {
+    if (baseIncidencias.length > 0) {
+      sendAlertas(baseIncidencias);
+    }
+  }, [baseIncidencias, sendAlertas]);
 
   const handleUpdateIncidencia = (incId, changes) => {
     const inc = incidencias.find(i => i.id === incId);
@@ -174,6 +184,9 @@ export default function SicatRfid({ onInterfaceChange, onProfileOpen }) {
               incidencias={incidencias}
               onUpdateIncidencia={handleUpdateIncidencia}
             />
+          )}
+          {currentTab === 'alertas' && (
+            <HistorialAlertas alertas={alertasBD} />
           )}
         </main>
       )}
