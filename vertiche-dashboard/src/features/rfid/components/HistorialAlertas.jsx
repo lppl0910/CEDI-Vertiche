@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 export default function HistorialAlertas({ alertas }) {
   if (!alertas || alertas.length === 0) {
@@ -27,7 +27,7 @@ export default function HistorialAlertas({ alertas }) {
               <th style={{ padding: '12px 16px', fontWeight: 500 }}>Orden</th>
               <th style={{ padding: '12px 16px', fontWeight: 500 }}>Etapa</th>
               <th style={{ padding: '12px 16px', fontWeight: 500 }}>Descripción</th>
-              <th style={{ padding: '12px 16px', fontWeight: 500 }}>Estado</th>
+
               <th style={{ padding: '12px 16px', fontWeight: 500 }}>Fecha</th>
             </tr>
           </thead>
@@ -42,11 +42,7 @@ export default function HistorialAlertas({ alertas }) {
                   </span>
                 </td>
                 <td style={{ padding: '12px 16px', color: '#1F1F1F', maxWidth: 300 }}>{alerta.desc}</td>
-                <td style={{ padding: '12px 16px' }}>
-                  {alerta.status === 'open' && <span style={{ color: '#D97706', display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={14}/> Abierta</span>}
-                  {alerta.status === 'escalated' && <span style={{ color: '#B65E4A', display: 'flex', alignItems: 'center', gap: 4 }}><AlertCircle size={14}/> Escalada</span>}
-                  {alerta.status === 'resolved' && <span style={{ color: '#6E8B6B', display: 'flex', alignItems: 'center', gap: 4 }}><CheckCircle2 size={14}/> Resuelta</span>}
-                </td>
+
                 <td style={{ padding: '12px 16px', color: '#6B6B6B', fontSize: 12 }}>
                   {alerta.ts ? new Date(alerta.ts).toLocaleString() : 'N/A'}
                 </td>
