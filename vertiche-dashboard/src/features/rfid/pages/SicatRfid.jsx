@@ -39,10 +39,12 @@ function adaptOrden(orden) {
     const startMin = minTs ? Math.max(0, Math.round((minTs - arrivalTs) / 60000)) : 0;
     const durMin   = (minTs && maxTs && maxTs > minTs) ? Math.round((maxTs - minTs) / 60000) : null;
 
+    const anyActiveInStage = rawPP.some(pp => pp.currentEtapa === etapa);
     let status;
-    if (pe.count === 0)          status = 'pending';
+    if (pe.count === 0) status = 'pending';
+    else if (anyActiveInStage) status = 'active';
     else if (pe.count >= pe.total) status = 'done';
-    else                           status = 'active';
+    else status = 'active';
 
     stages[key] = { proc: pe.count, total: pe.total, startMin, durMin, status, sent: false };
   });
@@ -54,13 +56,10 @@ function adaptOrden(orden) {
     const stageResults = STAGE_KEYS.map((key, si) => {
       const etapa = ETAPA_NAMES[si];
       const s     = stages[key];
+      if (pp.currentEtapa === etapa) return 'act';
       if (!s || s.status === 'pending') return 'pend';
       const ppEvents = (pp.historial ?? []).filter(e => e.etapa === etapa);
-      if (ppEvents.length > 0) {
-        if (pp.currentEtapa === etapa && s.status !== 'done') return 'act';
-        return 'ok';
-      }
-      if (pp.currentEtapa === etapa) return 'act';
+      if (ppEvents.length > 0) return 'ok';
       if (currentIdx >= 0 && si < currentIdx) return 'pend';
       return 'pend';
     });
