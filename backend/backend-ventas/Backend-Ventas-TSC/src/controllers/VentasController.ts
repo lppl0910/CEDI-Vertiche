@@ -303,6 +303,11 @@ private async getFestivos(req: Request, res: Response) {
 // Productos
 private async getTallas(req: Request, res: Response) {
   try {
+    const period = (req.query.period as string) || '30d';
+    const diasMap: Record<string, number> = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 };
+    const dias = diasMap[period] ?? 30;
+    const fechaBase = '2025-12-31';
+
     const rows = await db.Fact_Ventas.findAll({
       attributes: [
         [col('Dim_Producto.talla'), 'name'],
@@ -310,6 +315,11 @@ private async getTallas(req: Request, res: Response) {
       ],
       include: [
         { model: db.Dim_Producto, attributes: [] },
+        {
+          model: db.Dim_Tiempo,
+          attributes: [],
+          where: literal(`Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY)`),
+        },
       ],
       group: ['Dim_Producto.talla'],
       order: [[fn('SUM', col('Fact_Ventas.cantidad')), 'DESC']],
