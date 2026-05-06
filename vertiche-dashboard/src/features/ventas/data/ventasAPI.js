@@ -59,8 +59,8 @@ export async function fetchTemporadas() {
 
 // ── Distribución por talla ───────────────────────────────────────────
 // GET /ventas/tallas
-export async function fetchTallas() {
-  return get('tallas');
+export async function fetchTallas(period = '30d') {
+  return get('tallas', { period });
 }
 
 // ── Rotación de inventario ───────────────────────────────────────────

@@ -22,13 +22,14 @@ function buildParetoData(products) {
   });
 }
 
-export function SectionProductos() {
+export function SectionProductos({ filters }) {
   const [topProductos, setTopProductos] = useState([]);
   const [tallas, setTallas] = useState([]);
   const [seasonData, setSeasonData] = useState({ cats: [], colors: [], stackedData: [] });
 
   useEffect(() => {
-    fetchTallas()
+    console.log(filters);
+    fetchTallas(filters.period)
       .then(setTallas)
       .catch(err => console.error('fetchTallas:', err));
 
@@ -39,7 +40,7 @@ export function SectionProductos() {
     fetchTopProductos()
       .then(setTopProductos)
       .catch(err => console.error('fetchTopProductos:', err));
-  }, []);
+  }, [filters]);
 
   return (
     <div className="section-productos">
