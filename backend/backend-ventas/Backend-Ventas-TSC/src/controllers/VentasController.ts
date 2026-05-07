@@ -129,6 +129,8 @@ export default class VentasController extends AbstractController {
 
   private async getYoY(req: Request, res: Response) {
     try {
+      const period = (req.query.period as string) || "30d";
+      const dias = diasMap[period] ?? 30;
       const anioActual = 2025;
       const anioAnterior = anioActual - 1;
 
@@ -140,10 +142,12 @@ export default class VentasController extends AbstractController {
           ],
           include: [
             {
-              model: db.Dim_Tiempo,
-              attributes: [],
-              where: { anio },
-            },
+            model: db.Dim_Tiempo,
+            attributes: [],
+            where: literal(
+              `Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY) AND ${anio}`,
+            ),
+          },
           ],
           group: ["Dim_Tiempo.mes_nombre"],
           raw: true,
