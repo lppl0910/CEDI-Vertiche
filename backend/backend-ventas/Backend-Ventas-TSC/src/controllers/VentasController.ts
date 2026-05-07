@@ -132,6 +132,8 @@ export default class VentasController extends AbstractController {
       const period = (req.query.period as string) || "30d";
       const dias = diasMap[period] ?? 30;
 
+      const region = (req.query.region as string) || "all";
+
       const anioActual = 2025;
       const anioAnterior = anioActual - 1;
 
@@ -147,6 +149,13 @@ export default class VentasController extends AbstractController {
               attributes: [],
               where: literal(
                 `Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY) AND ${anio}`,
+              ),
+            },
+            {
+              model: db.Dim_Tienda,
+              attributes: [],
+              where: literal(
+                `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
               ),
             },
           ],
@@ -201,8 +210,6 @@ export default class VentasController extends AbstractController {
       const dias = diasMap[period] ?? 30;
 
       const region = (req.query.region as string) || "all";
-      
-      console.log(region);
 
       let groupBy: string;
       if (period === "7d") groupBy = "dia_semana";
@@ -300,6 +307,9 @@ export default class VentasController extends AbstractController {
     try {
       const period = (req.query.period as string) || "30d";
       const dias = diasMap[period] ?? 30;
+
+      const region = (req.query.region as string) || "all";
+
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
           [col("Dim_Producto.temporada"), "season"],
@@ -312,6 +322,13 @@ export default class VentasController extends AbstractController {
             attributes: [],
             where: literal(
               `Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY)`,
+            ),
+          },
+          {
+            model: db.Dim_Tienda,
+            attributes: [],
+            where: literal(
+              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
             ),
           },
         ],
@@ -336,6 +353,9 @@ export default class VentasController extends AbstractController {
     try {
       const period = (req.query.period as string) || "30d";
       const dias = diasMap[period] ?? 30;
+
+      const region = (req.query.region as string) || "all";
+
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
           [col("Dim_Tiempo.es_festivo"), "es_festivo"],
@@ -352,6 +372,13 @@ export default class VentasController extends AbstractController {
             attributes: [],
             where: literal(
               `Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY)`,
+            ),
+          },
+          {
+            model: db.Dim_Tienda,
+            attributes: [],
+            where: literal(
+              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
             ),
           },
         ],
@@ -414,6 +441,8 @@ export default class VentasController extends AbstractController {
       const period = (req.query.period as string) || "30d";
       const dias = diasMap[period] ?? 30;
 
+      const region = (req.query.region as string) || "all";
+
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
           [col("Dim_Producto.talla"), "name"],
@@ -426,6 +455,13 @@ export default class VentasController extends AbstractController {
             attributes: [],
             where: literal(
               `Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY)`,
+            ),
+          },
+          {
+            model: db.Dim_Tienda,
+            attributes: [],
+            where: literal(
+              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
             ),
           },
         ],
@@ -450,6 +486,9 @@ export default class VentasController extends AbstractController {
     try {
       const period = (req.query.period as string) || "30d";
       const dias = diasMap[period] ?? 30;
+
+      const region = (req.query.region as string) || "all";
+
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
           [col("Dim_Producto.temporada"), "temporada"],
@@ -463,6 +502,13 @@ export default class VentasController extends AbstractController {
             attributes: [],
             where: literal(
               `Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY)`,
+            ),
+          },
+          {
+            model: db.Dim_Tienda,
+            attributes: [],
+            where: literal(
+              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
             ),
           },
         ],
@@ -522,6 +568,9 @@ export default class VentasController extends AbstractController {
     try {
       const period = (req.query.period as string) || "30d";
       const dias = diasMap[period] ?? 30;
+
+      const region = (req.query.region as string) || "all";
+
       const limit = parseInt(req.query.limit as string) || 10;
 
       const rows = await db.Fact_Ventas.findAll({
@@ -537,6 +586,13 @@ export default class VentasController extends AbstractController {
             attributes: [],
             where: literal(
               `Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY)`,
+            ),
+          },
+          {
+            model: db.Dim_Tienda,
+            attributes: [],
+            where: literal(
+              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
             ),
           },
         ],
@@ -563,6 +619,9 @@ export default class VentasController extends AbstractController {
     try {
       const period = (req.query.period as string) || "30d";
       const dias = diasMap[period] ?? 30;
+
+      const region = (req.query.region as string) || "all";
+
       const meses = [
         "Enero",
         "Febrero",
@@ -592,7 +651,13 @@ export default class VentasController extends AbstractController {
               `Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY)`,
             ),
           },
-          { model: db.Dim_Tienda, attributes: [] },
+          {
+            model: db.Dim_Tienda,
+            attributes: [],
+            where: literal(
+              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
+            ),
+          },
         ],
         group: ["Dim_Tiempo.mes_nombre", "Dim_Tienda.region"],
         raw: true,
@@ -633,6 +698,9 @@ export default class VentasController extends AbstractController {
     try {
       const period = (req.query.period as string) || "30d";
       const dias = diasMap[period] ?? 30;
+
+      const region = (req.query.region as string) || "all";
+
       const query = async (anio: number) => {
         return db.Fact_Ventas.findAll({
           attributes: [
@@ -644,7 +712,13 @@ export default class VentasController extends AbstractController {
             [fn("SUM", col("Fact_Ventas.cantidad")), "uds"],
           ],
           include: [
-            { model: db.Dim_Tienda, attributes: [] },
+            {
+              model: db.Dim_Tienda,
+              attributes: [],
+              where: literal(
+                `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
+              ),
+            },
             {
               model: db.Dim_Tiempo,
               attributes: [],
