@@ -131,6 +131,7 @@ export default class VentasController extends AbstractController {
     try {
       const period = (req.query.period as string) || "30d";
       const dias = diasMap[period] ?? 30;
+
       const anioActual = 2025;
       const anioAnterior = anioActual - 1;
 
@@ -142,12 +143,12 @@ export default class VentasController extends AbstractController {
           ],
           include: [
             {
-            model: db.Dim_Tiempo,
-            attributes: [],
-            where: literal(
-              `Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY) AND ${anio}`,
-            ),
-          },
+              model: db.Dim_Tiempo,
+              attributes: [],
+              where: literal(
+                `Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY) AND ${anio}`,
+              ),
+            },
           ],
           group: ["Dim_Tiempo.mes_nombre"],
           raw: true,
@@ -194,8 +195,14 @@ export default class VentasController extends AbstractController {
 
   private async getPerformance(req: Request, res: Response) {
     try {
+      console.log(req.query);
+
       const period = (req.query.period as string) || "30d";
       const dias = diasMap[period] ?? 30;
+
+      const region = (req.query.region as string) || "all";
+      
+      console.log(region);
 
       let groupBy: string;
       if (period === "7d") groupBy = "dia_semana";
@@ -233,6 +240,13 @@ export default class VentasController extends AbstractController {
             model: db.Dim_Tiempo,
             attributes: [],
             where: literal(`Dim_Tiempo.anio IN (2024, 2025)`),
+          },
+          {
+            model: db.Dim_Tienda,
+            attributes: [],
+            where: literal(
+              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
+            ),
           },
         ],
         raw: true,
