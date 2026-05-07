@@ -7,12 +7,12 @@ import { DistribucionZonaTable } from './charts/DistribucionZonaTable';
 import { RankingTiendasTable } from './charts/RankingTiendasTable';
 import './styles/SectionTiendas.css';
 
-export function SectionTiendas() {
+export function SectionTiendas({ filters }) {
   const [ticketData, setTicketData] = useState([]);
   const [tiendas, setTiendas] = useState([]);
 
   useEffect(() => {
-    fetchTicketZona()
+    fetchTicketZona(filters.period)
       .then(data => {
         const mapped = data.labels.map((mes, i) => ({
           mes,
@@ -23,10 +23,10 @@ export function SectionTiendas() {
       })
       .catch(err => console.error('fetchTicketZona:', err));
 
-    fetchRankingTiendas()
+    fetchRankingTiendas(filters.period)
       .then(setTiendas)
       .catch(err => console.error('fetchRankingTiendas:', err));
-  }, []);
+  }, [filters]);
 
   return (
     <div className="section-tiendas">

@@ -31,7 +31,7 @@ export function SectionTendencias({ filters }) {
   const [loadingPerf, setLoadingPerf] = useState(true);
 
   useEffect(() => {
-    fetchYoY()
+    fetchYoY(filters.period)
       .then(data => {
         const mapped = MESES.map((mes, i) => ({
           mes,
@@ -42,7 +42,7 @@ export function SectionTendencias({ filters }) {
       })
       .catch(err => console.error('fetchYoY:', err))
       .finally(() => setLoadingYoy(false));
-  }, []);
+  }, [filters]);
 
   useEffect(() => {
     fetchPerformance(filters.period)
@@ -56,7 +56,7 @@ export function SectionTendencias({ filters }) {
       })
       .catch(err => console.error('fetchPerformance:', err))
       .finally(() => setLoadingPerf(false));
-  }, [filters.period]);
+  }, [filters]);
 
   return (
     <div className="section-tendencias">
@@ -74,8 +74,8 @@ export function SectionTendencias({ filters }) {
       </TwoCol>
 
       <TwoCol>
-        <VentasTrimestralChart />
-        <FestivosVsNormalesGrid />
+        <VentasTrimestralChart filters={filters} />
+        <FestivosVsNormalesGrid filters={filters} />
       </TwoCol>
     </div>
   );

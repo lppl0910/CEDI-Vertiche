@@ -17,44 +17,44 @@ export async function fetchPerformance(period = '30d') {
 
 // ── Comparativo año contra año ───────────────────────────────────────
 // GET /ventas/yoy
-export async function fetchYoY() {
-  return get('yoy');
+export async function fetchYoY(period = '30d') {
+  return get('yoy', { period });
 }
 
 // ── Top productos ────────────────────────────────────────────────────
 // GET /ventas/top-productos?limit=10
-export async function fetchTopProductos(limit = 10) {
-  return get('top-productos', { limit });
+export async function fetchTopProductos(limit = 10, period = '30d') {
+  return get('top-productos', { limit, period });
 }
 
 // ── Ranking tiendas ──────────────────────────────────────────────────
 // GET /ventas/tiendas
-export async function fetchTiendas() {
-  return get('tiendas');
+export async function fetchTiendas(period = '30d') {
+  return get('tiendas', { period });
 }
 
 // ── Alertas de stock ─────────────────────────────────────────────────
 // GET /ventas/stock-alerts
-export async function fetchStockAlerts() {
-  return get('stock-alerts');
+export async function fetchStockAlerts(period = '30d') {
+  return get('stock-alerts', { period });
 }
 
 // ── Scatter descuentos ───────────────────────────────────────────────
 // GET /ventas/descuentos
-export async function fetchDescuentos() {
-  return get('descuentos');
+export async function fetchDescuentos(period = '30d') {
+  return get('descuentos', { period });
 }
 
 // ── Ticket promedio por zona ─────────────────────────────────────────
 // GET /ventas/ticket-zona
-export async function fetchTicketZona() {
-  return get('ticket-zona');
+export async function fetchTicketZona(period = '30d') {
+  return get('ticket-zona', { period });
 }
 
 // ── Ventas por temporada ─────────────────────────────────────────────
 // GET /ventas/temporadas
-export async function fetchTemporadas() {
-  return get('temporadas');
+export async function fetchTemporadas(period = '30d') {
+  return get('temporadas', { period });
 }
 
 // ── Distribución por talla ───────────────────────────────────────────
@@ -65,36 +65,38 @@ export async function fetchTallas(period = '30d') {
 
 // ── Rotación de inventario ───────────────────────────────────────────
 // GET /ventas/rotacion
-export async function fetchRotacion() {
-  return get('rotacion');
+export async function fetchRotacion(period = '30d') {
+  return get('rotacion', { period });
 }
 
 // ── Recibido vs vendido ──────────────────────────────────────────────
 // GET /ventas/recibido-vendido
-export async function fetchRecibidoVendido() {
-  return get('recibido-vendido');
+export async function fetchRecibidoVendido(period = '30d') {
+  return get('recibido-vendido', { period });
 }
 
 // ── KPIs de cobertura ────────────────────────────────────────────────
 // GET /ventas/cobertura
-export async function fetchCobertura() {
-  return get('cobertura');
+export async function fetchCobertura(period = '30d') {
+  return get('cobertura', { period });
 }
 
-export async function fetchTrimestral() {
-  return get('trimestral');
+export async function fetchTrimestral(period = '30d') {
+  console.log("fetchTrimestral()");
+  console.log("fetchTrimestral() period: ", period);
+  return get('trimestral', { period });
 }
 
-export async function fetchFestivos() {
-  return get('festivos');
+export async function fetchFestivos(period = '30d') {
+  return get('festivos', { period });
 }
 
 // Apis de Productos
-export async function fetchTemporadasCategoria() {
-  return get('temporadas-categoria');
+export async function fetchTemporadasCategoria(period = '30d') {
+  return get('temporadas-categoria', { period });
 }
 
 // Tiendas
-export async function fetchRankingTiendas() {
-  return get('ranking-tiendas');
+export async function fetchRankingTiendas(period = '30d') {
+  return get('ranking-tiendas', { period });
 }

@@ -28,16 +28,15 @@ export function SectionProductos({ filters }) {
   const [seasonData, setSeasonData] = useState({ cats: [], colors: [], stackedData: [] });
 
   useEffect(() => {
-    console.log(filters);
     fetchTallas(filters.period)
       .then(setTallas)
       .catch(err => console.error('fetchTallas:', err));
 
-    fetchTemporadasCategoria()
+    fetchTemporadasCategoria(filters.period)
       .then(setSeasonData)
       .catch(err => console.error('fetchTemporadasCategoria:', err));
 
-    fetchTopProductos()
+    fetchTopProductos(filters.period)
       .then(setTopProductos)
       .catch(err => console.error('fetchTopProductos:', err));
   }, [filters]);

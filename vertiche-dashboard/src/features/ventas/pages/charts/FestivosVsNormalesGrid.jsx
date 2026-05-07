@@ -4,14 +4,14 @@ import { fetchFestivos } from '../../data/ventasApi';
 import { Card } from '../Card';
 import { ChartTitle } from '../ChartTitle';
 
-export function FestivosVsNormalesGrid() {
+export function FestivosVsNormalesGrid({ filters }) {
   const [data, setData] = useState(FESTIVOS_DATA);
 
   useEffect(() => {
-    fetchFestivos()
+    fetchFestivos(filters.period)
       .then(setData)
       .catch(err => console.error('fetchFestivos:', err));
-  }, []);
+  }, [filters]);
 
   return (
     <Card>
