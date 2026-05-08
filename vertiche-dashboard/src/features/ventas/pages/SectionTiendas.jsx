@@ -12,7 +12,7 @@ export function SectionTiendas({ filters }) {
   const [tiendas, setTiendas] = useState([]);
 
   useEffect(() => {
-    fetchTicketZona(filters.period)
+    fetchTicketZona(filters.period, filters.zona)
       .then(data => {
         const mapped = data.labels.map((mes, i) => ({
           mes,
@@ -23,7 +23,7 @@ export function SectionTiendas({ filters }) {
       })
       .catch(err => console.error('fetchTicketZona:', err));
 
-    fetchRankingTiendas(filters.period)
+    fetchRankingTiendas(filters.period, filters.zona)
       .then(setTiendas)
       .catch(err => console.error('fetchRankingTiendas:', err));
   }, [filters]);

@@ -12,10 +12,10 @@ export function SectionPerformance({ filters }) {
   const insightBorderColor = fallback.insight?.type === 'warn' ? C.warning : C.success;
 
   useEffect(() => {
-    fetchPerformance(filters.period)
+    fetchPerformance(filters.period, filters.zona)
       .then(data => { if (data.kpis) setKpis(data.kpis); })
       .catch(err => console.error('fetchPerformance KPIs:', err));
-  }, [filters.period]);
+  }, [filters]);
 
   return (
     <div className="section-performance">

@@ -8,7 +8,7 @@ export function FestivosVsNormalesGrid({ filters }) {
   const [data, setData] = useState(FESTIVOS_DATA);
 
   useEffect(() => {
-    fetchFestivos(filters.period)
+    fetchFestivos(filters.period, filters.zona)
       .then(setData)
       .catch(err => console.error('fetchFestivos:', err));
   }, [filters]);

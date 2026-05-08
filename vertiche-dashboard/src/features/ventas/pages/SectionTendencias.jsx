@@ -31,7 +31,7 @@ export function SectionTendencias({ filters }) {
   const [loadingPerf, setLoadingPerf] = useState(true);
 
   useEffect(() => {
-    fetchYoY(filters.period)
+    fetchYoY(filters.period, filters.zona)
       .then(data => {
         const mapped = MESES.map((mes, i) => ({
           mes,
@@ -45,7 +45,7 @@ export function SectionTendencias({ filters }) {
   }, [filters]);
 
   useEffect(() => {
-    fetchPerformance(filters.period)
+    fetchPerformance(filters.period, filters.zona)
       .then(data => {
         const mapped = data.labels.map((label, i) => ({
           label: data.period === '7d' ? label : `S${label}`,

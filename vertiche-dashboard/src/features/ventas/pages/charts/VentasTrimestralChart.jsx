@@ -11,16 +11,11 @@ const QUARTER_COLORS = [C.black, '#8E9AAF', C.beige, '#080808'];
 export function VentasTrimestralChart({ filters }) {
   const [data, setData] = useState(QUARTERLY_REVENUE);
 
-  console.log("VentasTrimestralChart actualizado!")
-  console.log(filters.period);
-
   useEffect(() => {
-    fetchTrimestral(filters.period)
+    fetchTrimestral(filters.period, filters.zona)
       .then(setData)
       .catch(err => console.error('fetchTrimestral:', err));
   }, [filters]);
-
-  console.log(data)
 
   return (
     <Card>
