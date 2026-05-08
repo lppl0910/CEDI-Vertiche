@@ -210,6 +210,7 @@ export default class VentasController extends AbstractController {
       const dias = diasMap[period] ?? 30;
 
       const region = (req.query.region as string) || "all";
+      console.log("region: ", region);
 
       let groupBy: string;
       if (period === "7d") groupBy = "dia_semana";
@@ -228,6 +229,13 @@ export default class VentasController extends AbstractController {
             attributes: [],
             where: literal(
               `Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY)`,
+            ),
+          },
+          {
+            model: db.Dim_Tienda,
+            attributes: [],
+            where: literal(
+              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
             ),
           },
         ],
