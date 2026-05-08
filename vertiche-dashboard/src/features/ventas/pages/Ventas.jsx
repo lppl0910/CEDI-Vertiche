@@ -1,7 +1,6 @@
 import { SectionPerformance } from './SectionPerformance';
 import { SectionTendencias } from './SectionTendencias';
 import { ChatFAB } from './ChatFAB';
-import ComponenteEsquina from './components/ComponenteEsquina';
 import './styles/Ventas.css';
 import { SectionProductos } from './SectionProductos';
 import { SectionTiendas } from './SectionTiendas';
@@ -57,7 +56,6 @@ export default function Ventas({
 
   return (
     <div className="ventas">
-      <ComponenteEsquina fechaPeriodo={strFechaPeriodo} fechaHoy={strFechaHoy} />
       <SectionPerformance filters={filters} />
       <ActiveSection filters={filters} />
       <ChatFAB />
