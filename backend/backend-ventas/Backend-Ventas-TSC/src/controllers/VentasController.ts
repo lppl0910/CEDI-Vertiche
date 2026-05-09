@@ -618,69 +618,93 @@ export default class VentasController extends AbstractController {
 
   // ── GET /ventas/ticket-zona ──────────────────────────────────────────
   private async getTicketZona(req: Request, res: Response) {
-    try {
-      const period = (req.query.period as string) || "30d";
-      const dias = diasMap[period] ?? 30;
-      const { productoWhere, tiempoWhere } = this.buildWhere(req);
-      // ↑ tiendaWhere ignorado — la gráfica siempre muestra Norte vs Sur
+  try {
+    const period = (req.query.period as string) || "30d";
+    const dias   = diasMap[period] ?? 30;
+    const { productoWhere, tiempoWhere } = this.buildWhere(req);
+    // ↑ tiendaWhere ignorado — la gráfica siempre muestra Norte vs Sur
 
-      const meses = [
-        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
-      ];
+    let groupBy: string;
+    if (period === "7d")      groupBy = "dia_semana";
+    else if (period === "1y") groupBy = "mes_nombre";
+    else                      groupBy = "semana";
 
-      const rows = await db.Fact_Ventas.findAll({
-        attributes: [
-          [col("Dim_Tiempo.mes_nombre"), "mes"],
-          [col("Dim_Tienda.region"), "zona"],
-          [fn("AVG", col("Fact_Ventas.precio_final")), "ticket"],
-        ],
-        include: [
-          {
-            model: db.Dim_Tiempo,
-            attributes: [],
-            where: tiempoWhere(dias),
-            required: true,
-          },
-          {
-            model: db.Dim_Tienda,
-            attributes: [],
-            required: true,          // sin where — siempre ambas zonas
-          },
-          {
-            model: db.Dim_Producto,
-            attributes: [],
-            where: productoWhere,
-            required: !!productoWhere,
-          },
-        ],
-        group: ["Dim_Tiempo.mes_nombre", "Dim_Tienda.region"],
-        raw: true,
-      });
+    const ORDEN_MESES = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+    ];
 
-      const norte: number[] = new Array(12).fill(0);
-      const sur: number[]   = new Array(12).fill(0);
+    const rows = await db.Fact_Ventas.findAll({
+      attributes: [
+        [col(`Dim_Tiempo.${groupBy}`), "label"],
+        [col("Dim_Tienda.region"), "zona"],
+        [fn("AVG", col("Fact_Ventas.precio_final")), "ticket"],
+      ],
+      include: [
+        {
+          model: db.Dim_Tiempo,
+          attributes: [],
+          where: tiempoWhere(dias),
+          required: true,
+        },
+        {
+          model: db.Dim_Tienda,
+          attributes: [],
+          required: true,           // sin where — siempre ambas zonas
+        },
+        {
+          model: db.Dim_Producto,
+          attributes: [],
+          where: productoWhere,
+          required: !!productoWhere,
+        },
+      ],
+      group: [`Dim_Tiempo.${groupBy}`, "Dim_Tienda.region"],
+      raw: true,
+    });
 
-      rows.forEach((r: any) => {
-        const idx = meses.indexOf(r.mes);
-        if (idx === -1) return;
-        const val = Math.round(parseFloat(r.ticket));
-        if (r.zona === "Norte") norte[idx] = val;
-        else sur[idx] = val;
-      });
+    // Construir labels ordenados según el period
+    const labelsSet = new Set(rows.map((r: any) => String(r.label)));
+    let labels: string[];
 
-      const labels = [
-        "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-        "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
-      ];
-
-      res.status(200).json({ labels, norte, sur });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
+    if (period === "1y") {
+      // Ordenar cronológicamente por mes
+      labels = ORDEN_MESES
+        .filter(m => labelsSet.has(m))
+        .map(m => m.slice(0, 3)); // "Enero" → "Ene"
+    } else if (period === "7d") {
+      const ORDEN_DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+      labels = ORDEN_DIAS.filter(d => labelsSet.has(d));
+    } else {
+      // semanas — ordenar numéricamente y prefijar con S
+      labels = [...labelsSet]
+        .sort((a, b) => Number(a) - Number(b))
+        .map(s => `S${s}`);
     }
-  }
 
+    // Construir arrays norte y sur alineados con labels
+    const rawLabels = period === "1y"
+      ? ORDEN_MESES.filter(m => labelsSet.has(m))
+      : period === "7d"
+        ? ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].filter(d => labelsSet.has(d))
+        : [...labelsSet].sort((a, b) => Number(a) - Number(b));
+
+    const norte: number[] = rawLabels.map(l => {
+      const r = rows.find((r: any) => String(r.label) === l && r.zona === "Norte") as any;
+      return r ? Math.round(parseFloat(r.ticket)) : 0;
+    });
+
+    const sur: number[] = rawLabels.map(l => {
+      const r = rows.find((r: any) => String(r.label) === l && r.zona === "Sur") as any;
+      return r ? Math.round(parseFloat(r.ticket)) : 0;
+    });
+
+    res.status(200).json({ labels, norte, sur });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ mensaje: err });
+  }
+}
   // ── GET /ventas/ranking-tiendas ──────────────────────────────────────
   private async getRankingTiendas(req: Request, res: Response) {
     try {

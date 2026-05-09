@@ -1,58 +1,70 @@
 import { useState, useEffect } from 'react';
-import { fetchTicketZona, fetchRankingTiendas,fetchVentasEstado } from '../data/ventasApi';
+import { fetchTicketZona, fetchRankingTiendas, fetchVentasEstado } from '../data/ventasApi';
 import { SectionSep } from './SectionSep';
 import { TwoCol } from './TwoCol';
 import { TicketPromedioZonaChart } from './charts/TicketPromedioZonaChart';
 import { DistribucionZonaTable } from './charts/DistribucionZonaTable';
 import { RankingTiendasTable } from './charts/RankingTiendasTable';
+import { MapaCalorMexico } from './charts/MapaCalorMexico';
 import './styles/SectionTiendas.css';
 
-import { MapaCalorMexico } from './charts/MapaCalorMexico';
-
 export function SectionTiendas({ filters }) {
-  const [ticketData, setTicketData]   = useState([]);
-  const [tiendas, setTiendas]         = useState([]);
-  const [loadingTicket, setLoadingTicket] = useState(true);
+  const { period, zona, temporada } = filters;
+
+  const [ticketData, setTicketData]         = useState([]);
+  const [tiendas, setTiendas]               = useState([]);
+  const [estadosData, setEstadosData]       = useState([]);
+  const [loadingTicket, setLoadingTicket]   = useState(true);
   const [loadingTiendas, setLoadingTiendas] = useState(true);
-  const [estadosData, setEstadosData] = useState([]);
-  const [loadingMapa, setLoadingMapa] = useState(true);
+  const [loadingMapa, setLoadingMapa]       = useState(true);
 
   // Ticket Promedio — period y temporada (sin zona)
   useEffect(() => {
-    setLoadingTicket(true);
-    fetchTicketZona({ period: filters.period, temporada: filters.temporada })
+    fetchTicketZona({ period, temporada })
       .then(data => {
-        const mapped = data.labels.map((mes, i) => ({
-          mes,
+        const mapped = data.labels.map((label, i) => ({
+          mes:   label,
           Norte: data.norte[i],
           Sur:   data.sur[i],
         }));
         setTicketData(mapped);
+        setLoadingTicket(false);
       })
-      .catch(err => console.error('fetchTicketZona:', err))
-      .finally(() => setLoadingTicket(false));
-  }, [filters.period, filters.temporada]);
+      .catch(err => {
+        console.error('fetchTicketZona:', err);
+        setLoadingTicket(false);
+      });
+  }, [period, temporada]);
 
   // Ranking + Distribución — los 3 filtros
   useEffect(() => {
-    setLoadingTiendas(true);
-    fetchRankingTiendas(filters)
-      .then(setTiendas)
-      .catch(err => console.error('fetchRankingTiendas:', err))
-      .finally(() => setLoadingTiendas(false));
-  }, [filters.period, filters.zona, filters.temporada]);
+    fetchRankingTiendas({ period, zona, temporada })
+      .then(data => {
+        setTiendas(data);
+        setLoadingTiendas(false);
+      })
+      .catch(err => {
+        console.error('fetchRankingTiendas:', err);
+        setLoadingTiendas(false);
+      });
+  }, [period, zona, temporada]);
+
+  // Mapa de calor — los 3 filtros
+  useEffect(() => {
+    fetchVentasEstado({ period, zona, temporada })
+      .then(data => {
+        setEstadosData(data);
+        setLoadingMapa(false);
+      })
+      .catch(err => {
+        console.error('fetchVentasEstado:', err);
+        setLoadingMapa(false);
+      });
+  }, [period, zona, temporada]);
 
   const loading = (
     <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Cargando...</div>
   );
-
-  useEffect(() => {
-    setLoadingMapa(true);
-    fetchVentasEstado(filters)
-      .then(setEstadosData)
-      .catch(err => console.error('fetchVentasEstado:', err))
-      .finally(() => setLoadingMapa(false));
-  }, [filters.period, filters.zona, filters.temporada]);
 
   return (
     <div className="section-tiendas">
@@ -62,10 +74,12 @@ export function SectionTiendas({ filters }) {
         {loadingTicket  ? loading : <TicketPromedioZonaChart ticketData={ticketData} />}
         {loadingTiendas ? loading : <DistribucionZonaTable tiendas={tiendas} />}
       </TwoCol>
+
       {loadingMapa
         ? <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Cargando mapa...</div>
-        : <MapaCalorMexico data={estadosData} zona={filters.zona} />
+        : <MapaCalorMexico data={estadosData} zona={zona} />
       }
+
       {loadingTiendas ? loading : <RankingTiendasTable tiendas={tiendas} />}
     </div>
   );

@@ -7,15 +7,17 @@ import { VentasKPI } from './VentasKPI';
 import './styles/SectionPerformance.css';
 
 export function SectionPerformance({ filters }) {
-  const fallback = DATA[filters.period] || DATA['30d'];
+  const { period, zona, temporada } = filters;
+
+  const fallback = DATA[period] || DATA['30d'];
   const [kpis, setKpis] = useState(fallback.kpis);
   const insightBorderColor = fallback.insight?.type === 'warn' ? C.warning : C.success;
 
   useEffect(() => {
-    fetchPerformance(filters)                              // ← antes filters.period
+    fetchPerformance({ period, zona, temporada })
       .then(data => { if (data.kpis) setKpis(data.kpis); })
       .catch(err => console.error('fetchPerformance KPIs:', err));
-  }, [filters.period, filters.zona, filters.temporada]);  // ← antes solo filters.period
+  }, [period, zona, temporada]);
 
   return (
     <div className="section-performance">

@@ -23,6 +23,8 @@ function buildParetoData(products) {
 }
 
 export function SectionProductos({ filters }) {
+  const { period, zona, temporada } = filters;
+
   const [topProductos, setTopProductos]   = useState([]);
   const [tallas, setTallas]               = useState([]);
   const [seasonData, setSeasonData]       = useState({ cats: [], colors: [], stackedData: [] });
@@ -32,30 +34,42 @@ export function SectionProductos({ filters }) {
 
   // Top Productos + Pareto — los 3 filtros
   useEffect(() => {
-    setLoadingTop(true);
-    fetchTopProductos(filters)
-      .then(setTopProductos)
-      .catch(err => console.error('fetchTopProductos:', err))
-      .finally(() => setLoadingTop(false));
-  }, [filters.period, filters.zona, filters.temporada]);
+    fetchTopProductos({ period, zona, temporada })
+      .then(data => {
+        setTopProductos(data);
+        setLoadingTop(false);
+      })
+      .catch(err => {
+        console.error('fetchTopProductos:', err);
+        setLoadingTop(false);
+      });
+  }, [period, zona, temporada]);
 
   // Temporada × Categoría — solo zona
   useEffect(() => {
-    setLoadingSeason(true);
-    fetchTemporadasCategoria({ zona: filters.zona })
-      .then(setSeasonData)
-      .catch(err => console.error('fetchTemporadasCategoria:', err))
-      .finally(() => setLoadingSeason(false));
-  }, [filters.zona]);
+    fetchTemporadasCategoria({ zona })
+      .then(data => {
+        setSeasonData(data);
+        setLoadingSeason(false);
+      })
+      .catch(err => {
+        console.error('fetchTemporadasCategoria:', err);
+        setLoadingSeason(false);
+      });
+  }, [zona]);
 
   // Tallas — los 3 filtros
   useEffect(() => {
-    setLoadingTallas(true);
-    fetchTallas(filters)
-      .then(setTallas)
-      .catch(err => console.error('fetchTallas:', err))
-      .finally(() => setLoadingTallas(false));
-  }, [filters.period, filters.zona, filters.temporada]);
+    fetchTallas({ period, zona, temporada })
+      .then(data => {
+        setTallas(data);
+        setLoadingTallas(false);
+      })
+      .catch(err => {
+        console.error('fetchTallas:', err);
+        setLoadingTallas(false);
+      });
+  }, [period, zona, temporada]);
 
   const loading = <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Cargando...</div>;
 

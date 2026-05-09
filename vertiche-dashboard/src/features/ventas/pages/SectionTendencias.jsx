@@ -12,7 +12,8 @@ import './styles/SectionTendencias.css';
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 export function SectionTendencias({ filters }) {
-  const d = DATA[filters.period] || DATA['30d'];
+  const { period, zona, temporada } = filters;
+  const d = DATA[period] || DATA['30d'];
 
   // ── YoY — zona y temporada ─────────────────────────────────────
   const [yoyData, setYoyData] = useState(
@@ -42,53 +43,67 @@ export function SectionTendencias({ filters }) {
 
   // YoY: zona y temporada
   useEffect(() => {
-    setLoadingYoy(true);
-    fetchYoY({ zona: filters.zona, temporada: filters.temporada })
+    fetchYoY({ zona, temporada })
       .then(data => {
         const mapped = MESES.map((mes, i) => ({
           mes,
-          '2025': data.actual[i]   ?? 0,
+          '2025': data.actual[i] ?? 0,
           '2024': data.anterior[i] ?? 0,
         }));
         setYoyData(mapped);
+        setLoadingYoy(false);
       })
-      .catch(err => console.error('fetchYoY:', err))
-      .finally(() => setLoadingYoy(false));
-  }, [filters.zona, filters.temporada]);
+      .catch(err => {
+        console.error('fetchYoY:', err);
+        setLoadingYoy(false);
+      });
+  }, [zona, temporada]);
 
   // Performance: los 3 filtros
   useEffect(() => {
-    setLoadingPerf(true);
-    fetchPerformance(filters)
+    fetchPerformance({ period, zona, temporada })
       .then(data => {
         const mapped = data.labels.map((label, i) => ({
-          label: data.period === '7d' ? label : `S${label}`,
+          label: data.period === '7d' || data.period === '1y'
+            ? label
+            : `S${label}`,
           ingresos: data.revenue[i],
           unidades: +(data.units[i] / 10).toFixed(1),
         }));
         setLineData(mapped);
+        setLoadingPerf(false);
       })
-      .catch(err => console.error('fetchPerformance:', err))
-      .finally(() => setLoadingPerf(false));
-  }, [filters.period, filters.zona, filters.temporada]);
+      .catch(err => {
+        console.error('fetchPerformance:', err);
+        setLoadingPerf(false);
+      });
+  }, [period, zona, temporada]);
 
   // Trimestral: solo zona
   useEffect(() => {
-    setLoadingTrim(true);
-    fetchTrimestral({ zona: filters.zona })
-      .then(setTrimestralData)
-      .catch(err => console.error('fetchTrimestral:', err))
-      .finally(() => setLoadingTrim(false));
-  }, [filters.zona]);
+    fetchTrimestral({ zona })
+      .then(data => {
+        setTrimestralData(data);
+        setLoadingTrim(false);
+      })
+      .catch(err => {
+        console.error('fetchTrimestral:', err);
+        setLoadingTrim(false);
+      });
+  }, [zona]);
 
   // Festivos: los 3 filtros
   useEffect(() => {
-    setLoadingFest(true);
-    fetchFestivos(filters)
-      .then(setFestivosData)
-      .catch(err => console.error('fetchFestivos:', err))
-      .finally(() => setLoadingFest(false));
-  }, [filters.period, filters.zona, filters.temporada]);
+    fetchFestivos({ period, zona, temporada })
+      .then(data => {
+        setFestivosData(data);
+        setLoadingFest(false);
+      })
+      .catch(err => {
+        console.error('fetchFestivos:', err);
+        setLoadingFest(false);
+      });
+  }, [period, zona, temporada]);
 
   // ── Render ─────────────────────────────────────────────────────
   return (
