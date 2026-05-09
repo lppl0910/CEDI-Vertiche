@@ -22,41 +22,62 @@ function buildParetoData(products) {
   });
 }
 
-export function SectionProductos() {
-  const [topProductos, setTopProductos] = useState([]);
-  const [tallas, setTallas] = useState([]);
-  const [seasonData, setSeasonData] = useState({ cats: [], colors: [], stackedData: [] });
+export function SectionProductos({ filters }) {
+  const [topProductos, setTopProductos]   = useState([]);
+  const [tallas, setTallas]               = useState([]);
+  const [seasonData, setSeasonData]       = useState({ cats: [], colors: [], stackedData: [] });
+  const [loadingTop, setLoadingTop]       = useState(true);
+  const [loadingTallas, setLoadingTallas] = useState(true);
+  const [loadingSeason, setLoadingSeason] = useState(true);
 
+  // Top Productos + Pareto — los 3 filtros
   useEffect(() => {
-    fetchTallas()
-      .then(setTallas)
-      .catch(err => console.error('fetchTallas:', err));
-
-    fetchTemporadasCategoria()
-      .then(setSeasonData)
-      .catch(err => console.error('fetchTemporadasCategoria:', err));
-
-    fetchTopProductos()
+    setLoadingTop(true);
+    fetchTopProductos(filters)
       .then(setTopProductos)
-      .catch(err => console.error('fetchTopProductos:', err));
-  }, []);
+      .catch(err => console.error('fetchTopProductos:', err))
+      .finally(() => setLoadingTop(false));
+  }, [filters.period, filters.zona, filters.temporada]);
+
+  // Temporada × Categoría — solo zona
+  useEffect(() => {
+    setLoadingSeason(true);
+    fetchTemporadasCategoria({ zona: filters.zona })
+      .then(setSeasonData)
+      .catch(err => console.error('fetchTemporadasCategoria:', err))
+      .finally(() => setLoadingSeason(false));
+  }, [filters.zona]);
+
+  // Tallas — los 3 filtros
+  useEffect(() => {
+    setLoadingTallas(true);
+    fetchTallas(filters)
+      .then(setTallas)
+      .catch(err => console.error('fetchTallas:', err))
+      .finally(() => setLoadingTallas(false));
+  }, [filters.period, filters.zona, filters.temporada]);
+
+  const loading = <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Cargando...</div>;
 
   return (
     <div className="section-productos">
       <SectionSep label="Análisis de Producto" />
 
       <TwoCol>
-        <TopProductosChart products={topProductos} />
-        <ParetoSKUChart paretoData={buildParetoData(topProductos)} />
+        {loadingTop ? loading : <TopProductosChart products={topProductos} />}
+        {loadingTop ? loading : <ParetoSKUChart paretoData={buildParetoData(topProductos)} />}
       </TwoCol>
 
       <TwoCol>
-        <VentasTemporadaChart
-          stackedData={seasonData.stackedData}
-          cats={seasonData.cats}
-          colors={seasonData.colors}
-        />
-        <UnidadesTallaChart tallas={tallas} />
+        {loadingSeason
+          ? loading
+          : <VentasTemporadaChart
+              stackedData={seasonData.stackedData}
+              cats={seasonData.cats}
+              colors={seasonData.colors}
+            />
+        }
+        {loadingTallas ? loading : <UnidadesTallaChart tallas={tallas} />}
       </TwoCol>
     </div>
   );

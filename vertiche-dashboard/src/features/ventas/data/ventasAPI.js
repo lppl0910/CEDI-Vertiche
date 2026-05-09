@@ -3,98 +3,75 @@ const BASE_URL = 'http://localhost:8080/ventas';
 // ── Helper ───────────────────────────────────────────────────────────
 async function get(endpoint, params = {}) {
   const url = new URL(`${BASE_URL}/${endpoint}`);
-  Object.entries(params).forEach(([k, v]) => url.searchParams.append(k, v));
+  Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
+    .forEach(([k, v]) => url.searchParams.append(k, v));
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error(`Error ${res.status} en ${endpoint}`);
   return res.json();
 }
 
-// ── Performance general (KPIs + serie) ──────────────────────────────
-// GET /ventas/performance?period=30d
-export async function fetchPerformance(period = '30d') {
-  return get('performance', { period });
+// ── Performance general (KPIs + serie) — los 3 filtros ──────────────
+export async function fetchPerformance(filters = {}) {
+  const { period = '30d', zona, temporada } = filters;
+  return get('performance', { period, zona, temporada });
 }
 
-// ── Comparativo año contra año ───────────────────────────────────────
-// GET /ventas/yoy
-export async function fetchYoY() {
-  return get('yoy');
+// ── Comparativo año contra año — zona y temporada ────────────────────
+export async function fetchYoY(filters = {}) {
+  const { zona, temporada } = filters;
+  return get('yoy', { zona, temporada });
 }
 
-// ── Top productos ────────────────────────────────────────────────────
-// GET /ventas/top-productos?limit=10
-export async function fetchTopProductos(limit = 10) {
-  return get('top-productos', { limit });
+// ── Ventas por trimestre — solo zona ────────────────────────────────
+export async function fetchTrimestral(filters = {}) {
+  const { zona } = filters;
+  return get('trimestral', { zona });
 }
 
-// ── Ranking tiendas ──────────────────────────────────────────────────
-// GET /ventas/tiendas
+// ── Festivos vs normales — los 3 filtros ────────────────────────────
+export async function fetchFestivos(filters = {}) {
+  const { period = '30d', zona, temporada } = filters;
+  return get('festivos', { period, zona, temporada });
+}
+
+// ── Distribución por talla — los 3 filtros ──────────────────────────
+export async function fetchTallas(filters = {}) {
+  const { period = '30d', zona, temporada } = filters;
+  return get('tallas', { period, zona, temporada });
+}
+
+// ── Temporadas × categoría — los 3 filtros ──────────────────────────
+export async function fetchTemporadasCategoria(filters = {}) {
+  const { period = '30d', zona, temporada } = filters;
+  return get('temporadas-categoria', { period, zona, temporada });
+}
+
+// ── Top productos — los 3 filtros ────────────────────────────────────
+export async function fetchTopProductos(filters = {}, limit = 10) {
+  const { period = '30d', zona, temporada } = filters;
+  return get('top-productos', { period, limit, zona, temporada });
+}
+
+// ── Ticket promedio por zona — los 3 filtros ─────────────────────────
+export async function fetchTicketZona(filters = {}) {
+  const { period = '30d', zona, temporada } = filters;
+  return get('ticket-zona', { period, zona, temporada });
+}
+
+// ── Ranking tiendas — los 3 filtros ──────────────────────────────────
+export async function fetchRankingTiendas(filters = {}) {
+  const { period = '30d', zona, temporada } = filters;
+  return get('ranking-tiendas', { period, zona, temporada });
+}
+
+// ── Sin filtros analíticos ───────────────────────────────────────────
 export async function fetchTiendas() {
   return get('tiendas');
 }
 
-// ── Alertas de stock ─────────────────────────────────────────────────
-// GET /ventas/stock-alerts
-export async function fetchStockAlerts() {
-  return get('stock-alerts');
-}
-
-// ── Scatter descuentos ───────────────────────────────────────────────
-// GET /ventas/descuentos
-export async function fetchDescuentos() {
-  return get('descuentos');
-}
-
-// ── Ticket promedio por zona ─────────────────────────────────────────
-// GET /ventas/ticket-zona
-export async function fetchTicketZona() {
-  return get('ticket-zona');
-}
-
-// ── Ventas por temporada ─────────────────────────────────────────────
-// GET /ventas/temporadas
-export async function fetchTemporadas() {
-  return get('temporadas');
-}
-
-// ── Distribución por talla ───────────────────────────────────────────
-// GET /ventas/tallas
-export async function fetchTallas() {
-  return get('tallas');
-}
-
-// ── Rotación de inventario ───────────────────────────────────────────
-// GET /ventas/rotacion
-export async function fetchRotacion() {
-  return get('rotacion');
-}
-
-// ── Recibido vs vendido ──────────────────────────────────────────────
-// GET /ventas/recibido-vendido
-export async function fetchRecibidoVendido() {
-  return get('recibido-vendido');
-}
-
-// ── KPIs de cobertura ────────────────────────────────────────────────
-// GET /ventas/cobertura
-export async function fetchCobertura() {
-  return get('cobertura');
-}
-
-export async function fetchTrimestral() {
-  return get('trimestral');
-}
-
-export async function fetchFestivos() {
-  return get('festivos');
-}
-
-// Apis de Productos
-export async function fetchTemporadasCategoria() {
-  return get('temporadas-categoria');
-}
-
-// Tiendas
-export async function fetchRankingTiendas() {
-  return get('ranking-tiendas');
+// ── Ventas por estado — mapa de calor — los 3 filtros ───────────────
+export async function fetchVentasEstado(filters = {}) {
+  const { period = '30d', zona, temporada } = filters;
+  return get('ventas-estado', { period, zona, temporada });
 }
