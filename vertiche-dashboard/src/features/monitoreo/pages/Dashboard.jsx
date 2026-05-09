@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -13,7 +13,7 @@ import {
   PieChart,
   Pie,
   ReferenceLine,
-} from 'recharts';
+} from "recharts";
 import {
   bahiasGeneral,
   equipos,
@@ -37,48 +37,52 @@ import {
   distribucionTiemposAuditoria,
   backlogOrdenes,
   estatusOrdenes,
-} from '../data/mockData';
-import KPICard from '../../../shared/components/ui/KPICard';
+} from "../data/mockData";
+import KPICard from "../../../shared/components/ui/KPICard";
+
+import { usePreregistroKPIs } from "../hooks/usePreRegistroKPI";
 
 const STATUS_COLOR = {
-  success: '#6E8B6B',
-  warning: '#C9963B',
-  error: '#B65E4A',
+  success: "#6E8B6B",
+  warning: "#C9963B",
+  error: "#B65E4A",
 };
 
 const STATUS_BG = {
-  success: '#EEF2ED',
-  warning: '#FBF4E6',
-  error: '#F9EDEB',
+  success: "#EEF2ED",
+  warning: "#FBF4E6",
+  error: "#F9EDEB",
 };
 
-const STATUS_LABEL = { success: 'OK', warning: 'Atención', error: 'Error' };
+const STATUS_LABEL = { success: "OK", warning: "Atención", error: "Error" };
 
 const stageRoutes = [
-  { id: 'preregistro', label: 'Preregistro', path: '/dashboard/preregistro' },
-  { id: 'qa', label: 'QA', path: '/dashboard/qa' },
-  { id: 'registro', label: 'Registro', path: '/dashboard/registro' },
-  { id: 'sorter', label: 'Sorter', path: '/dashboard/sorter' },
-  { id: 'bahias', label: 'Bahías', path: '/dashboard/bahias' },
-  { id: 'auditoria', label: 'Auditoría', path: '/dashboard/auditoria' },
-  { id: 'envio', label: 'Envío', path: '/dashboard/envio' },
+  { id: "preregistro", label: "Preregistro", path: "/dashboard/preregistro" },
+  { id: "qa", label: "QA", path: "/dashboard/qa" },
+  { id: "registro", label: "Registro", path: "/dashboard/registro" },
+  { id: "sorter", label: "Sorter", path: "/dashboard/sorter" },
+  { id: "bahias", label: "Bahías", path: "/dashboard/bahias" },
+  { id: "auditoria", label: "Auditoría", path: "/dashboard/auditoria" },
+  { id: "envio", label: "Envío", path: "/dashboard/envio" },
 ];
 
-const teamPerformanceStages = ['preregistro', 'qa', 'registro'];
+const teamPerformanceStages = ["preregistro", "qa", "registro"];
 
-const axisStyle = { fontSize: 12, fill: '#6B6B6B', fontFamily: 'Inter' };
-const gridStyle = { stroke: '#E7E2DC', strokeDasharray: '3 3' };
+const axisStyle = { fontSize: 12, fill: "#6B6B6B", fontFamily: "Inter" };
+const gridStyle = { stroke: "#E7E2DC", strokeDasharray: "3 3" };
 
 function getCurrentStageId() {
-  if (typeof window === 'undefined') return 'preregistro';
-  const current = stageRoutes.find(stage => window.location.pathname === stage.path);
-  return current?.id || 'preregistro';
+  if (typeof window === "undefined") return "preregistro";
+  const current = stageRoutes.find(
+    (stage) => window.location.pathname === stage.path,
+  );
+  return current?.id || "preregistro";
 }
 
 function goToPath(path) {
-  if (typeof window === 'undefined') return;
-  window.history.pushState({}, '', path);
-  window.dispatchEvent(new PopStateEvent('popstate'));
+  if (typeof window === "undefined") return;
+  window.history.pushState({}, "", path);
+  window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
 function average(values) {
@@ -86,13 +90,13 @@ function average(values) {
 }
 
 function overallStatus(statuses) {
-  if (statuses.includes('error')) return 'error';
-  if (statuses.includes('warning')) return 'warning';
-  return 'success';
+  if (statuses.includes("error")) return "error";
+  if (statuses.includes("warning")) return "warning";
+  return "success";
 }
 
 function formatNumber(value, decimals = 0) {
-  return Number(value).toLocaleString('es-MX', {
+  return Number(value).toLocaleString("es-MX", {
     maximumFractionDigits: decimals,
     minimumFractionDigits: decimals,
   });
@@ -100,42 +104,46 @@ function formatNumber(value, decimals = 0) {
 
 function StatusDot({ status }) {
   return (
-    <span style={{
-      width: 8,
-      height: 8,
-      borderRadius: '50%',
-      background: STATUS_COLOR[status],
-      display: 'inline-block',
-      flexShrink: 0,
-    }} />
+    <span
+      style={{
+        width: 8,
+        height: 8,
+        borderRadius: "50%",
+        background: STATUS_COLOR[status],
+        display: "inline-block",
+        flexShrink: 0,
+      }}
+    />
   );
 }
 
 function StageTabs({ activeStage, onStageChange }) {
   return (
-    <div style={{
-      display: 'flex',
-      gap: 6,
-      overflowX: 'auto',
-      paddingBottom: 2,
-    }}>
-      {stageRoutes.map(stage => {
+    <div
+      style={{
+        display: "flex",
+        gap: 6,
+        overflowX: "auto",
+        paddingBottom: 2,
+      }}
+    >
+      {stageRoutes.map((stage) => {
         const isActive = activeStage === stage.id;
         return (
           <button
             key={stage.id}
             onClick={() => onStageChange(stage)}
             style={{
-              border: '1px solid #E7E2DC',
-              background: isActive ? '#111111' : '#FFFFFF',
-              color: isActive ? '#FFFFFF' : '#6B6B6B',
+              border: "1px solid #E7E2DC",
+              background: isActive ? "#111111" : "#FFFFFF",
+              color: isActive ? "#FFFFFF" : "#6B6B6B",
               borderRadius: 8,
-              padding: '8px 14px',
+              padding: "8px 14px",
               fontSize: 13,
               fontWeight: isActive ? 600 : 500,
-              fontFamily: 'var(--font)',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
+              fontFamily: "var(--font)",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
             }}
           >
             {stage.label}
@@ -148,37 +156,64 @@ function StageTabs({ activeStage, onStageChange }) {
 
 function SectionHeader({ title, summary, status }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        gap: 16,
+        marginBottom: 18,
+      }}
+    >
       <div>
-        <div style={{
-          fontSize: 11,
-          color: '#6B6B6B',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          fontWeight: 600,
-          marginBottom: 6,
-        }}>
+        <div
+          style={{
+            fontSize: 11,
+            color: "#6B6B6B",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            fontWeight: 600,
+            marginBottom: 6,
+          }}
+        >
           Dashboard operativo
         </div>
-        <h1 style={{ fontSize: 28, lineHeight: 1.15, fontWeight: 600, color: '#1F1F1F', margin: 0 }}>
+        <h1
+          style={{
+            fontSize: 28,
+            lineHeight: 1.15,
+            fontWeight: 600,
+            color: "#1F1F1F",
+            margin: 0,
+          }}
+        >
           {title}
         </h1>
-        <p style={{ fontSize: 14, color: '#6B6B6B', marginTop: 6, maxWidth: 680 }}>
+        <p
+          style={{
+            fontSize: 14,
+            color: "#6B6B6B",
+            marginTop: 6,
+            maxWidth: 680,
+          }}
+        >
           {summary}
         </p>
       </div>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        background: STATUS_BG[status],
-        color: STATUS_COLOR[status],
-        borderRadius: 20,
-        padding: '6px 12px',
-        fontSize: 12,
-        fontWeight: 700,
-        whiteSpace: 'nowrap',
-      }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          background: STATUS_BG[status],
+          color: STATUS_COLOR[status],
+          borderRadius: 20,
+          padding: "6px 12px",
+          fontSize: 12,
+          fontWeight: 700,
+          whiteSpace: "nowrap",
+        }}
+      >
         {/* <StatusDot status={status} />
         {STATUS_LABEL[status]} */}
       </div>
@@ -188,7 +223,7 @@ function SectionHeader({ title, summary, status }) {
 
 function KpiStrip({ primaryKpi, secondaryKpis }) {
   return (
-    <div style={{ display: 'flex', gap: 14, marginBottom: 22 }}>
+    <div style={{ display: "flex", gap: 14, marginBottom: 22 }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <KPICard
           label={primaryKpi.label}
@@ -197,7 +232,7 @@ function KpiStrip({ primaryKpi, secondaryKpis }) {
           unit={primaryKpi.unit}
         />
       </div>
-      {secondaryKpis.map(item => (
+      {secondaryKpis.map((item) => (
         <div key={item.label} style={{ flex: 1, minWidth: 0 }}>
           <KPICard
             label={item.label}
@@ -214,9 +249,22 @@ function KpiStrip({ primaryKpi, secondaryKpis }) {
 function ChartCard({ title, children, footer }) {
   return (
     <div className="card" style={{ minHeight: 320 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 600, color: '#1F1F1F', margin: 0 }}>{title}</h2>
-        {footer && <span style={{ fontSize: 12, color: '#6B6B6B' }}>{footer}</span>}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          marginBottom: 16,
+        }}
+      >
+        <h2
+          style={{ fontSize: 15, fontWeight: 600, color: "#1F1F1F", margin: 0 }}
+        >
+          {title}
+        </h2>
+        {footer && (
+          <span style={{ fontSize: 12, color: "#6B6B6B" }}>{footer}</span>
+        )}
       </div>
       {children}
     </div>
@@ -226,18 +274,23 @@ function ChartCard({ title, children, footer }) {
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{
-      background: '#FFFFFF',
-      border: '1px solid #E7E2DC',
-      borderRadius: 8,
-      padding: '8px 12px',
-      fontSize: 12,
-      fontFamily: 'Inter',
-      boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-    }}>
-      <div style={{ color: '#6B6B6B', marginBottom: 4 }}>{label}</div>
-      {payload.map(item => (
-        <div key={item.dataKey} style={{ color: item.color || '#1F1F1F', fontWeight: 600 }}>
+    <div
+      style={{
+        background: "#FFFFFF",
+        border: "1px solid #E7E2DC",
+        borderRadius: 8,
+        padding: "8px 12px",
+        fontSize: 12,
+        fontFamily: "Inter",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+      }}
+    >
+      <div style={{ color: "#6B6B6B", marginBottom: 4 }}>{label}</div>
+      {payload.map((item) => (
+        <div
+          key={item.dataKey}
+          style={{ color: item.color || "#1F1F1F", fontWeight: 600 }}
+        >
           {item.name}: {item.value}
         </div>
       ))}
@@ -245,7 +298,7 @@ function CustomTooltip({ active, payload, label }) {
   );
 }
 
-function VerticalBarChart({ data, xKey, valueKey, color = '#111111' }) {
+function VerticalBarChart({ data, xKey, valueKey, color = "#111111" }) {
   return (
     <ResponsiveContainer width="100%" height={240}>
       <BarChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
@@ -259,10 +312,14 @@ function VerticalBarChart({ data, xKey, valueKey, color = '#111111' }) {
   );
 }
 
-function HorizontalBarChart({ data, xKey, valueKey, color = '#111111' }) {
+function HorizontalBarChart({ data, xKey, valueKey, color = "#111111" }) {
   return (
     <ResponsiveContainer width="100%" height={240}>
-      <BarChart data={data} layout="vertical" margin={{ top: 8, right: 16, left: 16, bottom: 4 }}>
+      <BarChart
+        data={data}
+        layout="vertical"
+        margin={{ top: 8, right: 16, left: 16, bottom: 4 }}
+      >
         <CartesianGrid {...gridStyle} horizontal={false} />
         <XAxis type="number" tick={axisStyle} />
         <YAxis dataKey={xKey} type="category" tick={axisStyle} width={88} />
@@ -281,7 +338,7 @@ function LineMetricChart({ data, lines }) {
         <XAxis dataKey="hora" tick={axisStyle} />
         <YAxis tick={axisStyle} />
         <Tooltip content={<CustomTooltip />} />
-        {lines.map(line => (
+        {lines.map((line) => (
           <Line
             key={line.key}
             type="monotone"
@@ -297,16 +354,25 @@ function LineMetricChart({ data, lines }) {
   );
 }
 
-function ProgressBar({ value, status = 'success' }) {
+function ProgressBar({ value, status = "success" }) {
   return (
-    <div style={{ width: '100%' }}>
-      <div style={{ height: 6, borderRadius: 6, background: '#F0EDE8', overflow: 'hidden' }}>
-        <div style={{
-          width: `${Math.max(0, Math.min(value, 100))}%`,
-          height: '100%',
-          background: STATUS_COLOR[status],
+    <div style={{ width: "100%" }}>
+      <div
+        style={{
+          height: 6,
           borderRadius: 6,
-        }} />
+          background: "#F0EDE8",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            width: `${Math.max(0, Math.min(value, 100))}%`,
+            height: "100%",
+            background: STATUS_COLOR[status],
+            borderRadius: 6,
+          }}
+        />
       </div>
     </div>
   );
@@ -315,26 +381,29 @@ function ProgressBar({ value, status = 'success' }) {
 function TeamPerformance({ stageId }) {
   if (!teamPerformanceStages.includes(stageId)) return null;
 
-  const rows = equipos.map(equipo => {
-    if (stageId === 'preregistro') {
-      const receivedPercent = (equipo.detalleOrden.totalPrepacks / equipo.detalleOrden.prepacksEsperados) * 100;
+  const rows = equipos.map((equipo) => {
+    if (stageId === "preregistro") {
+      const receivedPercent =
+        (equipo.detalleOrden.totalPrepacks /
+          equipo.detalleOrden.prepacksEsperados) *
+        100;
       return {
         equipo: equipo.nombre,
         orden: equipo.orden,
         value: formatNumber(receivedPercent, 1),
-        unit: '% recibido',
+        unit: "% recibido",
         detail: `${equipo.detalleOrden.totalPrepacks} de ${equipo.detalleOrden.prepacksEsperados} prepacks`,
         status: equipo.etapas.prepack.status,
         progress: receivedPercent,
       };
     }
 
-    if (stageId === 'qa') {
+    if (stageId === "qa") {
       return {
         equipo: equipo.nombre,
         orden: equipo.orden,
         value: equipo.etapas.qa.porcentaje,
-        unit: '% aceptación',
+        unit: "% aceptación",
         detail: `${formatNumber(100 - equipo.etapas.qa.porcentaje, 1)}% rechazo`,
         status: equipo.etapas.qa.status,
         progress: equipo.etapas.qa.porcentaje,
@@ -346,33 +415,60 @@ function TeamPerformance({ stageId }) {
       orden: equipo.orden,
       value: equipo.etapas.registro.valor,
       unit: equipo.etapas.registro.unidad,
-      detail: 'Rendimiento por equipo',
+      detail: "Rendimiento por equipo",
       status: equipo.etapas.registro.status,
-      progress: Math.min(100, Math.round((equipo.etapas.registro.valor / 260) * 100)),
+      progress: Math.min(
+        100,
+        Math.round((equipo.etapas.registro.valor / 260) * 100),
+      ),
     };
   });
 
   return (
-    <ChartCard title="Rendimiento por equipos" footer="Solo preregistro, QA y registro">
-      <div style={{ display: 'grid', gap: 12 }}>
-        {rows.map(row => (
+    <ChartCard
+      title="Rendimiento por equipos"
+      footer="Solo preregistro, QA y registro"
+    >
+      <div style={{ display: "grid", gap: 12 }}>
+        {rows.map((row) => (
           <div
             key={row.equipo}
             style={{
-              border: '1px solid #E7E2DC',
+              border: "1px solid #E7E2DC",
               borderRadius: 8,
-              padding: '14px 16px',
-              background: '#FAFAF8',
+              padding: "14px 16px",
+              background: "#FAFAF8",
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                marginBottom: 10,
+              }}
+            >
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#1F1F1F' }}>{row.equipo}</div>
-                <div style={{ fontSize: 12, color: '#6B6B6B', marginTop: 2 }}>{row.orden} · {row.detail}</div>
+                <div
+                  style={{ fontSize: 14, fontWeight: 600, color: "#1F1F1F" }}
+                >
+                  {row.equipo}
+                </div>
+                <div style={{ fontSize: 12, color: "#6B6B6B", marginTop: 2 }}>
+                  {row.orden} · {row.detail}
+                </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 18, fontWeight: 700, color: STATUS_COLOR[row.status] }}>{row.value}</div>
-                <div style={{ fontSize: 11, color: '#6B6B6B' }}>{row.unit}</div>
+              <div style={{ textAlign: "right" }}>
+                <div
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    color: STATUS_COLOR[row.status],
+                  }}
+                >
+                  {row.value}
+                </div>
+                <div style={{ fontSize: 11, color: "#6B6B6B" }}>{row.unit}</div>
               </div>
             </div>
             <ProgressBar value={row.progress} status={row.status} />
@@ -386,36 +482,40 @@ function TeamPerformance({ stageId }) {
 function OrdersTable({ orders }) {
   return (
     <ChartCard title="Ordenes recibidas" footer="Llegadas recientes">
-      <div style={{ display: 'grid', gap: 10 }}>
-        {orders.map(order => (
+      <div style={{ display: "grid", gap: 10 }}>
+        {orders.map((order) => (
           <div
             key={order.orden}
             style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr auto',
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
               gap: 12,
-              alignItems: 'center',
-              padding: '12px 14px',
-              border: '1px solid #E7E2DC',
+              alignItems: "center",
+              padding: "12px 14px",
+              border: "1px solid #E7E2DC",
               borderRadius: 8,
-              background: '#FAFAF8',
+              background: "#FAFAF8",
             }}
           >
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#1F1F1F' }}>{order.orden}</div>
-              <div style={{ fontSize: 12, color: '#6B6B6B', marginTop: 2 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#1F1F1F" }}>
+                {order.orden}
+              </div>
+              <div style={{ fontSize: 12, color: "#6B6B6B", marginTop: 2 }}>
                 {order.hora} · {order.prepacks} prepacks · {order.items} SKUs
               </div>
             </div>
-            <span style={{
-              borderRadius: 20,
-              padding: '4px 10px',
-              fontSize: 11,
-              fontWeight: 700,
-              color: STATUS_COLOR[order.status],
-              background: STATUS_BG[order.status],
-            }}>
-              {order.completa ? 'Completa' : 'Incompleta'}
+            <span
+              style={{
+                borderRadius: 20,
+                padding: "4px 10px",
+                fontSize: 11,
+                fontWeight: 700,
+                color: STATUS_COLOR[order.status],
+                background: STATUS_BG[order.status],
+              }}
+            >
+              {order.completa ? "Completa" : "Incompleta"}
             </span>
           </div>
         ))}
@@ -427,22 +527,43 @@ function OrdersTable({ orders }) {
 function BayGrid({ bahias }) {
   return (
     <ChartCard title="Ocupacion por carril" footer="10 carriles">
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(128px, 1fr))', gap: 12 }}>
-        {bahias.map(bahia => (
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(128px, 1fr))",
+          gap: 12,
+        }}
+      >
+        {bahias.map((bahia) => (
           <div
             key={bahia.id}
             style={{
-              border: '1px solid #E7E2DC',
+              border: "1px solid #E7E2DC",
               borderRadius: 8,
-              background: '#FAFAF8',
+              background: "#FAFAF8",
               padding: 14,
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#1F1F1F' }}>{bahia.id}</span>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 12,
+              }}
+            >
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#1F1F1F" }}>
+                {bahia.id}
+              </span>
               <StatusDot status={bahia.status} />
             </div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: STATUS_COLOR[bahia.status], marginBottom: 8 }}>
+            <div
+              style={{
+                fontSize: 24,
+                fontWeight: 700,
+                color: STATUS_COLOR[bahia.status],
+                marginBottom: 8,
+              }}
+            >
               {bahia.porcentaje}%
             </div>
             <ProgressBar value={bahia.porcentaje} status={bahia.status} />
@@ -453,16 +574,16 @@ function BayGrid({ bahias }) {
   );
 }
 
-
 function calcularPareto(items, valueKey) {
   const total = items.reduce((sum, item) => sum + item[valueKey], 0);
   let acumulado = 0;
   return [...items]
     .sort((a, b) => b[valueKey] - a[valueKey])
-    .map(item => {
+    .map((item) => {
       acumulado += item[valueKey];
       const pctAcum = (acumulado / total) * 100;
-      const banda = pctAcum <= 80 ? 'error' : pctAcum <= 95 ? 'warning' : 'success';
+      const banda =
+        pctAcum <= 80 ? "error" : pctAcum <= 95 ? "warning" : "success";
       return { ...item, pctAcum: Number(pctAcum.toFixed(1)), banda };
     });
 }
@@ -470,118 +591,237 @@ function calcularPareto(items, valueKey) {
 function getBacklogRowBg(minutos, umbral1, umbral2) {
   if (minutos >= umbral2) return STATUS_BG.error;
   if (minutos >= umbral1) return STATUS_BG.warning;
-  return 'transparent';
+  return "transparent";
 }
 
-function buildStageData() {
+function buildStageData(preregistroKPIs) {
   // shared table styles
-  const tableStyle = { width: '100%', borderCollapse: 'collapse', fontSize: 13, fontFamily: 'Inter' };
+  const tableStyle = {
+    width: "100%",
+    borderCollapse: "collapse",
+    fontSize: 13,
+    fontFamily: "Inter",
+  };
   const thStyle = {
-    textAlign: 'left', padding: '8px 10px', fontSize: 11, fontWeight: 600,
-    color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.06em',
-    borderBottom: '1px solid #E7E2DC', background: '#FAFAF8',
+    textAlign: "left",
+    padding: "8px 10px",
+    fontSize: 11,
+    fontWeight: 600,
+    color: "#6B6B6B",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    borderBottom: "1px solid #E7E2DC",
+    background: "#FAFAF8",
   };
   const tdStyle = {
-    padding: '9px 10px', borderBottom: '1px solid #F0EDE8',
-    color: '#1F1F1F', verticalAlign: 'middle',
+    padding: "9px 10px",
+    borderBottom: "1px solid #F0EDE8",
+    color: "#1F1F1F",
+    verticalAlign: "middle",
   };
-  const PIE_COLORS = ['#6E8B6B', '#A48F7A', '#C9963B', '#B65E4A', '#8B7355'];
-  const CATEGORIA_COLOR = { estrella: 'success', bueno: 'warning', riesgo: 'error' };
+  const PIE_COLORS = ["#6E8B6B", "#A48F7A", "#C9963B", "#B65E4A", "#8B7355"];
+  const CATEGORIA_COLOR = {
+    estrella: "success",
+    bueno: "warning",
+    riesgo: "error",
+  };
 
   // ---- PREREGISTRO ----
-  const totalOrdenesRecibidas = 489;
-  const ordenesInc = ordenesIncompletasPorProveedor.reduce((s, d) => s + d.incompletas, 0);
-  const tasaCompletas = formatNumber(((totalOrdenesRecibidas - ordenesInc) / totalOrdenesRecibidas) * 100, 1);
-  const provConIncidencias = ordenesIncompletasPorProveedor.filter(d => d.incompletas > 0).length;
+  const totalOrdenesRecibidas = preregistroKPIs.ordenes_recibidas;
+  const ordenesInc = preregistroKPIs.ordenes_incompletas;
+  const tasaCompletas = preregistroKPIs.tasa_completas;
+  const provConIncidencias = preregistroKPIs.proveedores_con_incidencias;
+  const semanaEnCurso = preregistroKPIs.semana_en_curso;
   const paretoPreregistro = calcularPareto(ordenesIncompletasPorProveedor, 'incompletas');
-
   // ---- QA ----
   const totalPrepacks = 1640;
-  const totalErroresQA = erroresPPPorProveedor.reduce((s, d) => s + d.errores, 0);
-  const tasaAceptacionQA = formatNumber(((totalPrepacks - totalErroresQA) / totalPrepacks) * 100, 1);
+  const totalErroresQA = erroresPPPorProveedor.reduce(
+    (s, d) => s + d.errores,
+    0,
+  );
+  const tasaAceptacionQA = formatNumber(
+    ((totalPrepacks - totalErroresQA) / totalPrepacks) * 100,
+    1,
+  );
   const totalRetornados = prepacksRetornadosQA.length;
-  const proveedoresConRechazo = erroresPPPorProveedor.filter(d => d.errores >= 20).length;
-  const motivoPrincipal = motivosRechazoQA.reduce((mx, d) => d.cantidad > mx.cantidad ? d : mx).motivo;
-  const paretoQA = calcularPareto(erroresPPPorProveedor, 'errores');
+  const proveedoresConRechazo = erroresPPPorProveedor.filter(
+    (d) => d.errores >= 20,
+  ).length;
+  const motivoPrincipal = motivosRechazoQA.reduce((mx, d) =>
+    d.cantidad > mx.cantidad ? d : mx,
+  ).motivo;
+  const paretoQA = calcularPareto(erroresPPPorProveedor, "errores");
 
   // ---- REGISTRO ----
-  const prepsCrossDock = distribucionAlmacen.find(d => d.almacen === 'Cross-dock').prepacks;
-  const tiempoPromedioReg = formatNumber(average(tendenciaTiemposRegistro.map(d => d.tiempoPromedio)), 1);
-  const ppEnBacklog = backlogPPs.filter(d => d.minutosEnSistema > 10).length;
+  const prepsCrossDock = distribucionAlmacen.find(
+    (d) => d.almacen === "Cross-dock",
+  ).prepacks;
+  const tiempoPromedioReg = formatNumber(
+    average(tendenciaTiemposRegistro.map((d) => d.tiempoPromedio)),
+    1,
+  );
+  const ppEnBacklog = backlogPPs.filter((d) => d.minutosEnSistema > 10).length;
   const mejorEquipo = rankingEquiposRegistro.reduce((best, e) =>
-    parseInt(e.tiempoPromedio) < parseInt(best.tiempoPromedio) ? e : best
+    parseInt(e.tiempoPromedio) < parseInt(best.tiempoPromedio) ? e : best,
   );
 
   // ---- SORTER ----
-  const totalPaquetesSorter = paquetesPorBahia.reduce((s, d) => s + d.paquetes, 0);
+  const totalPaquetesSorter = paquetesPorBahia.reduce(
+    (s, d) => s + d.paquetes,
+    0,
+  );
   const totalIncorrectos = paquetesIncorrectos.length;
-  const tiempoActualSorter = tiempoSorterTendencia[tiempoSorterTendencia.length - 1].segundos;
-  const bahiaMasCargadaSorter = paquetesPorBahia.reduce((mx, d) => d.paquetes > mx.paquetes ? d : mx);
+  const tiempoActualSorter =
+    tiempoSorterTendencia[tiempoSorterTendencia.length - 1].segundos;
+  const bahiaMasCargadaSorter = paquetesPorBahia.reduce((mx, d) =>
+    d.paquetes > mx.paquetes ? d : mx,
+  );
 
   // ---- BAHÍAS ----
-  const ocupaciones = capacidadBahias.map(d => (d.procesando / d.capacidad) * 100);
+  const ocupaciones = capacidadBahias.map(
+    (d) => (d.procesando / d.capacidad) * 100,
+  );
   const ocupacionPromedio = formatNumber(average(ocupaciones), 1);
-  const bahiasSaturadas = capacidadBahias.filter(d => (d.procesando / d.capacidad) * 100 > 90).length;
+  const bahiasSaturadas = capacidadBahias.filter(
+    (d) => (d.procesando / d.capacidad) * 100 > 90,
+  ).length;
   const capacidadTotal = capacidadBahias.reduce((s, d) => s + d.capacidad, 0);
   const bahiaMasDescargada = capacidadBahias.reduce((mn, d) =>
-    (d.procesando / d.capacidad) < (mn.procesando / mn.capacidad) ? d : mn
+    d.procesando / d.capacidad < mn.procesando / mn.capacidad ? d : mn,
   );
-  const bahiaLineKeys = ['B01', 'B02', 'B03', 'B04', 'B05'];
-  const bahiaLineColors = { B01: '#6E8B6B', B02: '#A48F7A', B03: '#B65E4A', B04: '#C9963B', B05: '#8B7355' };
+  const bahiaLineKeys = ["B01", "B02", "B03", "B04", "B05"];
+  const bahiaLineColors = {
+    B01: "#6E8B6B",
+    B02: "#A48F7A",
+    B03: "#B65E4A",
+    B04: "#C9963B",
+    B05: "#8B7355",
+  };
 
   // ---- AUDITORÍA ----
-  const tiempoPromedioAudit = formatNumber(average(cajasIncorrectas.map(d => d.minutosAuditoria)), 1);
+  const tiempoPromedioAudit = formatNumber(
+    average(cajasIncorrectas.map((d) => d.minutosAuditoria)),
+    1,
+  );
   const cajasConError = cajasIncorrectas.length;
-  const cajasAuditadasHoy = distribucionTiemposAuditoria.reduce((s, d) => s + d.cajas, 0);
-  const tasaExitoAudit = formatNumber(((cajasAuditadasHoy - cajasConError) / cajasAuditadasHoy) * 100, 1);
+  const cajasAuditadasHoy = distribucionTiemposAuditoria.reduce(
+    (s, d) => s + d.cajas,
+    0,
+  );
+  const tasaExitoAudit = formatNumber(
+    ((cajasAuditadasHoy - cajasConError) / cajasAuditadasHoy) * 100,
+    1,
+  );
 
   // ---- ENVÍO ----
-  const ordenesEnviadas = estatusOrdenes.filter(d => d.etapaActual === 'Envío').length;
-  const ordenesEnBacklog = backlogOrdenes.filter(d => d.minutosEnSistema > 30).length;
-  const tiempoPromedioEnvio = formatNumber(average(backlogOrdenes.map(d => d.minutosEnSistema)), 1);
-  const ordenesCriticas = backlogOrdenes.filter(d => d.minutosEnSistema >= 40).length;
+  const ordenesEnviadas = estatusOrdenes.filter(
+    (d) => d.etapaActual === "Envío",
+  ).length;
+  const ordenesEnBacklog = backlogOrdenes.filter(
+    (d) => d.minutosEnSistema > 30,
+  ).length;
+  const tiempoPromedioEnvio = formatNumber(
+    average(backlogOrdenes.map((d) => d.minutosEnSistema)),
+    1,
+  );
+  const ordenesCriticas = backlogOrdenes.filter(
+    (d) => d.minutosEnSistema >= 40,
+  ).length;
 
   return {
     preregistro: {
-      title: 'Preregistro',
-      summary: 'Entrada de órdenes al flujo, validando si cada orden llega completa antes de avanzar.',
-      status: 'warning',
-      primaryKpi: { label: 'Órdenes recibidas', value: totalOrdenesRecibidas, delta: 12, unit: '' },
+      title: "Preregistro",
+      summary:
+        "Entrada de órdenes al flujo, validando si cada orden llega completa antes de avanzar.",
+      status: "warning",
+      primaryKpi: {
+        label: "Órdenes recibidas",
+        value: totalOrdenesRecibidas,
+        delta: 12,
+        unit: "",
+      },
       secondaryKpis: [
-        { label: 'Órdenes incompletas', value: ordenesInc, delta: -5, unit: '' },
-        { label: 'Tasa de órdenes completas', value: tasaCompletas, delta: 1.2, unit: '%' },
-        { label: 'Proveedores con incidencias', value: provConIncidencias, delta: 0, unit: '' },
-        { label: 'Semana', value: 'S6', delta: null, unit: '' },
+        {
+          label: "Órdenes incompletas",
+          value: ordenesInc,
+          delta: -5,
+          unit: "",
+        },
+        {
+          label: "Tasa de órdenes completas",
+          value: tasaCompletas,
+          delta: 1.2,
+          unit: "%",
+        },
+        {
+          label: "Proveedores con incidencias",
+          value: provConIncidencias,
+          delta: 0,
+          unit: "",
+        },
+        { label: 'Semana', value: semanaEnCurso, delta: null, unit: '' },
       ],
       charts: [
-        <ChartCard key="prereg-pareto" title="Órdenes incompletas por proveedor (Pareto)">
+        <ChartCard
+          key="prereg-pareto"
+          title="Órdenes incompletas por proveedor (Pareto)"
+        >
           <table style={tableStyle}>
             <thead>
               <tr>
                 <th style={thStyle}>Proveedor</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Incompletas</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>% Acum</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Incompletas</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>% Acum</th>
               </tr>
             </thead>
             <tbody>
-              {paretoPreregistro.map(item => (
-                <tr key={item.proveedor} style={{ background: STATUS_BG[item.banda] }}>
+              {paretoPreregistro.map((item) => (
+                <tr
+                  key={item.proveedor}
+                  style={{ background: STATUS_BG[item.banda] }}
+                >
                   <td style={tdStyle}>{item.proveedor}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{item.incompletas}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: STATUS_COLOR[item.banda] }}>{item.pctAcum}%</td>
+                  <td
+                    style={{ ...tdStyle, textAlign: "right", fontWeight: 600 }}
+                  >
+                    {item.incompletas}
+                  </td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      textAlign: "right",
+                      fontWeight: 700,
+                      color: STATUS_COLOR[item.banda],
+                    }}
+                  >
+                    {item.pctAcum}%
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </ChartCard>,
-        <ChartCard key="prereg-trend" title="Tendencia semanal de órdenes incompletas">
+        <ChartCard
+          key="prereg-trend"
+          title="Tendencia semanal de órdenes incompletas"
+        >
           <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={tendenciaOrdenesIncompletas} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+            <LineChart
+              data={tendenciaOrdenesIncompletas}
+              margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
+            >
               <CartesianGrid {...gridStyle} />
               <XAxis dataKey="semana" tick={axisStyle} />
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
-              <Line type="monotone" dataKey="total" name="Incompletas" stroke="#B65E4A" strokeWidth={2} dot={false} />
+              <Line
+                type="monotone"
+                dataKey="total"
+                name="Incompletas"
+                stroke="#B65E4A"
+                strokeWidth={2}
+                dot={false}
+              />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>,
@@ -591,24 +831,39 @@ function buildStageData() {
               <tr>
                 <th style={{ ...thStyle, width: 32 }}>#</th>
                 <th style={thStyle}>Proveedor</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Tasa Acept (%)</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Volumen (pp)</th>
-                <th style={{ ...thStyle, textAlign: 'center' }}>Categoría</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>
+                  Tasa Acept (%)
+                </th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Volumen (pp)</th>
+                <th style={{ ...thStyle, textAlign: "center" }}>Categoría</th>
               </tr>
             </thead>
             <tbody>
               {proveedoresEstrella.map((item, i) => (
                 <tr key={item.proveedor}>
-                  <td style={{ ...tdStyle, color: '#6B6B6B' }}>{i + 1}</td>
+                  <td style={{ ...tdStyle, color: "#6B6B6B" }}>{i + 1}</td>
                   <td style={tdStyle}>{item.proveedor}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{item.tasaAceptacion}%</td>
-                  <td style={{ ...tdStyle, textAlign: 'right' }}>{item.volumen.toLocaleString('es-MX')}</td>
-                  <td style={{ ...tdStyle, textAlign: 'center' }}>
-                    <span style={{
-                      background: STATUS_BG[CATEGORIA_COLOR[item.categoria]],
-                      color: STATUS_COLOR[CATEGORIA_COLOR[item.categoria]],
-                      borderRadius: 12, padding: '3px 10px', fontSize: 11, fontWeight: 700,
-                    }}>{item.categoria}</span>
+                  <td
+                    style={{ ...tdStyle, textAlign: "right", fontWeight: 600 }}
+                  >
+                    {item.tasaAceptacion}%
+                  </td>
+                  <td style={{ ...tdStyle, textAlign: "right" }}>
+                    {item.volumen.toLocaleString("es-MX")}
+                  </td>
+                  <td style={{ ...tdStyle, textAlign: "center" }}>
+                    <span
+                      style={{
+                        background: STATUS_BG[CATEGORIA_COLOR[item.categoria]],
+                        color: STATUS_COLOR[CATEGORIA_COLOR[item.categoria]],
+                        borderRadius: 12,
+                        padding: "3px 10px",
+                        fontSize: 11,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {item.categoria}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -619,15 +874,41 @@ function buildStageData() {
     },
 
     qa: {
-      title: 'QA',
-      summary: 'Control del porcentaje de aceptación por proveedor y rechazo operativo antes del registro.',
-      status: 'warning',
-      primaryKpi: { label: 'Tasa de aceptación', value: tasaAceptacionQA, delta: 0.8, unit: '%' },
+      title: "QA",
+      summary:
+        "Control del porcentaje de aceptación por proveedor y rechazo operativo antes del registro.",
+      status: "warning",
+      primaryKpi: {
+        label: "Tasa de aceptación",
+        value: tasaAceptacionQA,
+        delta: 0.8,
+        unit: "%",
+      },
       secondaryKpis: [
-        { label: 'Prepacks retornados', value: totalRetornados, delta: -2, unit: '' },
-        { label: 'Proveedores con mayor rechazo', value: proveedoresConRechazo, delta: 0, unit: '' },
-        { label: 'Motivo principal', value: motivoPrincipal, delta: null, unit: '' },
-        { label: 'Total errores PP', value: totalErroresQA, delta: -8, unit: '' },
+        {
+          label: "Prepacks retornados",
+          value: totalRetornados,
+          delta: -2,
+          unit: "",
+        },
+        {
+          label: "Proveedores con mayor rechazo",
+          value: proveedoresConRechazo,
+          delta: 0,
+          unit: "",
+        },
+        {
+          label: "Motivo principal",
+          value: motivoPrincipal,
+          delta: null,
+          unit: "",
+        },
+        {
+          label: "Total errores PP",
+          value: totalErroresQA,
+          delta: -8,
+          unit: "",
+        },
       ],
       charts: [
         <ChartCard key="qa-pareto" title="Errores por proveedor (Pareto)">
@@ -635,16 +916,32 @@ function buildStageData() {
             <thead>
               <tr>
                 <th style={thStyle}>Proveedor</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Errores</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>% Acum</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Errores</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>% Acum</th>
               </tr>
             </thead>
             <tbody>
-              {paretoQA.map(item => (
-                <tr key={item.proveedor} style={{ background: STATUS_BG[item.banda] }}>
+              {paretoQA.map((item) => (
+                <tr
+                  key={item.proveedor}
+                  style={{ background: STATUS_BG[item.banda] }}
+                >
                   <td style={tdStyle}>{item.proveedor}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{item.errores}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: STATUS_COLOR[item.banda] }}>{item.pctAcum}%</td>
+                  <td
+                    style={{ ...tdStyle, textAlign: "right", fontWeight: 600 }}
+                  >
+                    {item.errores}
+                  </td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      textAlign: "right",
+                      fontWeight: 700,
+                      color: STATUS_COLOR[item.banda],
+                    }}
+                  >
+                    {item.pctAcum}%
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -658,17 +955,21 @@ function buildStageData() {
                 <th style={thStyle}>Proveedor</th>
                 <th style={thStyle}>Motivo</th>
                 <th style={thStyle}>Equipo</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Hora</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Hora</th>
               </tr>
             </thead>
             <tbody>
-              {prepacksRetornadosQA.map(item => (
+              {prepacksRetornadosQA.map((item) => (
                 <tr key={item.pp}>
                   <td style={{ ...tdStyle, fontWeight: 600 }}>{item.pp}</td>
                   <td style={tdStyle}>{item.proveedor}</td>
                   <td style={tdStyle}>{item.motivo}</td>
                   <td style={tdStyle}>{item.equipo}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', color: '#6B6B6B' }}>{item.hora}</td>
+                  <td
+                    style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}
+                  >
+                    {item.hora}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -676,10 +977,19 @@ function buildStageData() {
         </ChartCard>,
         <ChartCard key="qa-prenda" title="Rechazo por tipo de prenda">
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={rechazosPorTipoPrenda} layout="vertical" margin={{ top: 8, right: 16, left: 16, bottom: 4 }}>
+            <BarChart
+              data={rechazosPorTipoPrenda}
+              layout="vertical"
+              margin={{ top: 8, right: 16, left: 16, bottom: 4 }}
+            >
               <CartesianGrid {...gridStyle} horizontal={false} />
               <XAxis type="number" tick={axisStyle} />
-              <YAxis dataKey="tipo" type="category" tick={axisStyle} width={88} />
+              <YAxis
+                dataKey="tipo"
+                type="category"
+                tick={axisStyle}
+                width={88}
+              />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="rechazos" fill="#B65E4A" radius={[0, 3, 3, 0]} />
             </BarChart>
@@ -695,7 +1005,9 @@ function buildStageData() {
                 cx="50%"
                 cy="50%"
                 outerRadius={80}
-                label={({ motivo, percent }) => `${motivo}: ${(percent * 100).toFixed(0)}%`}
+                label={({ motivo, percent }) =>
+                  `${motivo}: ${(percent * 100).toFixed(0)}%`
+                }
                 labelLine={false}
               >
                 {motivosRechazoQA.map((_, i) => (
@@ -710,15 +1022,41 @@ function buildStageData() {
     },
 
     registro: {
-      title: 'Registro',
-      summary: 'Ritmo de registro por equipo, distribución por almacén y avance del flujo hacia el sorter.',
-      status: overallStatus(rankingEquiposRegistro.map(e => e.status)),
-      primaryKpi: { label: 'Prepacks en Cross-dock', value: prepsCrossDock, delta: 14, unit: '' },
+      title: "Registro",
+      summary:
+        "Ritmo de registro por equipo, distribución por almacén y avance del flujo hacia el sorter.",
+      status: overallStatus(rankingEquiposRegistro.map((e) => e.status)),
+      primaryKpi: {
+        label: "Prepacks en Cross-dock",
+        value: prepsCrossDock,
+        delta: 14,
+        unit: "",
+      },
       secondaryKpis: [
-        { label: 'Tiempo promedio registro', value: tiempoPromedioReg, delta: -0.8, unit: 'min' },
-        { label: 'PPs en backlog (>10 min)', value: ppEnBacklog, delta: 1, unit: '' },
-        { label: 'Mejor equipo', value: mejorEquipo.equipo, delta: null, unit: '' },
-        { label: 'Tiempo mejor equipo', value: mejorEquipo.tiempoPromedio, delta: null, unit: '' },
+        {
+          label: "Tiempo promedio registro",
+          value: tiempoPromedioReg,
+          delta: -0.8,
+          unit: "min",
+        },
+        {
+          label: "PPs en backlog (>10 min)",
+          value: ppEnBacklog,
+          delta: 1,
+          unit: "",
+        },
+        {
+          label: "Mejor equipo",
+          value: mejorEquipo.equipo,
+          delta: null,
+          unit: "",
+        },
+        {
+          label: "Tiempo mejor equipo",
+          value: mejorEquipo.tiempoPromedio,
+          delta: null,
+          unit: "",
+        },
       ],
       charts: [
         <ChartCard key="reg-pie" title="Distribución por almacén">
@@ -731,7 +1069,9 @@ function buildStageData() {
                 cx="50%"
                 cy="50%"
                 outerRadius={80}
-                label={({ almacen, percent }) => `${almacen}: ${(percent * 100).toFixed(0)}%`}
+                label={({ almacen, percent }) =>
+                  `${almacen}: ${(percent * 100).toFixed(0)}%`
+                }
                 labelLine={false}
               >
                 {distribucionAlmacen.map((_, i) => (
@@ -748,15 +1088,32 @@ function buildStageData() {
               <tr>
                 <th style={{ ...thStyle, width: 32 }}>#</th>
                 <th style={thStyle}>Equipo</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Tiempo Promedio</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>
+                  Tiempo Promedio
+                </th>
               </tr>
             </thead>
             <tbody>
               {rankingEquiposRegistro.map((item, i) => (
-                <tr key={item.equipo} style={{ background: STATUS_BG[item.status] }}>
-                  <td style={{ ...tdStyle, color: '#6B6B6B' }}>{i + 1}</td>
-                  <td style={{ ...tdStyle, fontWeight: 600, color: STATUS_COLOR[item.status] }}>{item.equipo}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700 }}>{item.tiempoPromedio}</td>
+                <tr
+                  key={item.equipo}
+                  style={{ background: STATUS_BG[item.status] }}
+                >
+                  <td style={{ ...tdStyle, color: "#6B6B6B" }}>{i + 1}</td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      fontWeight: 600,
+                      color: STATUS_COLOR[item.status],
+                    }}
+                  >
+                    {item.equipo}
+                  </td>
+                  <td
+                    style={{ ...tdStyle, textAlign: "right", fontWeight: 700 }}
+                  >
+                    {item.tiempoPromedio}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -769,19 +1126,35 @@ function buildStageData() {
                 <th style={thStyle}>PP</th>
                 <th style={thStyle}>Proveedor</th>
                 <th style={thStyle}>Equipo</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Tiempo (min)</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Tiempo (min)</th>
               </tr>
             </thead>
             <tbody>
-              {backlogPPs.map(item => (
-                <tr key={item.pp} style={{ background: getBacklogRowBg(item.minutosEnSistema, 10, 20) }}>
+              {backlogPPs.map((item) => (
+                <tr
+                  key={item.pp}
+                  style={{
+                    background: getBacklogRowBg(item.minutosEnSistema, 10, 20),
+                  }}
+                >
                   <td style={{ ...tdStyle, fontWeight: 600 }}>{item.pp}</td>
                   <td style={tdStyle}>{item.proveedor}</td>
                   <td style={tdStyle}>{item.equipo}</td>
-                  <td style={{
-                    ...tdStyle, textAlign: 'right', fontWeight: 700,
-                    color: item.minutosEnSistema >= 20 ? STATUS_COLOR.error : item.minutosEnSistema >= 10 ? STATUS_COLOR.warning : '#1F1F1F',
-                  }}>{item.minutosEnSistema}</td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      textAlign: "right",
+                      fontWeight: 700,
+                      color:
+                        item.minutosEnSistema >= 20
+                          ? STATUS_COLOR.error
+                          : item.minutosEnSistema >= 10
+                            ? STATUS_COLOR.warning
+                            : "#1F1F1F",
+                    }}
+                  >
+                    {item.minutosEnSistema}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -789,15 +1162,33 @@ function buildStageData() {
         </ChartCard>,
         <ChartCard key="reg-tendencia" title="Tendencia de tiempos de registro">
           <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={tendenciaTiemposRegistro} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+            <LineChart
+              data={tendenciaTiemposRegistro}
+              margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
+            >
               <CartesianGrid {...gridStyle} />
               <XAxis dataKey="semana" tick={axisStyle} />
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={10} stroke="#BBBBBB" strokeDasharray="4 4"
-                label={{ value: 'Target 10 min', position: 'insideTopRight', fontSize: 11, fill: '#BBBBBB' }}
+              <ReferenceLine
+                y={10}
+                stroke="#BBBBBB"
+                strokeDasharray="4 4"
+                label={{
+                  value: "Target 10 min",
+                  position: "insideTopRight",
+                  fontSize: 11,
+                  fill: "#BBBBBB",
+                }}
               />
-              <Line type="monotone" dataKey="tiempoPromedio" name="Tiempo prom (min)" stroke="#111111" strokeWidth={2} dot={false} />
+              <Line
+                type="monotone"
+                dataKey="tiempoPromedio"
+                name="Tiempo prom (min)"
+                stroke="#111111"
+                strokeWidth={2}
+                dot={false}
+              />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>,
@@ -805,20 +1196,49 @@ function buildStageData() {
     },
 
     sorter: {
-      title: 'Sorter',
-      summary: 'Flujo único de clasificación con foco en distribución por bahía y paquetes incorrectamente sorteados.',
-      status: 'warning',
-      primaryKpi: { label: 'Paquetes clasificados hoy', value: totalPaquetesSorter, delta: 87, unit: '' },
+      title: "Sorter",
+      summary:
+        "Flujo único de clasificación con foco en distribución por bahía y paquetes incorrectamente sorteados.",
+      status: "warning",
+      primaryKpi: {
+        label: "Paquetes clasificados hoy",
+        value: totalPaquetesSorter,
+        delta: 87,
+        unit: "",
+      },
       secondaryKpis: [
-        { label: 'Paquetes en bahía incorrecta', value: totalIncorrectos, delta: -2, unit: '' },
-        { label: 'Tiempo promedio por paquete', value: tiempoActualSorter, delta: -0.3, unit: 'seg' },
-        { label: 'Bahía más cargada', value: bahiaMasCargadaSorter.bahia, delta: null, unit: '' },
-        { label: 'Paquetes bahía top', value: bahiaMasCargadaSorter.paquetes, delta: null, unit: '' },
+        {
+          label: "Paquetes en bahía incorrecta",
+          value: totalIncorrectos,
+          delta: -2,
+          unit: "",
+        },
+        {
+          label: "Tiempo promedio por paquete",
+          value: tiempoActualSorter,
+          delta: -0.3,
+          unit: "seg",
+        },
+        {
+          label: "Bahía más cargada",
+          value: bahiaMasCargadaSorter.bahia,
+          delta: null,
+          unit: "",
+        },
+        {
+          label: "Paquetes bahía top",
+          value: bahiaMasCargadaSorter.paquetes,
+          delta: null,
+          unit: "",
+        },
       ],
       charts: [
         <ChartCard key="sorter-dist" title="Distribución de paquetes en bahías">
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={paquetesPorBahia} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+            <BarChart
+              data={paquetesPorBahia}
+              margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
+            >
               <CartesianGrid {...gridStyle} />
               <XAxis dataKey="bahia" tick={axisStyle} />
               <YAxis tick={axisStyle} />
@@ -827,38 +1247,79 @@ function buildStageData() {
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>,
-        <ChartCard key="sorter-incorrectos" title="Paquetes sorteados incorrectamente">
+        <ChartCard
+          key="sorter-incorrectos"
+          title="Paquetes sorteados incorrectamente"
+        >
           <table style={tableStyle}>
             <thead>
               <tr>
                 <th style={thStyle}>PP</th>
-                <th style={{ ...thStyle, textAlign: 'center' }}>Bahía Actual</th>
-                <th style={{ ...thStyle, textAlign: 'center' }}>Bahía Correcta</th>
+                <th style={{ ...thStyle, textAlign: "center" }}>
+                  Bahía Actual
+                </th>
+                <th style={{ ...thStyle, textAlign: "center" }}>
+                  Bahía Correcta
+                </th>
                 <th style={thStyle}>Equipo</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Hora</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Hora</th>
               </tr>
             </thead>
             <tbody>
-              {paquetesIncorrectos.map(item => (
+              {paquetesIncorrectos.map((item) => (
                 <tr key={item.pp} style={{ background: STATUS_BG.error }}>
                   <td style={{ ...tdStyle, fontWeight: 600 }}>{item.pp}</td>
-                  <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 700, color: STATUS_COLOR.error }}>{item.bahiaActual}</td>
-                  <td style={{ ...tdStyle, textAlign: 'center', color: STATUS_COLOR.success }}>{item.bahiaCorrecta}</td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      textAlign: "center",
+                      fontWeight: 700,
+                      color: STATUS_COLOR.error,
+                    }}
+                  >
+                    {item.bahiaActual}
+                  </td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      textAlign: "center",
+                      color: STATUS_COLOR.success,
+                    }}
+                  >
+                    {item.bahiaCorrecta}
+                  </td>
                   <td style={tdStyle}>{item.equipo}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', color: '#6B6B6B' }}>{item.hora}</td>
+                  <td
+                    style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}
+                  >
+                    {item.hora}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </ChartCard>,
-        <ChartCard key="sorter-tiempo" title="Tiempo promedio del sorter (seg/paquete)">
+        <ChartCard
+          key="sorter-tiempo"
+          title="Tiempo promedio del sorter (seg/paquete)"
+        >
           <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={tiempoSorterTendencia} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+            <LineChart
+              data={tiempoSorterTendencia}
+              margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
+            >
               <CartesianGrid {...gridStyle} />
               <XAxis dataKey="semana" tick={axisStyle} />
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
-              <Line type="monotone" dataKey="segundos" name="Seg/paquete" stroke="#111111" strokeWidth={2} dot={false} />
+              <Line
+                type="monotone"
+                dataKey="segundos"
+                name="Seg/paquete"
+                stroke="#111111"
+                strokeWidth={2}
+                dot={false}
+              />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>,
@@ -866,40 +1327,96 @@ function buildStageData() {
     },
 
     bahias: {
-      title: 'Bahías',
-      summary: 'Ocupación a lo largo de los 10 carriles, tendencia histórica y capacidad disponible.',
+      title: "Bahías",
+      summary:
+        "Ocupación a lo largo de los 10 carriles, tendencia histórica y capacidad disponible.",
       status: bahiasGeneral.status,
-      primaryKpi: { label: 'Ocupación promedio', value: ocupacionPromedio, delta: 2.1, unit: '%' },
+      primaryKpi: {
+        label: "Ocupación promedio",
+        value: ocupacionPromedio,
+        delta: 2.1,
+        unit: "%",
+      },
       secondaryKpis: [
-        { label: 'Bahías saturadas (>90%)', value: bahiasSaturadas, delta: 1, unit: '' },
-        { label: 'Capacidad total', value: capacidadTotal, delta: 0, unit: 'pp' },
-        { label: 'Bahía más descargada', value: bahiaMasDescargada.bahia, delta: null, unit: '' },
-        { label: 'Procesando en descargada', value: bahiaMasDescargada.procesando, delta: null, unit: '' },
+        {
+          label: "Bahías saturadas (>90%)",
+          value: bahiasSaturadas,
+          delta: 1,
+          unit: "",
+        },
+        {
+          label: "Capacidad total",
+          value: capacidadTotal,
+          delta: 0,
+          unit: "pp",
+        },
+        {
+          label: "Bahía más descargada",
+          value: bahiaMasDescargada.bahia,
+          delta: null,
+          unit: "",
+        },
+        {
+          label: "Procesando en descargada",
+          value: bahiaMasDescargada.procesando,
+          delta: null,
+          unit: "",
+        },
       ],
       charts: [
         <BayGrid key="bay-grid" bahias={bahiasGeneral.bahias} />,
-        <ChartCard key="bay-tendencia" title="Tendencia de ocupación por bahía (B01–B05)">
+        <ChartCard
+          key="bay-tendencia"
+          title="Tendencia de ocupación por bahía (B01–B05)"
+        >
           <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={tendenciaOcupacionBahias} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+            <LineChart
+              data={tendenciaOcupacionBahias}
+              margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
+            >
               <CartesianGrid {...gridStyle} />
               <XAxis dataKey="semana" tick={axisStyle} />
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
-              {bahiaLineKeys.map(key => (
-                <Line key={key} type="monotone" dataKey={key} name={key} stroke={bahiaLineColors[key]} strokeWidth={2} dot={false} />
+              {bahiaLineKeys.map((key) => (
+                <Line
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  name={key}
+                  stroke={bahiaLineColors[key]}
+                  strokeWidth={2}
+                  dot={false}
+                />
               ))}
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>,
-        <ChartCard key="bay-capacidad" title="Capacidad disponible vs procesando por bahía">
+        <ChartCard
+          key="bay-capacidad"
+          title="Capacidad disponible vs procesando por bahía"
+        >
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={capacidadBahias} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+            <BarChart
+              data={capacidadBahias}
+              margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
+            >
               <CartesianGrid {...gridStyle} />
               <XAxis dataKey="bahia" tick={axisStyle} />
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="capacidad" name="Capacidad" fill="#1F1F1F" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="procesando" name="Procesando" fill="#A48F7A" radius={[3, 3, 0, 0]} />
+              <Bar
+                dataKey="capacidad"
+                name="Capacidad"
+                fill="#1F1F1F"
+                radius={[3, 3, 0, 0]}
+              />
+              <Bar
+                dataKey="procesando"
+                name="Procesando"
+                fill="#A48F7A"
+                radius={[3, 3, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>,
@@ -907,15 +1424,36 @@ function buildStageData() {
     },
 
     auditoria: {
-      title: 'Auditoría',
-      summary: 'Validación final con detalle de cajas incorrectas y distribución de tiempos de auditoría.',
-      status: 'warning',
-      primaryKpi: { label: 'Cajas auditadas hoy', value: cajasAuditadasHoy, delta: 8, unit: '' },
+      title: "Auditoría",
+      summary:
+        "Validación final con detalle de cajas incorrectas y distribución de tiempos de auditoría.",
+      status: "warning",
+      primaryKpi: {
+        label: "Cajas auditadas hoy",
+        value: cajasAuditadasHoy,
+        delta: 8,
+        unit: "",
+      },
       secondaryKpis: [
-        { label: 'Tiempo promedio auditoría', value: tiempoPromedioAudit, delta: -0.4, unit: 'min' },
-        { label: 'Cajas con error', value: cajasConError, delta: -1, unit: '' },
-        { label: 'Tasa de éxito', value: tasaExitoAudit, delta: 0.5, unit: '%' },
-        { label: 'Auditoría lenta (>8 min)', value: cajasIncorrectas.filter(d => d.minutosAuditoria > 8).length, delta: 0, unit: '' },
+        {
+          label: "Tiempo promedio auditoría",
+          value: tiempoPromedioAudit,
+          delta: -0.4,
+          unit: "min",
+        },
+        { label: "Cajas con error", value: cajasConError, delta: -1, unit: "" },
+        {
+          label: "Tasa de éxito",
+          value: tasaExitoAudit,
+          delta: 0.5,
+          unit: "%",
+        },
+        {
+          label: "Auditoría lenta (>8 min)",
+          value: cajasIncorrectas.filter((d) => d.minutosAuditoria > 8).length,
+          delta: 0,
+          unit: "",
+        },
       ],
       charts: [
         <ChartCard key="audit-cajas" title="Detalle de cajas incorrectas">
@@ -925,36 +1463,59 @@ function buildStageData() {
                 <th style={thStyle}>Caja</th>
                 <th style={thStyle}>Tipo</th>
                 <th style={thStyle}>Equipo</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Tiempo (min)</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Hora</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Tiempo (min)</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Hora</th>
               </tr>
             </thead>
             <tbody>
-              {cajasIncorrectas.map(item => (
+              {cajasIncorrectas.map((item) => (
                 <tr key={item.caja}>
                   <td style={{ ...tdStyle, fontWeight: 600 }}>{item.caja}</td>
                   <td style={tdStyle}>{item.tipo}</td>
                   <td style={tdStyle}>{item.equipo}</td>
-                  <td style={{
-                    ...tdStyle, textAlign: 'right', fontWeight: 700,
-                    color: item.minutosAuditoria > 8 ? STATUS_COLOR.error : '#1F1F1F',
-                  }}>{item.minutosAuditoria}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', color: '#6B6B6B' }}>{item.hora}</td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      textAlign: "right",
+                      fontWeight: 700,
+                      color:
+                        item.minutosAuditoria > 8
+                          ? STATUS_COLOR.error
+                          : "#1F1F1F",
+                    }}
+                  >
+                    {item.minutosAuditoria}
+                  </td>
+                  <td
+                    style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}
+                  >
+                    {item.hora}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </ChartCard>,
-        <ChartCard key="audit-dist" title="¿Por qué tardan más algunos casos?" footer="Distribución de tiempos de auditoría">
+        <ChartCard
+          key="audit-dist"
+          title="¿Por qué tardan más algunos casos?"
+          footer="Distribución de tiempos de auditoría"
+        >
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={distribucionTiemposAuditoria} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+            <BarChart
+              data={distribucionTiemposAuditoria}
+              margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
+            >
               <CartesianGrid {...gridStyle} />
               <XAxis dataKey="rango" tick={axisStyle} />
               <YAxis tick={axisStyle} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="cajas" name="Cajas" radius={[3, 3, 0, 0]}>
                 {distribucionTiemposAuditoria.map((item, i) => (
-                  <Cell key={i} fill={item.rango === '> 12 min' ? '#B65E4A' : '#A48F7A'} />
+                  <Cell
+                    key={i}
+                    fill={item.rango === "> 12 min" ? "#B65E4A" : "#A48F7A"}
+                  />
                 ))}
               </Bar>
             </BarChart>
@@ -964,15 +1525,46 @@ function buildStageData() {
     },
 
     envio: {
-      title: 'Envío',
-      summary: 'Cierre del flujo con backlog de órdenes pendientes y estatus general por proveedor.',
-      status: ordenesCriticas > 0 ? 'error' : ordenesEnBacklog > 0 ? 'warning' : 'success',
-      primaryKpi: { label: 'Órdenes enviadas hoy', value: ordenesEnviadas, delta: 1, unit: '' },
+      title: "Envío",
+      summary:
+        "Cierre del flujo con backlog de órdenes pendientes y estatus general por proveedor.",
+      status:
+        ordenesCriticas > 0
+          ? "error"
+          : ordenesEnBacklog > 0
+            ? "warning"
+            : "success",
+      primaryKpi: {
+        label: "Órdenes enviadas hoy",
+        value: ordenesEnviadas,
+        delta: 1,
+        unit: "",
+      },
       secondaryKpis: [
-        { label: 'Órdenes en backlog (>30 min)', value: ordenesEnBacklog, delta: 0, unit: '' },
-        { label: 'Tiempo promedio total', value: tiempoPromedioEnvio, delta: -2.1, unit: 'min' },
-        { label: 'Alertas críticas (≥40 min)', value: ordenesCriticas, delta: 0, unit: '' },
-        { label: 'Prepacks en tránsito', value: backlogOrdenes.reduce((s, d) => s + d.prepacks, 0), delta: null, unit: '' },
+        {
+          label: "Órdenes en backlog (>30 min)",
+          value: ordenesEnBacklog,
+          delta: 0,
+          unit: "",
+        },
+        {
+          label: "Tiempo promedio total",
+          value: tiempoPromedioEnvio,
+          delta: -2.1,
+          unit: "min",
+        },
+        {
+          label: "Alertas críticas (≥40 min)",
+          value: ordenesCriticas,
+          delta: 0,
+          unit: "",
+        },
+        {
+          label: "Prepacks en tránsito",
+          value: backlogOrdenes.reduce((s, d) => s + d.prepacks, 0),
+          delta: null,
+          unit: "",
+        },
       ],
       charts: [
         <ChartCard key="envio-backlog" title="Backlog de órdenes">
@@ -981,20 +1573,38 @@ function buildStageData() {
               <tr>
                 <th style={thStyle}>Orden</th>
                 <th style={thStyle}>Proveedor</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Tiempo (min)</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Prepacks</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Tiempo (min)</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Prepacks</th>
               </tr>
             </thead>
             <tbody>
-              {backlogOrdenes.map(item => (
-                <tr key={item.orden} style={{ background: getBacklogRowBg(item.minutosEnSistema, 30, 40) }}>
+              {backlogOrdenes.map((item) => (
+                <tr
+                  key={item.orden}
+                  style={{
+                    background: getBacklogRowBg(item.minutosEnSistema, 30, 40),
+                  }}
+                >
                   <td style={{ ...tdStyle, fontWeight: 600 }}>{item.orden}</td>
                   <td style={tdStyle}>{item.proveedor}</td>
-                  <td style={{
-                    ...tdStyle, textAlign: 'right', fontWeight: 700,
-                    color: item.minutosEnSistema >= 40 ? STATUS_COLOR.error : item.minutosEnSistema >= 30 ? STATUS_COLOR.warning : '#1F1F1F',
-                  }}>{item.minutosEnSistema}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right' }}>{item.prepacks}</td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      textAlign: "right",
+                      fontWeight: 700,
+                      color:
+                        item.minutosEnSistema >= 40
+                          ? STATUS_COLOR.error
+                          : item.minutosEnSistema >= 30
+                            ? STATUS_COLOR.warning
+                            : "#1F1F1F",
+                    }}
+                  >
+                    {item.minutosEnSistema}
+                  </td>
+                  <td style={{ ...tdStyle, textAlign: "right" }}>
+                    {item.prepacks}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1007,23 +1617,35 @@ function buildStageData() {
                 <th style={thStyle}>Orden</th>
                 <th style={thStyle}>Proveedor</th>
                 <th style={thStyle}>Etapa Actual</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Prepacks</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Hora Ingreso</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Prepacks</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Hora Ingreso</th>
               </tr>
             </thead>
             <tbody>
-              {estatusOrdenes.map(item => (
+              {estatusOrdenes.map((item) => (
                 <tr key={item.orden}>
                   <td style={{ ...tdStyle, fontWeight: 600 }}>{item.orden}</td>
                   <td style={tdStyle}>{item.proveedor}</td>
                   <td style={tdStyle}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
                       <StatusDot status={item.status} />
                       {item.etapaActual}
                     </span>
                   </td>
-                  <td style={{ ...tdStyle, textAlign: 'right' }}>{item.prepacks}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', color: '#6B6B6B' }}>{item.horaIngreso}</td>
+                  <td style={{ ...tdStyle, textAlign: "right" }}>
+                    {item.prepacks}
+                  </td>
+                  <td
+                    style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}
+                  >
+                    {item.horaIngreso}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1035,30 +1657,41 @@ function buildStageData() {
 }
 
 export default function Dashboard() {
+  const { kpis: preregistroKPIs, loading: loadingPreregistro } =
+    usePreregistroKPIs();
   const [activeStage, setActiveStage] = useState(getCurrentStageId);
-  const stageData = useMemo(() => buildStageData(), []);
+  const stageData = useMemo(
+  () => buildStageData(preregistroKPIs),
+  [preregistroKPIs]
+);
   const currentStage = stageData[activeStage] || stageData.preregistro;
 
   useEffect(() => {
     const syncStage = () => setActiveStage(getCurrentStageId());
-    window.addEventListener('popstate', syncStage);
+    window.addEventListener("popstate", syncStage);
 
-    if (!stageRoutes.some(stage => window.location.pathname === stage.path)) {
-      window.history.replaceState({}, '', '/dashboard/preregistro');
+    if (!stageRoutes.some((stage) => window.location.pathname === stage.path)) {
+      window.history.replaceState({}, "", "/dashboard/preregistro");
       syncStage();
     }
 
-    return () => window.removeEventListener('popstate', syncStage);
+    return () => window.removeEventListener("popstate", syncStage);
   }, []);
 
-  const onStageChange = stage => {
+  const onStageChange = (stage) => {
     setActiveStage(stage.id);
     goToPath(stage.path);
   };
 
   return (
-    <div style={{ padding: 24, background: '#F8F6F3', minHeight: 'calc(100vh - 56px)' }}>
-      <div style={{ display: 'grid', gap: 18, marginBottom: 24 }}>
+    <div
+      style={{
+        padding: 24,
+        background: "#F8F6F3",
+        minHeight: "calc(100vh - 56px)",
+      }}
+    >
+      <div style={{ display: "grid", gap: 18, marginBottom: 24 }}>
         <StageTabs activeStage={activeStage} onStageChange={onStageChange} />
         <SectionHeader
           title={currentStage.title}
@@ -1067,9 +1700,18 @@ export default function Dashboard() {
         />
       </div>
 
-      <KpiStrip primaryKpi={currentStage.primaryKpi} secondaryKpis={currentStage.secondaryKpis} />
+      <KpiStrip
+        primaryKpi={currentStage.primaryKpi}
+        secondaryKpis={currentStage.secondaryKpis}
+      />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 18 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, 1fr)",
+          gap: 18,
+        }}
+      >
         {currentStage.charts}
         <TeamPerformance stageId={activeStage} />
       </div>
