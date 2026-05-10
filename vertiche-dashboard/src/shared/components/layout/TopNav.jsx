@@ -214,7 +214,7 @@ export default function TopNav({
                       appearance: 'none',
                     }}
                   >
-                    <option value="All">Todas las zonas</option>
+                    <option value="all">Todas las zonas</option>
                     <option value="Norte">Zona Norte</option>
                     <option value="Sur">Zona Sur</option>
                   </select>
