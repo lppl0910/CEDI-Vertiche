@@ -1,18 +1,14 @@
-import { useState, useEffect } from 'react';
-import { FESTIVOS_DATA } from '../../data/ventasData';
-import { fetchFestivos } from '../../data/ventasApi';
 import { Card } from '../Card';
 import { ChartTitle } from '../ChartTitle';
 
-export function FestivosVsNormalesGrid({ filters }) {
-  const [data, setData] = useState(FESTIVOS_DATA);
-
-  useEffect(() => {
-    fetchFestivos(filters.period, filters.zona)
-      .then(setData)
-      .catch(err => console.error('fetchFestivos:', err));
-  }, [filters]);
-
+/**
+ * FestivosVsNormalesGrid
+ * Grid de 4 KPIs: ingreso festivo, ingreso normal, ratio y ticket promedio.
+ * Filtros que aplican: period, zona, temporada (el fetch lo maneja SectionTendencias).
+ *
+ * @param {{ label: string, val: string, color: string, sub: string }[]} data
+ */
+export function FestivosVsNormalesGrid({ data = [] }) {
   return (
     <Card>
       <ChartTitle

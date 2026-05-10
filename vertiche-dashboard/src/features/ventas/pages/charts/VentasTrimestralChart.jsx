@@ -1,22 +1,18 @@
-import { useState, useEffect } from 'react';
-import { QUARTERLY_REVENUE } from '../../data/ventasData';
-import { fetchTrimestral } from '../../data/ventasApi';
+import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, Cell } from 'recharts';
 import { Card } from '../Card';
 import { ChartTitle } from '../ChartTitle';
-import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, Cell } from 'recharts';
 import { grid, ax, C } from '../CONSTANTES';
 
 const QUARTER_COLORS = [C.black, '#8E9AAF', C.beige, '#080808'];
 
-export function VentasTrimestralChart({ filters }) {
-  const [data, setData] = useState(QUARTERLY_REVENUE);
-
-  useEffect(() => {
-    fetchTrimestral(filters.period, filters.zona)
-      .then(setData)
-      .catch(err => console.error('fetchTrimestral:', err));
-  }, [filters]);
-
+/**
+ * VentasTrimestralChart
+ * Ingresos totales agrupados por temporada de producto.
+ * Filtros que aplican: zona (el fetch lo maneja SectionTendencias).
+ *
+ * @param {{ season: string, value: number }[]} data
+ */
+export function VentasTrimestralChart({ data = [] }) {
   return (
     <Card>
       <ChartTitle title="Ventas por Trimestre" sub="Ingreso total" />
@@ -24,8 +20,11 @@ export function VentasTrimestralChart({ filters }) {
         <BarChart data={data} margin={{ top: 2, right: 8, bottom: 0, left: -10 }}>
           <CartesianGrid strokeDasharray="3 3" {...grid} />
           <XAxis dataKey="season" tick={ax} axisLine={false} tickLine={false} />
-          <YAxis tick={ax} axisLine={false} tickLine={false} tickFormatter={v => `$${(v/1000).toFixed(1)}M`}/>
-          <Tooltip formatter={v => [`$${(v/1000).toFixed(1)}M`, 'Ingresos']} />
+          <YAxis
+            tick={ax} axisLine={false} tickLine={false}
+            tickFormatter={v => `$${(v / 1000).toFixed(1)}M`}
+          />
+          <Tooltip formatter={v => [`$${(v / 1000).toFixed(1)}M`, 'Ingresos']} />
           <Bar dataKey="value" radius={[4, 4, 0, 0]}>
             {data.map((_, i) => (
               <Cell key={i} fill={QUARTER_COLORS[i % QUARTER_COLORS.length]} />
