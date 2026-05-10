@@ -400,9 +400,7 @@ export default class VentasController extends AbstractController {
           {
             model: db.Dim_Tienda,
             attributes: [],
-            where: literal(
-              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
-            ),
+            where: tiendaWhere
           },
         ],
         group: ["Dim_Producto.temporada"],
@@ -579,9 +577,7 @@ export default class VentasController extends AbstractController {
           {
             model: db.Dim_Tienda,
             attributes: [],
-            where: literal(
-              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
-            ),
+            where: tiendaWhere
           },
         ],
         group: ["Dim_Producto.temporada", "Dim_Producto.categoria"],
