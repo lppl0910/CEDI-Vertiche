@@ -13,10 +13,10 @@ import { grid, ax, C } from '../CONSTANTES';
 export function IngresosMensualesChart({ yoyData }) {
   return (
     <Card>
-      <ChartTitle title="Ingresos Mensuales — Comparación Anual" sub="2024 vs 2023" />
+      <ChartTitle title="Ingresos Mensuales — Comparación Anual" sub="2025 vs 2024" />
       <div className="section-tendencias__legend">
-        <LegendDot color={C.black} />2024 &nbsp;
-        <LegendDot color={C.taupe} />2023
+        <LegendDot color={C.black} />2025 &nbsp;
+        <LegendDot color={C.taupe} />2024
       </div>
       <ResponsiveContainer width="100%" height={130}>
         <LineChart data={yoyData} margin={{ top: 2, right: 8, bottom: 0, left: -10 }}>
@@ -25,12 +25,12 @@ export function IngresosMensualesChart({ yoyData }) {
           <YAxis tick={ax} axisLine={false} tickLine={false} tickFormatter={v => `$${v}K`} />
           <Tooltip formatter={(v, n) => [`$${v}K`, n]} />
           <Line
-            type="monotone" dataKey="2024"
+            type="monotone" dataKey="2025"
             stroke={C.black} strokeWidth={2}
             dot={{ r: 2.5, fill: C.black }}
           />
           <Line
-            type="monotone" dataKey="2023"
+            type="monotone" dataKey="2024"
             stroke={C.taupe} strokeWidth={1.5} strokeDasharray="4 3"
             dot={{ r: 2.5, fill: C.taupe }}
           />

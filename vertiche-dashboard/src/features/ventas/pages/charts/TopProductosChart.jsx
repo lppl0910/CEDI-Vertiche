@@ -6,12 +6,19 @@ import { grid, ax, C } from '../CONSTANTES';
 /**
  * TopProductosChart
  * Gráfica de barras horizontal con los 10 productos de mayor ingreso.
- * Los primeros 3 se resaltan en negro, los siguientes 3 en taupe,
- * el resto en beige.
  *
  * @param {{ name: string, rev: number, units: number }[]} products
  */
 export function TopProductosChart({ products }) {
+  if (!products || products.length === 0) {
+    return (
+      <Card>
+        <ChartTitle title="Top 10 Productos por Ingreso" />
+        <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: 12 }}>Cargando...</div>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <ChartTitle title="Top 10 Productos por Ingreso" />
@@ -33,8 +40,8 @@ export function TopProductosChart({ products }) {
             tickFormatter={v => v.length > 18 ? v.slice(0, 18) + '…' : v}
           />
           <Tooltip
-            formatter={(v, _, p) => [
-              `$${v}K · ${products[p.index]?.units?.toLocaleString()} uds`,
+           formatter={(v, _, p) => [
+              `$${v}K · ${p.payload?.units?.toLocaleString() ?? 0} uds`,
               'Ingreso',
             ]}
           />

@@ -1,4 +1,5 @@
-import { TOP_PRODS, SEASON_DATA, TALLAS } from '../data/ventasData';
+import { useState, useEffect } from 'react';
+import { fetchTallas, fetchTemporadasCategoria, fetchTopProductos } from '../data/ventasApi';
 import { SectionSep } from './SectionSep';
 import { TwoCol } from './TwoCol';
 import { TopProductosChart } from './charts/TopProductosChart';
@@ -7,7 +8,6 @@ import { VentasTemporadaChart } from './charts/VentasTemporadaChart';
 import { UnidadesTallaChart } from './charts/UnidadesTallaChart';
 import './styles/SectionProductos.css';
 
-/** Calcula los datos del análisis de Pareto a partir de TOP_PRODS. */
 function buildParetoData(products) {
   const sorted = [...products].sort((a, b) => b.rev - a.rev);
   const total  = sorted.reduce((sum, p) => sum + p.rev, 0);
@@ -22,33 +22,76 @@ function buildParetoData(products) {
   });
 }
 
-/** Pivotea SEASON_DATA al formato { season, [cat]: value } que usa recharts. */
-function buildStackedData() {
-  const labels = ['Primavera', 'Verano', 'Otoño', 'Invierno'];
-  return labels.map((season, si) => {
-    const row = { season };
-    SEASON_DATA.cats.forEach((cat, ci) => { row[cat] = SEASON_DATA.data[si][ci]; });
-    return row;
-  });
-}
+export function SectionProductos({ filters }) {
+  const { period, zona, temporada } = filters;
 
-export function SectionProductos() {
-  const paretoData   = buildParetoData(TOP_PRODS);
-  const stackedData  = buildStackedData();
-  const totalTallas  = TALLAS.reduce((sum, t) => sum + t.value, 0);
+  const [topProductos, setTopProductos]   = useState([]);
+  const [tallas, setTallas]               = useState([]);
+  const [seasonData, setSeasonData]       = useState({ cats: [], colors: [], stackedData: [] });
+  const [loadingTop, setLoadingTop]       = useState(true);
+  const [loadingTallas, setLoadingTallas] = useState(true);
+  const [loadingSeason, setLoadingSeason] = useState(true);
+
+  // Top Productos + Pareto — los 3 filtros
+  useEffect(() => {
+    fetchTopProductos({ period, zona, temporada })
+      .then(data => {
+        setTopProductos(data);
+        setLoadingTop(false);
+      })
+      .catch(err => {
+        console.error('fetchTopProductos:', err);
+        setLoadingTop(false);
+      });
+  }, [period, zona, temporada]);
+
+  // Temporada × Categoría — solo zona
+  useEffect(() => {
+    fetchTemporadasCategoria({ zona })
+      .then(data => {
+        setSeasonData(data);
+        setLoadingSeason(false);
+      })
+      .catch(err => {
+        console.error('fetchTemporadasCategoria:', err);
+        setLoadingSeason(false);
+      });
+  }, [zona]);
+
+  // Tallas — los 3 filtros
+  useEffect(() => {
+    fetchTallas({ period, zona, temporada })
+      .then(data => {
+        setTallas(data);
+        setLoadingTallas(false);
+      })
+      .catch(err => {
+        console.error('fetchTallas:', err);
+        setLoadingTallas(false);
+      });
+  }, [period, zona, temporada]);
+
+  const loading = <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Cargando...</div>;
 
   return (
     <div className="section-productos">
       <SectionSep label="Análisis de Producto" />
 
       <TwoCol>
-        <TopProductosChart products={TOP_PRODS} />
-        <ParetoSKUChart paretoData={paretoData} />
+        {loadingTop ? loading : <TopProductosChart products={topProductos} />}
+        {loadingTop ? loading : <ParetoSKUChart paretoData={buildParetoData(topProductos)} />}
       </TwoCol>
 
       <TwoCol>
-        <VentasTemporadaChart stackedData={stackedData} />
-        <UnidadesTallaChart tallas={TALLAS} totalUnidades={totalTallas} />
+        {loadingSeason
+          ? loading
+          : <VentasTemporadaChart
+              stackedData={seasonData.stackedData}
+              cats={seasonData.cats}
+              colors={seasonData.colors}
+            />
+        }
+        {loadingTallas ? loading : <UnidadesTallaChart tallas={tallas} />}
       </TwoCol>
     </div>
   );
