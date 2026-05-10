@@ -144,6 +144,11 @@ export default class VentasController extends AbstractController {
   // ── GET /ventas/yoy ──────────────────────────────────────────────────
   private async getYoY(req: Request, res: Response) {
     try {
+      const period = (req.query.period as string) || "30d";
+      const dias = diasMap[period] ?? 30;
+
+      const region = (req.query.region as string) || "all";
+
       const anioActual = 2025;
       const anioAnterior = anioActual - 1;
       const zona = req.query.zona as string;
@@ -164,7 +169,16 @@ export default class VentasController extends AbstractController {
             {
               model: db.Dim_Tiempo,
               attributes: [],
-              where: { anio },
+              where: literal(
+                `Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY) AND ${anio}`,
+              ),
+            },
+            {
+              model: db.Dim_Tienda,
+              attributes: [],
+              where: literal(
+                `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
+              ),
             },
             {
               model: db.Dim_Tienda,
@@ -211,9 +225,14 @@ export default class VentasController extends AbstractController {
   // ── GET /ventas/performance ──────────────────────────────────────────
   private async getPerformance(req: Request, res: Response) {
     try {
+      console.log(req.query);
+
       const period = (req.query.period as string) || "30d";
       const dias = diasMap[period] ?? 30;
       const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
+
+      const region = (req.query.region as string) || "all";
+      console.log("region: ", region);
 
       let groupBy: string;
       if (period === "7d") groupBy = "dia_semana";
@@ -250,6 +269,13 @@ export default class VentasController extends AbstractController {
             attributes: [],
             where: productoWhere,
             required: !!productoWhere,
+          },
+          {
+            model: db.Dim_Tienda,
+            attributes: [],
+            where: literal(
+              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
+            ),
           },
         ],
         group: [`Dim_Tiempo.${groupBy}`],
@@ -289,6 +315,13 @@ export default class VentasController extends AbstractController {
             attributes: [],
             where: productoWhere,
             required: !!productoWhere,
+          },
+          {
+            model: db.Dim_Tienda,
+            attributes: [],
+            where: literal(
+              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
+            ),
           },
         ],
         raw: true,
@@ -363,6 +396,13 @@ export default class VentasController extends AbstractController {
             attributes: [],
             where: tiendaWhere,
             required: !!tiendaWhere,
+          },
+          {
+            model: db.Dim_Tienda,
+            attributes: [],
+            where: literal(
+              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
+            ),
           },
         ],
         group: ["Dim_Producto.temporada"],
@@ -468,6 +508,8 @@ export default class VentasController extends AbstractController {
       const dias = diasMap[period] ?? 30;
       const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
 
+      const region = (req.query.region as string) || "all";
+
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
           [col("Dim_Producto.talla"), "name"],
@@ -534,6 +576,13 @@ export default class VentasController extends AbstractController {
             where: tiendaWhere,
             required: !!tiendaWhere,
           },
+          {
+            model: db.Dim_Tienda,
+            attributes: [],
+            where: literal(
+              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
+            ),
+          },
         ],
         group: ["Dim_Producto.temporada", "Dim_Producto.categoria"],
         raw: true,
@@ -573,6 +622,9 @@ export default class VentasController extends AbstractController {
     try {
       const period = (req.query.period as string) || "30d";
       const dias = diasMap[period] ?? 30;
+
+      const region = (req.query.region as string) || "all";
+
       const limit = parseInt(req.query.limit as string) || 10;
       const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
 
