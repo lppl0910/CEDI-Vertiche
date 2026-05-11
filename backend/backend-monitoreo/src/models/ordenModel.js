@@ -5,6 +5,7 @@ const ordenSchema = new mongoose.Schema({
   id_tienda: mongoose.Schema.Types.ObjectId,
   id_proveedor: String,
   nombre_proveedor: String,
+  equipo: String,
   fecha_creacion: Date,
   estado: {
     type: String,

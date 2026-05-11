@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -18,7 +18,6 @@ import {
   bahiasGeneral,
   equipos,
   ordenesIncompletasPorProveedor,
-  proveedoresEstrella,
   erroresPPPorProveedor,
   prepacksRetornadosQA,
   rechazosPorTipoPrenda,
@@ -42,6 +41,8 @@ import KPICard from "../../../shared/components/ui/KPICard";
 import { usePreregistroKPIs } from "../hooks/usePreRegistroKPI";
 import { useOrdenesIncompletas } from "../hooks/useOrdenesIncompletas";
 import { useTendenciaSemanal } from "../hooks/useTendenciaSemanal";
+import { useProveedoresEstrella } from "../hooks/useProveedoresEstrella";
+import { useRendimientoEquipos } from "../hooks/useRendimientoEquipos";
 
 const STATUS_COLOR = {
   success: "#6E8B6B",
@@ -707,6 +708,488 @@ function TendenciaSemanalChart() {
   );
 }
 
+const ESTRELLA_COLOR = {
+  estrella: "#C9A227",
+  bueno: "#6E8B6B",
+  riesgo: "#E07B39",
+};
+
+const ESTRELLA_BG = {
+  estrella: "#FBF6E6",
+  bueno: "#EEF2ED",
+  riesgo: "#FEF3EC",
+};
+
+const ESTRELLA_LABEL = {
+  estrella: "Estrella",
+  bueno: "Bueno",
+  riesgo: "Riesgo",
+};
+
+function ProveedoresEstrellaTable() {
+  const { data, loading } = useProveedoresEstrella();
+  const [expanded, setExpanded] = useState(null);
+  const [historial, setHistorial] = useState([]);
+  const [loadingHistorial, setLoadingHistorial] = useState(false);
+
+  const tableStyle = {
+    width: "100%",
+    borderCollapse: "collapse",
+    fontSize: 13,
+    fontFamily: "Inter",
+  };
+  const thStyle = {
+    textAlign: "left",
+    padding: "8px 10px",
+    fontSize: 11,
+    fontWeight: 600,
+    color: "#6B6B6B",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    borderBottom: "1px solid #E7E2DC",
+    background: "#FAFAF8",
+  };
+  const tdStyle = {
+    padding: "9px 10px",
+    borderBottom: "1px solid #F0EDE8",
+    color: "#1F1F1F",
+    verticalAlign: "middle",
+  };
+
+  const handleRowClick = async (item) => {
+    if (expanded === item.id_proveedor) {
+      setExpanded(null);
+      return;
+    }
+    setExpanded(item.id_proveedor);
+    setHistorial([]);
+    setLoadingHistorial(true);
+    try {
+      const res = await fetch(
+        `http://localhost:3001/api/preregistro/proveedores/${encodeURIComponent(item.id_proveedor)}/historial`,
+      );
+      if (!res.ok) throw new Error("Error en el servidor");
+      setHistorial(await res.json());
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingHistorial(false);
+    }
+  };
+
+  return (
+    <ChartCard title="Ranking de proveedores">
+      {loading ? (
+        <div
+          style={{
+            height: 200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#6B6B6B",
+            fontSize: 13,
+          }}
+        >
+          Cargando...
+        </div>
+      ) : (
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th style={{ ...thStyle, width: 32 }}>#</th>
+              <th style={thStyle}>Proveedor</th>
+              <th style={{ ...thStyle, textAlign: "right" }}>Tasa Acept (%)</th>
+              <th style={{ ...thStyle, textAlign: "right" }}>Volumen (pp)</th>
+              <th style={{ ...thStyle, textAlign: "center" }}>Categoría</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((item, i) => (
+              <React.Fragment key={item.id_proveedor}>
+                <tr
+                  onClick={() => handleRowClick(item)}
+                  style={{
+                    background:
+                      expanded === item.id_proveedor
+                        ? ESTRELLA_BG[item.categoria]
+                        : "transparent",
+                    cursor: "pointer",
+                  }}
+                >
+                  <td style={{ ...tdStyle, color: "#6B6B6B" }}>{i + 1}</td>
+                  <td style={{ ...tdStyle, fontWeight: 600 }}>
+                    {item.proveedor}
+                  </td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      textAlign: "right",
+                      fontWeight: 700,
+                      color: ESTRELLA_COLOR[item.categoria],
+                    }}
+                  >
+                    {item.tasa_aceptacion}%
+                  </td>
+                  <td style={{ ...tdStyle, textAlign: "right" }}>
+                    {item.volumen.toLocaleString("es-MX")}
+                  </td>
+                  <td style={{ ...tdStyle, textAlign: "center" }}>
+                    <span
+                      style={{
+                        background: ESTRELLA_BG[item.categoria],
+                        color: ESTRELLA_COLOR[item.categoria],
+                        borderRadius: 12,
+                        padding: "3px 10px",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        border: `1px solid ${ESTRELLA_COLOR[item.categoria]}30`,
+                      }}
+                    >
+                      {ESTRELLA_LABEL[item.categoria]}
+                    </span>
+                  </td>
+                </tr>
+                {expanded === item.id_proveedor && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      style={{
+                        padding: "16px 12px",
+                        background: ESTRELLA_BG[item.categoria],
+                        borderBottom: "1px solid #E7E2DC",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: "#1F1F1F",
+                          marginBottom: 10,
+                        }}
+                      >
+                        Historial mensual — {item.proveedor}
+                      </div>
+                      {loadingHistorial ? (
+                        <div
+                          style={{
+                            height: 140,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#6B6B6B",
+                            fontSize: 12,
+                          }}
+                        >
+                          Cargando...
+                        </div>
+                      ) : historial.length === 0 ? (
+                        <div
+                          style={{
+                            height: 80,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#6B6B6B",
+                            fontSize: 12,
+                          }}
+                        >
+                          Sin historial disponible
+                        </div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={160}>
+                          <LineChart
+                            data={historial}
+                            margin={{ top: 4, right: 16, left: 0, bottom: 4 }}
+                          >
+                            <CartesianGrid {...gridStyle} />
+                            <XAxis dataKey="mes" tick={axisStyle} />
+                            <YAxis
+                              domain={[0, 100]}
+                              tick={axisStyle}
+                              unit="%"
+                            />
+                            <Tooltip content={<CustomTooltip />} />
+                            <ReferenceLine
+                              y={95}
+                              stroke="#C9A227"
+                              strokeDasharray="4 4"
+                              label={{
+                                value: "Estrella 95%",
+                                position: "insideTopRight",
+                                fontSize: 10,
+                                fill: "#C9A227",
+                              }}
+                            />
+                            <ReferenceLine
+                              y={80}
+                              stroke="#6E8B6B"
+                              strokeDasharray="4 4"
+                              label={{
+                                value: "Bueno 80%",
+                                position: "insideTopRight",
+                                fontSize: 10,
+                                fill: "#6E8B6B",
+                              }}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="tasa_aceptacion"
+                              name="Tasa acept (%)"
+                              stroke={ESTRELLA_COLOR[item.categoria]}
+                              strokeWidth={2}
+                              dot={{ r: 3, fill: ESTRELLA_COLOR[item.categoria] }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )}
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </ChartCard>
+  );
+}
+
+const UMBRAL_ALERTA = 80;
+const UMBRAL_AVISO = 95;
+
+function RendimientoEquiposPreregistro() {
+  const { data, loading } = useRendimientoEquipos();
+  const [expanded, setExpanded] = useState(null);
+
+  if (loading) {
+    return (
+      <ChartCard title="Rendimiento por equipo">
+        <div
+          style={{
+            height: 200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#6B6B6B",
+            fontSize: 13,
+          }}
+        >
+          Cargando...
+        </div>
+      </ChartCard>
+    );
+  }
+
+  if (!data.length) {
+    return (
+      <ChartCard title="Rendimiento por equipo">
+        <div
+          style={{
+            height: 200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#6B6B6B",
+            fontSize: 13,
+          }}
+        >
+          Sin órdenes activas asignadas a equipos
+        </div>
+      </ChartCard>
+    );
+  }
+
+  return (
+    <ChartCard
+      title="Rendimiento por equipo"
+      footer={`${data.length} equipo${data.length !== 1 ? "s" : ""} activo${data.length !== 1 ? "s" : ""}`}
+    >
+      <div style={{ display: "grid", gap: 12 }}>
+        {data.map((item) => {
+          const isExpanded = expanded === item.equipo;
+          const belowThreshold = item.pct_recibido < UMBRAL_ALERTA;
+          const needsAttention =
+            item.pct_recibido < UMBRAL_AVISO && item.pct_recibido >= UMBRAL_ALERTA;
+          const borderColor = belowThreshold
+            ? STATUS_COLOR.error
+            : needsAttention
+              ? STATUS_COLOR.warning
+              : "#E7E2DC";
+
+          return (
+            <div key={item.equipo}>
+              <div
+                onClick={() => setExpanded(isExpanded ? null : item.equipo)}
+                style={{
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: 8,
+                  padding: "14px 16px",
+                  background: belowThreshold
+                    ? STATUS_BG.error
+                    : needsAttention
+                      ? STATUS_BG.warning
+                      : "#FAFAF8",
+                  cursor: "pointer",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    gap: 12,
+                    marginBottom: 10,
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: "#1F1F1F",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      {item.equipo}
+                      {belowThreshold && (
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: STATUS_COLOR.error,
+                            background: STATUS_BG.error,
+                            border: `1px solid ${STATUS_COLOR.error}40`,
+                            borderRadius: 10,
+                            padding: "2px 7px",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                          }}
+                        >
+                          Bajo umbral
+                        </span>
+                      )}
+                      {needsAttention && (
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: STATUS_COLOR.warning,
+                            background: STATUS_BG.warning,
+                            border: `1px solid ${STATUS_COLOR.warning}40`,
+                            borderRadius: 10,
+                            padding: "2px 7px",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                          }}
+                        >
+                          Atención
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      style={{ fontSize: 12, color: "#6B6B6B", marginTop: 2 }}
+                    >
+                      {item.id_orden} · {item.recibidos} de {item.total_prepacks} prepacks
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div
+                      style={{
+                        fontSize: 18,
+                        fontWeight: 700,
+                        color: STATUS_COLOR[item.status],
+                      }}
+                    >
+                      {item.pct_recibido}%
+                    </div>
+                    <div style={{ fontSize: 11, color: "#6B6B6B" }}>
+                      recibido
+                    </div>
+                  </div>
+                </div>
+                <ProgressBar value={item.pct_recibido} status={item.status} />
+              </div>
+
+              {isExpanded && item.prepacks.length > 0 && (
+                <div
+                  style={{
+                    border: "1px solid #E7E2DC",
+                    borderTop: "none",
+                    borderRadius: "0 0 8px 8px",
+                    background: "#FFFFFF",
+                    padding: "12px 16px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: "#6B6B6B",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      marginBottom: 10,
+                    }}
+                  >
+                    Prepacks recibidos ({item.prepacks.length})
+                  </div>
+                  <div style={{ display: "grid", gap: 8 }}>
+                    {item.prepacks.map((pp, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "auto 1fr auto",
+                          alignItems: "center",
+                          gap: 12,
+                          padding: "8px 10px",
+                          background: "#FAFAF8",
+                          borderRadius: 6,
+                          border: "1px solid #F0EDE8",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: "#1F1F1F",
+                            minWidth: 80,
+                          }}
+                        >
+                          {pp.modelo}
+                        </div>
+                        <div style={{ fontSize: 11, color: "#6B6B6B" }}>
+                          {pp.distribucion_talla
+                            ? Object.entries(pp.distribucion_talla)
+                                .filter(([, v]) => v > 0)
+                                .map(([k, v]) => `${k}:${v}`)
+                                .join(" · ")
+                            : "—"}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: "#6B6B6B",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {pp.cantidad_total} uds
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </ChartCard>
+  );
+}
+
 function buildStageData(preregistroKPIs, ordenesIncompletas) {
   // shared table styles
   const tableStyle = {
@@ -934,51 +1417,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas) {
           </table>
         </ChartCard>,
         <TendenciaSemanalChart key="prereg-trend" />,
-        <ChartCard key="prereg-stars" title="Ranking de proveedores">
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={{ ...thStyle, width: 32 }}>#</th>
-                <th style={thStyle}>Proveedor</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>
-                  Tasa Acept (%)
-                </th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Volumen (pp)</th>
-                <th style={{ ...thStyle, textAlign: "center" }}>Categoría</th>
-              </tr>
-            </thead>
-            <tbody>
-              {proveedoresEstrella.map((item, i) => (
-                <tr key={item.proveedor}>
-                  <td style={{ ...tdStyle, color: "#6B6B6B" }}>{i + 1}</td>
-                  <td style={tdStyle}>{item.proveedor}</td>
-                  <td
-                    style={{ ...tdStyle, textAlign: "right", fontWeight: 600 }}
-                  >
-                    {item.tasaAceptacion}%
-                  </td>
-                  <td style={{ ...tdStyle, textAlign: "right" }}>
-                    {item.volumen.toLocaleString("es-MX")}
-                  </td>
-                  <td style={{ ...tdStyle, textAlign: "center" }}>
-                    <span
-                      style={{
-                        background: STATUS_BG[CATEGORIA_COLOR[item.categoria]],
-                        color: STATUS_COLOR[CATEGORIA_COLOR[item.categoria]],
-                        borderRadius: 12,
-                        padding: "3px 10px",
-                        fontSize: 11,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {item.categoria}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </ChartCard>,
+        <ProveedoresEstrellaTable key="prereg-stars" />,
       ],
     },
 
@@ -1766,7 +2205,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas) {
 }
 
 export default function Dashboard() {
-  const { kpis: preregistroKPIs, loading: loadingPreregistro } =
+  const { kpis: preregistroKPIs} =
     usePreregistroKPIs();
   const { data: ordenesIncompletas } = useOrdenesIncompletas();
   const [activeStage, setActiveStage] = useState(getCurrentStageId);
@@ -1823,7 +2262,11 @@ export default function Dashboard() {
         }}
       >
         {currentStage.charts}
-        <TeamPerformance stageId={activeStage} />
+        {activeStage === "preregistro" ? (
+          <RendimientoEquiposPreregistro />
+        ) : (
+          <TeamPerformance stageId={activeStage} />
+        )}
       </div>
     </div>
   );
