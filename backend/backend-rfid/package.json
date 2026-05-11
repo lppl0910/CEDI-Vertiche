@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx tsx watch src/index.ts",
-    "simulate": "npx tsx scripts/simulador.ts"
+    "simulate": "npx tsx scripts/simulador.ts",
+    "all": "npm run dev & npm run simulate"
   },
   "keywords": [],
   "author": "",
