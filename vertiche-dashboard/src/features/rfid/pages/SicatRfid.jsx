@@ -15,7 +15,9 @@ const ETAPA_TO_KEY = Object.fromEntries(ETAPA_NAMES.map((n, i) => [n, STAGE_KEYS
 
 function adaptOrden(orden) {
   const rawPP = orden.prepacks ?? [];
+  const total = orden.totalPrepacks ?? rawPP.length;
 
+  // Arrival = earliest timestamp in any prepack's historial
   const allTs = rawPP
     .flatMap(pp => (pp.historial ?? []).map(e => new Date(e.timestamp).getTime()))
     .filter(Boolean);
@@ -24,14 +26,22 @@ function adaptOrden(orden) {
   const stages = {};
   STAGE_KEYS.forEach((key, idx) => {
     const etapa = ETAPA_NAMES[idx];
-    const pe    = (orden.progresoEtapa ?? []).find(p => p.etapa === etapa);
-    const total = orden.totalPrepacks ?? 0;
 
-    if (!pe || pe.total === 0) {
+    // Progreso ACUMULATIVO: cuenta prepacks que ya llegaron a esta etapa
+    // o la superaron (currentEtapa index >= idx). Así los porcentajes
+    // solo suben conforme el simulador avanza prepacks.
+    const proc = rawPP.filter(pp => {
+      const ppIdx = ETAPA_NAMES.indexOf(pp.currentEtapa ?? '');
+      return ppIdx >= idx;
+    }).length;
+
+    if (proc === 0) {
       stages[key] = { proc: 0, total, startMin: 0, durMin: null, status: 'pending', sent: false };
       return;
     }
 
+    // Timestamps: historial registra cuándo salió un prepack de una etapa
+    // (el campo "etapa" del evento = etapa que estaba ABANDONANDO)
     const etapaTs = rawPP
       .flatMap(pp => (pp.historial ?? []).filter(e => e.etapa === etapa).map(e => new Date(e.timestamp).getTime()))
       .filter(Boolean);
@@ -41,14 +51,11 @@ function adaptOrden(orden) {
     const startMin = minTs ? Math.max(0, Math.round((minTs - arrivalTs) / 60000)) : 0;
     const durMin   = (minTs && maxTs && maxTs > minTs) ? Math.round((maxTs - minTs) / 60000) : null;
 
-    const anyActiveInStage = rawPP.some(pp => pp.currentEtapa === etapa);
-    let status;
-    if (pe.count === 0) status = 'pending';
-    else if (anyActiveInStage) status = 'active';
-    else if (pe.count >= pe.total) status = 'done';
-    else status = 'active';
+    const done = proc >= total;
+    const anyHereNow = rawPP.some(pp => pp.currentEtapa === etapa);
+    const status = done ? 'done' : anyHereNow ? 'active' : (proc > 0 ? 'active' : 'pending');
 
-    stages[key] = { proc: pe.count, total: pe.total, startMin, durMin, status, sent: false };
+    stages[key] = { proc, total, startMin, durMin, status, sent: false };
   });
 
   if (stages.envio) stages.envio.sent = stages.envio.status === 'done';
@@ -122,10 +129,12 @@ function buildIncidencias(prepacks) {
 }
 
 export default function SicatRfid({ onInterfaceChange, onProfileOpen }) {
-  const [currentTab,   setCurrentTab]   = useState('flujo');
-  const [incOverrides, setIncOverrides] = useState({}); // keyed by ppId
-  const { ordenes, loading, error }     = useOrdenes();
-  const { alertasBD, sendAlertas }      = useAlertas();
+  const [currentTab,      setCurrentTab]      = useState('flujo');
+  const [incOverrides,    setIncOverrides]    = useState({}); // keyed by ppId
+  // #217 — Filtros que se pasan al backend vía useOrdenes
+  const [backendFilters,  setBackendFilters]  = useState({});
+  const { ordenes, loading, error, connected } = useOrdenes(backendFilters);
+  const { alertasBD, sendAlertas }            = useAlertas();
 
   const adaptedOrders = useMemo(() => ordenes.map(adaptOrden), [ordenes]);
   const allPrepacks   = useMemo(() => ordenes.flatMap(o => o.prepacks ?? []), [ordenes]);
@@ -162,6 +171,26 @@ export default function SicatRfid({ onInterfaceChange, onProfileOpen }) {
         onProfileOpen={onProfileOpen}
       />
 
+      {/* Indicador de conexión en tiempo real */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        padding: '4px 24px',
+        background: connected ? 'rgba(110,139,107,.08)' : 'rgba(182,94,74,.07)',
+        borderBottom: `1px solid ${connected ? 'rgba(110,139,107,.2)' : 'rgba(182,94,74,.2)'}`,
+        fontSize: 11, fontWeight: 600,
+        color: connected ? '#4A7A47' : '#B65E4A',
+      }}>
+        <span style={{
+          width: 8, height: 8, borderRadius: '50%',
+          background: connected ? '#6E8B6B' : '#B65E4A',
+          boxShadow: connected ? '0 0 0 2px rgba(110,139,107,.3)' : 'none',
+          animation: connected ? 'pulse-live 2s infinite' : 'none',
+          display: 'inline-block',
+        }} />
+        {connected ? 'RFID en tiempo real · conectado al servidor' : 'Sin conexión al servidor — los datos no se actualizan en tiempo real'}
+        <style>{`@keyframes pulse-live { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
+      </div>
+
       {loading && (
         <main style={{ padding: '2rem', color: '#6B6B6B' }}>Cargando órdenes...</main>
       )}
@@ -171,7 +200,10 @@ export default function SicatRfid({ onInterfaceChange, onProfileOpen }) {
       {!loading && !error && (
         <main>
           {currentTab === 'flujo' && (
-            <AnalisisFlujo orders={adaptedOrders} />
+            <AnalisisFlujo
+              orders={adaptedOrders}
+              onFiltersChange={setBackendFilters}
+            />
           )}
           {currentTab === 'historial' && (
             <Historial
