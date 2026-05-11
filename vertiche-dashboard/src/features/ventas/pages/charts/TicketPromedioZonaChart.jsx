@@ -22,7 +22,7 @@ export function TicketPromedioZonaChart({ ticketData }) {
         <LegendDot color={C.black} />Norte &nbsp;
         <LegendDot color={C.taupe} />Sur
       </div>
-      <ResponsiveContainer width="100%" height={200}>
+      <ResponsiveContainer width="100%" height={350}>
         <BarChart data={ticketData} margin={{ top: 2, right: 8, bottom: 0, left: 10 }}>
           <CartesianGrid strokeDasharray="3 3" {...grid} />
           <XAxis dataKey="mes" tick={ax} axisLine={false} tickLine={false} />
