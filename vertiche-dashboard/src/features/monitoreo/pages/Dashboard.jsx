@@ -195,6 +195,7 @@ function KpiStrip({ primaryKpi, secondaryKpis }) {
           value={primaryKpi.value}
           delta={primaryKpi.delta}
           unit={primaryKpi.unit}
+          description={primaryKpi.description}
         />
       </div>
       {secondaryKpis.map(item => (
@@ -204,6 +205,7 @@ function KpiStrip({ primaryKpi, secondaryKpis }) {
             value={item.value}
             delta={item.delta}
             unit={item.unit}
+            description={item.description}
           />
         </div>
       ))}
@@ -546,12 +548,42 @@ function buildStageData() {
       title: 'Preregistro',
       summary: 'Entrada de órdenes al flujo, validando si cada orden llega completa antes de avanzar.',
       status: 'warning',
-      primaryKpi: { label: 'Órdenes recibidas', value: totalOrdenesRecibidas, delta: 12, unit: '' },
+      primaryKpi: {
+        label: 'Órdenes recibidas',
+        value: totalOrdenesRecibidas,
+        delta: 12,
+        unit: '',
+        description: 'Total de órdenes ingresadas hoy al flujo.',
+      },
       secondaryKpis: [
-        { label: 'Órdenes incompletas', value: ordenesInc, delta: -5, unit: '' },
-        { label: 'Tasa de órdenes completas', value: tasaCompletas, delta: 1.2, unit: '%' },
-        { label: 'Proveedores con incidencias', value: provConIncidencias, delta: 0, unit: '' },
-        { label: 'Semana', value: 'S6', delta: null, unit: '' },
+        {
+          label: 'Órdenes incompletas',
+          value: ordenesInc,
+          delta: -5,
+          unit: '',
+          description: 'Órdenes recibidas con faltantes detectados.',
+        },
+        {
+          label: 'Tasa de órdenes completas',
+          value: tasaCompletas,
+          delta: 1.2,
+          unit: '%',
+          description: 'Porcentaje de órdenes recibidas sin faltantes.',
+        },
+        {
+          label: 'Proveedores con incidencias',
+          value: provConIncidencias,
+          delta: 0,
+          unit: '',
+          description: 'Número de proveedores con al menos una orden incompleta.',
+        },
+        {
+          label: 'Semana',
+          value: 'S6',
+          delta: null,
+          unit: '',
+          description: 'Semana operativa actual del análisis.',
+        },
       ],
       charts: [
         <ChartCard key="prereg-pareto" title="Órdenes incompletas por proveedor (Pareto)">
@@ -622,12 +654,42 @@ function buildStageData() {
       title: 'QA',
       summary: 'Control del porcentaje de aceptación por proveedor y rechazo operativo antes del registro.',
       status: 'warning',
-      primaryKpi: { label: 'Tasa de aceptación', value: tasaAceptacionQA, delta: 0.8, unit: '%' },
+      primaryKpi: {
+        label: 'Tasa de aceptación',
+        value: tasaAceptacionQA,
+        delta: 0.8,
+        unit: '%',
+        description: 'Porcentaje de prepacks que pasan QA sin rechazo.',
+      },
       secondaryKpis: [
-        { label: 'Prepacks retornados', value: totalRetornados, delta: -2, unit: '' },
-        { label: 'Proveedores con mayor rechazo', value: proveedoresConRechazo, delta: 0, unit: '' },
-        { label: 'Motivo principal', value: motivoPrincipal, delta: null, unit: '' },
-        { label: 'Total errores PP', value: totalErroresQA, delta: -8, unit: '' },
+        {
+          label: 'Prepacks retornados',
+          value: totalRetornados,
+          delta: -2,
+          unit: '',
+          description: 'Total de prepacks devueltos por QA.',
+        },
+        {
+          label: 'Proveedores con mayor rechazo',
+          value: proveedoresConRechazo,
+          delta: 0,
+          unit: '',
+          description: 'Cantidad de proveedores con rechazo alto (≥ 20 errores).',
+        },
+        {
+          label: 'Motivo principal',
+          value: motivoPrincipal,
+          delta: null,
+          unit: '',
+          description: 'Motivo de rechazo con mayor frecuencia.',
+        },
+        {
+          label: 'Total errores PP',
+          value: totalErroresQA,
+          delta: -8,
+          unit: '',
+          description: 'Total de errores detectados en prepacks.',
+        },
       ],
       charts: [
         <ChartCard key="qa-pareto" title="Errores por proveedor (Pareto)">
@@ -713,12 +775,42 @@ function buildStageData() {
       title: 'Registro',
       summary: 'Ritmo de registro por equipo, distribución por almacén y avance del flujo hacia el sorter.',
       status: overallStatus(rankingEquiposRegistro.map(e => e.status)),
-      primaryKpi: { label: 'Prepacks en Cross-dock', value: prepsCrossDock, delta: 14, unit: '' },
+      primaryKpi: {
+        label: 'Prepacks en Cross-dock',
+        value: prepsCrossDock,
+        delta: 14,
+        unit: '',
+        description: 'Prepacks registrados con destino Cross-dock.',
+      },
       secondaryKpis: [
-        { label: 'Tiempo promedio registro', value: tiempoPromedioReg, delta: -0.8, unit: 'min' },
-        { label: 'PPs en backlog (>10 min)', value: ppEnBacklog, delta: 1, unit: '' },
-        { label: 'Mejor equipo', value: mejorEquipo.equipo, delta: null, unit: '' },
-        { label: 'Tiempo mejor equipo', value: mejorEquipo.tiempoPromedio, delta: null, unit: '' },
+        {
+          label: 'Tiempo promedio registro',
+          value: tiempoPromedioReg,
+          delta: -0.8,
+          unit: 'min',
+          description: 'Promedio de minutos para registrar un prep pack.',
+        },
+        {
+          label: 'PPs en backlog (>10 min)',
+          value: ppEnBacklog,
+          delta: 1,
+          unit: '',
+          description: 'Prepacks con más de 10 min en registro.',
+        },
+        {
+          label: 'Mejor equipo',
+          value: mejorEquipo.equipo,
+          delta: null,
+          unit: '',
+          description: 'Equipo con menor tiempo promedio de registro.',
+        },
+        {
+          label: 'Tiempo mejor equipo',
+          value: mejorEquipo.tiempoPromedio,
+          delta: null,
+          unit: '',
+          description: 'Tiempo promedio del equipo más rápido.',
+        },
       ],
       charts: [
         <ChartCard key="reg-pie" title="Distribución por almacén">
@@ -808,12 +900,42 @@ function buildStageData() {
       title: 'Sorter',
       summary: 'Flujo único de clasificación con foco en distribución por bahía y paquetes incorrectamente sorteados.',
       status: 'warning',
-      primaryKpi: { label: 'Paquetes clasificados hoy', value: totalPaquetesSorter, delta: 87, unit: '' },
+      primaryKpi: {
+        label: 'Paquetes clasificados hoy',
+        value: totalPaquetesSorter,
+        delta: 87,
+        unit: '',
+        description: 'Total de paquetes procesados por el sorter hoy.',
+      },
       secondaryKpis: [
-        { label: 'Paquetes en bahía incorrecta', value: totalIncorrectos, delta: -2, unit: '' },
-        { label: 'Tiempo promedio por paquete', value: tiempoActualSorter, delta: -0.3, unit: 'seg' },
-        { label: 'Bahía más cargada', value: bahiaMasCargadaSorter.bahia, delta: null, unit: '' },
-        { label: 'Paquetes bahía top', value: bahiaMasCargadaSorter.paquetes, delta: null, unit: '' },
+        {
+          label: 'Paquetes en bahía incorrecta',
+          value: totalIncorrectos,
+          delta: -2,
+          unit: '',
+          description: 'Paquetes asignados a una bahía distinta a la correcta.',
+        },
+        {
+          label: 'Tiempo promedio por paquete',
+          value: tiempoActualSorter,
+          delta: -0.3,
+          unit: 'seg',
+          description: 'Segundos promedio por paquete en sorter.',
+        },
+        {
+          label: 'Bahía más cargada',
+          value: bahiaMasCargadaSorter.bahia,
+          delta: null,
+          unit: '',
+          description: 'Bahía con mayor volumen de paquetes.',
+        },
+        {
+          label: 'Paquetes bahía top',
+          value: bahiaMasCargadaSorter.paquetes,
+          delta: null,
+          unit: '',
+          description: 'Total de paquetes en la bahía más cargada.',
+        },
       ],
       charts: [
         <ChartCard key="sorter-dist" title="Distribución de paquetes en bahías">
@@ -869,12 +991,42 @@ function buildStageData() {
       title: 'Bahías',
       summary: 'Ocupación a lo largo de los 10 carriles, tendencia histórica y capacidad disponible.',
       status: bahiasGeneral.status,
-      primaryKpi: { label: 'Ocupación promedio', value: ocupacionPromedio, delta: 2.1, unit: '%' },
+      primaryKpi: {
+        label: 'Ocupación promedio',
+        value: ocupacionPromedio,
+        delta: 2.1,
+        unit: '%',
+        description: 'Promedio de ocupación de los carriles.',
+      },
       secondaryKpis: [
-        { label: 'Bahías saturadas (>90%)', value: bahiasSaturadas, delta: 1, unit: '' },
-        { label: 'Capacidad total', value: capacidadTotal, delta: 0, unit: 'pp' },
-        { label: 'Bahía más descargada', value: bahiaMasDescargada.bahia, delta: null, unit: '' },
-        { label: 'Procesando en descargada', value: bahiaMasDescargada.procesando, delta: null, unit: '' },
+        {
+          label: 'Bahías saturadas (>90%)',
+          value: bahiasSaturadas,
+          delta: 1,
+          unit: '',
+          description: 'Número de bahías con ocupación mayor a 90%.',
+        },
+        {
+          label: 'Capacidad total',
+          value: capacidadTotal,
+          delta: 0,
+          unit: 'pp',
+          description: 'Suma de capacidad de todas las bahías.',
+        },
+        {
+          label: 'Bahía más descargada',
+          value: bahiaMasDescargada.bahia,
+          delta: null,
+          unit: '',
+          description: 'Bahía con menor ocupación.',
+        },
+        {
+          label: 'Procesando en descargada',
+          value: bahiaMasDescargada.procesando,
+          delta: null,
+          unit: '',
+          description: 'Paquetes en proceso en la bahía menos cargada.',
+        },
       ],
       charts: [
         <BayGrid key="bay-grid" bahias={bahiasGeneral.bahias} />,
@@ -910,12 +1062,42 @@ function buildStageData() {
       title: 'Auditoría',
       summary: 'Validación final con detalle de cajas incorrectas y distribución de tiempos de auditoría.',
       status: 'warning',
-      primaryKpi: { label: 'Cajas auditadas hoy', value: cajasAuditadasHoy, delta: 8, unit: '' },
+      primaryKpi: {
+        label: 'Cajas auditadas hoy',
+        value: cajasAuditadasHoy,
+        delta: 8,
+        unit: '',
+        description: 'Total de cajas auditadas hoy.',
+      },
       secondaryKpis: [
-        { label: 'Tiempo promedio auditoría', value: tiempoPromedioAudit, delta: -0.4, unit: 'min' },
-        { label: 'Cajas con error', value: cajasConError, delta: -1, unit: '' },
-        { label: 'Tasa de éxito', value: tasaExitoAudit, delta: 0.5, unit: '%' },
-        { label: 'Auditoría lenta (>8 min)', value: cajasIncorrectas.filter(d => d.minutosAuditoria > 8).length, delta: 0, unit: '' },
+        {
+          label: 'Tiempo promedio auditoría',
+          value: tiempoPromedioAudit,
+          delta: -0.4,
+          unit: 'min',
+          description: 'Promedio de minutos por auditoría.',
+        },
+        {
+          label: 'Cajas con error',
+          value: cajasConError,
+          delta: -1,
+          unit: '',
+          description: 'Cajas auditadas con error detectado.',
+        },
+        {
+          label: 'Tasa de éxito',
+          value: tasaExitoAudit,
+          delta: 0.5,
+          unit: '%',
+          description: 'Porcentaje de cajas auditadas sin error.',
+        },
+        {
+          label: 'Auditoría lenta (>8 min)',
+          value: cajasIncorrectas.filter(d => d.minutosAuditoria > 8).length,
+          delta: 0,
+          unit: '',
+          description: 'Cajas con auditoría mayor a 8 minutos.',
+        },
       ],
       charts: [
         <ChartCard key="audit-cajas" title="Detalle de cajas incorrectas">
@@ -967,12 +1149,42 @@ function buildStageData() {
       title: 'Envío',
       summary: 'Cierre del flujo con backlog de órdenes pendientes y estatus general por proveedor.',
       status: ordenesCriticas > 0 ? 'error' : ordenesEnBacklog > 0 ? 'warning' : 'success',
-      primaryKpi: { label: 'Órdenes enviadas hoy', value: ordenesEnviadas, delta: 1, unit: '' },
+      primaryKpi: {
+        label: 'Órdenes enviadas hoy',
+        value: ordenesEnviadas,
+        delta: 1,
+        unit: '',
+        description: 'Órdenes cerradas y enviadas hoy.',
+      },
       secondaryKpis: [
-        { label: 'Órdenes en backlog (>30 min)', value: ordenesEnBacklog, delta: 0, unit: '' },
-        { label: 'Tiempo promedio total', value: tiempoPromedioEnvio, delta: -2.1, unit: 'min' },
-        { label: 'Alertas críticas (≥40 min)', value: ordenesCriticas, delta: 0, unit: '' },
-        { label: 'Prepacks en tránsito', value: backlogOrdenes.reduce((s, d) => s + d.prepacks, 0), delta: null, unit: '' },
+        {
+          label: 'Órdenes en backlog (>30 min)',
+          value: ordenesEnBacklog,
+          delta: 0,
+          unit: '',
+          description: 'Órdenes con más de 30 min en backlog.',
+        },
+        {
+          label: 'Tiempo promedio total',
+          value: tiempoPromedioEnvio,
+          delta: -2.1,
+          unit: 'min',
+          description: 'Promedio de minutos desde ingreso hasta envío.',
+        },
+        {
+          label: 'Alertas críticas (≥40 min)',
+          value: ordenesCriticas,
+          delta: 0,
+          unit: '',
+          description: 'Órdenes con más de 40 min en backlog.',
+        },
+        {
+          label: 'Prepacks en tránsito',
+          value: backlogOrdenes.reduce((s, d) => s + d.prepacks, 0),
+          delta: null,
+          unit: '',
+          description: 'Prepacks en movimiento dentro del flujo de envío.',
+        },
       ],
       charts: [
         <ChartCard key="envio-backlog" title="Backlog de órdenes">
