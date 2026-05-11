@@ -1,0 +1,32 @@
+{
+  "name": "project-g1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node -r dotenv/config dist/index.js",
+    "build:start": "tsc && node -r dotenv/config dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@typegoose/typegoose": "^13.2.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.1",
+    "express": "^5.2.1",
+    "mongoose": "^9.6.1",
+    "mysql2": "^3.22.0",
+    "sequelize": "^6.37.8"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^10.4.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/sequelize": "^4.28.20",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2"
+  }
+}

@@ -1,0 +1,98 @@
+@import url('variables.css');
+/* ── SectionTiendas — rendimiento y ranking de tiendas ──────── */
+.section-tiendas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-tiendas__legend {
+  font-size: 10px;
+  color: var(--c-muted);
+  margin-bottom: 8px;
+}
+
+/* ── Tabla compartida ── */
+.section-tiendas__table-overflow {
+  overflow-x: auto;
+}
+
+.section-tiendas__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.section-tiendas__th {
+  padding: 6px 8px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--c-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.section-tiendas__th--ranking {
+  padding: 8px 10px;
+}
+
+.section-tiendas__td {
+  padding: 7px 8px;
+}
+
+.section-tiendas__td--ranking {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.section-tiendas__td--id {
+  font-family: monospace;
+  font-size: 10px;
+  color: var(--c-muted);
+}
+
+.section-tiendas__td--name {
+  font-weight: 500;
+}
+
+.section-tiendas__td--revenue {
+  font-weight: 600;
+}
+
+.section-tiendas__td--units {
+  color: var(--c-muted);
+}
+
+/* ── Badge de zona ── */
+.section-tiendas__zone-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.section-tiendas__zone-badge--norte {
+  background: rgba(17, 17, 17, 0.08);
+  color: var(--c-black);
+}
+
+.section-tiendas__zone-badge--sur {
+  background: rgba(164, 143, 122, 0.15);
+  color: var(--c-taupe);
+}
+
+/* ── Indicador de variación ── */
+.section-tiendas__delta {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.section-tiendas__delta--positive {
+  color: var(--c-success);
+}
+
+.section-tiendas__delta--negative {
+  color: var(--c-error);
+}

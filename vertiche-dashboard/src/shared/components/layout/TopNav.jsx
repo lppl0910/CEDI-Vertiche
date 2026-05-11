@@ -10,8 +10,8 @@ const ventasTabs = [
   { id: 'tendencias',  label: 'Tendencias' },
   { id: 'productos',   label: 'Productos' },
   { id: 'tiendas',     label: 'Tiendas' },
-  { id: 'descuentos',  label: 'Descuentos' },
-  { id: 'inventario',  label: 'Inventario' },
+ // { id: 'descuentos',  label: 'Descuentos' },
+  // { id: 'inventario',  label: 'Inventario' },
 ];
 
 const interfaces = [
@@ -215,8 +215,8 @@ export default function TopNav({
                     }}
                   >
                     <option value="all">Todas las zonas</option>
-                    <option value="norte">Zona Norte</option>
-                    <option value="sur">Zona Sur</option>
+                    <option value="Norte">Zona Norte</option>
+                    <option value="Sur">Zona Sur</option>
                   </select>
                 </div>
 
