@@ -1135,7 +1135,7 @@ function buildStageData() {
         <ChartCard key="envio-backlog" title="Backlog de órdenes pendientes"
           footer="⚠ >30 min · 🔴 ≥40 min crítico">
           <div style={{ display: 'grid', gap: 10 }}>
-            {backlogOrdenes.map(item => {
+            {[...backlogOrdenes].sort((a, b) => b.minutosEnSistema - a.minutosEnSistema).map(item => {
               const nivel = item.minutosEnSistema >= 40 ? 'error' : item.minutosEnSistema >= 30 ? 'warning' : null;
               const pct = Math.min(100, (item.minutosEnSistema / 50) * 100);
               return (
