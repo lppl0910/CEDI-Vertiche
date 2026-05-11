@@ -3,6 +3,7 @@ const express = require('express')
 const cors = require('cors')
 const connectDB = require('./src/db')
 const preregistroRoutes = require('./src/routes/preregistroRoutes')
+const envioRoutes = require('./src/routes/envioRoutes')
 
 const app = express()
 
@@ -12,6 +13,7 @@ app.use(express.json())
 connectDB()
 
 app.use('/api/preregistro', preregistroRoutes)
+app.use('/api/envio', envioRoutes)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {

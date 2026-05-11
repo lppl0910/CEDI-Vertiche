@@ -7,6 +7,7 @@ const ordenSchema = new mongoose.Schema({
   nombre_proveedor: String,
   equipo: String,
   fecha_creacion: Date,
+  fecha_envio: Date,
   estado: {
     type: String,
     enum: ['en_proceso', 'completada', 'enviada']

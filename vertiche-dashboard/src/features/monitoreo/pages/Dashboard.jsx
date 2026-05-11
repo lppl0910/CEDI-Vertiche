@@ -33,8 +33,6 @@ import {
   capacidadBahias,
   cajasIncorrectas,
   distribucionTiemposAuditoria,
-  backlogOrdenes,
-  estatusOrdenes,
 } from "../data/mockData";
 import KPICard from "../../../shared/components/ui/KPICard";
 
@@ -43,6 +41,9 @@ import { useOrdenesIncompletas } from "../hooks/useOrdenesIncompletas";
 import { useTendenciaSemanal } from "../hooks/useTendenciaSemanal";
 import { useProveedoresEstrella } from "../hooks/useProveedoresEstrella";
 import { useRendimientoEquipos } from "../hooks/useRendimientoEquipos";
+import { useEnvioKPIs } from "../hooks/useEnvioKPIs";
+import { useBacklogEnvio } from "../hooks/useBacklogEnvio";
+import { useOrdenesActivas } from "../hooks/useOrdenesActivas";
 
 const STATUS_COLOR = {
   success: "#6E8B6B",
@@ -1190,7 +1191,466 @@ function RendimientoEquiposPreregistro() {
   );
 }
 
-function buildStageData(preregistroKPIs, ordenesIncompletas) {
+const BACKLOG_WARNING_MIN = 30;
+const BACKLOG_CRITICAL_MIN = 40;
+
+function elapsedMinutes(fechaCreacion) {
+  return Math.floor((Date.now() - new Date(fechaCreacion)) / 60000);
+}
+
+function BacklogEnvioTable() {
+  const { data, loading } = useBacklogEnvio();
+  const [, setTick] = useState(0);
+
+  // Re-render every 60 s so elapsed times update without a server call
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 60000);
+    return () => clearInterval(id);
+  }, []);
+
+  const rows = data
+    .map((item) => ({ ...item, elapsed: elapsedMinutes(item.fecha_creacion) }))
+    .sort((a, b) => b.elapsed - a.elapsed);
+
+  const tableStyle = {
+    width: "100%",
+    borderCollapse: "collapse",
+    fontSize: 13,
+    fontFamily: "Inter",
+  };
+  const thStyle = {
+    textAlign: "left",
+    padding: "8px 10px",
+    fontSize: 11,
+    fontWeight: 600,
+    color: "#6B6B6B",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    borderBottom: "1px solid #E7E2DC",
+    background: "#FAFAF8",
+  };
+  const tdStyle = {
+    padding: "9px 10px",
+    borderBottom: "1px solid #F0EDE8",
+    color: "#1F1F1F",
+    verticalAlign: "middle",
+  };
+
+  const alertCount = rows.filter((r) => r.elapsed >= BACKLOG_CRITICAL_MIN).length;
+  const warningCount = rows.filter(
+    (r) => r.elapsed >= BACKLOG_WARNING_MIN && r.elapsed < BACKLOG_CRITICAL_MIN,
+  ).length;
+
+  const footer = loading ? null : (
+    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      {alertCount > 0 && (
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: STATUS_COLOR.error,
+            background: STATUS_BG.error,
+            borderRadius: 10,
+            padding: "2px 8px",
+          }}
+        >
+          {alertCount} crítica{alertCount !== 1 ? "s" : ""}
+        </span>
+      )}
+      {warningCount > 0 && (
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: STATUS_COLOR.warning,
+            background: STATUS_BG.warning,
+            borderRadius: 10,
+            padding: "2px 8px",
+          }}
+        >
+          {warningCount} en espera
+        </span>
+      )}
+    </div>
+  );
+
+  return (
+    <ChartCard title="Backlog de órdenes" footer={footer}>
+      {loading ? (
+        <div
+          style={{
+            height: 200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#6B6B6B",
+            fontSize: 13,
+          }}
+        >
+          Cargando...
+        </div>
+      ) : rows.length === 0 ? (
+        <div
+          style={{
+            height: 200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#6B6B6B",
+            fontSize: 13,
+          }}
+        >
+          Sin órdenes activas en las últimas 12 h
+        </div>
+      ) : (
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Orden</th>
+              <th style={thStyle}>Proveedor</th>
+              <th style={{ ...thStyle, textAlign: "right" }}>Recibidos</th>
+              <th style={{ ...thStyle, textAlign: "right" }}>Tiempo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((item) => {
+              const isCritical = item.elapsed >= BACKLOG_CRITICAL_MIN;
+              const isWarning =
+                !isCritical && item.elapsed >= BACKLOG_WARNING_MIN;
+              const timeColor = isCritical
+                ? STATUS_COLOR.error
+                : isWarning
+                  ? STATUS_COLOR.warning
+                  : "#1F1F1F";
+              const rowBg = isCritical
+                ? STATUS_BG.error
+                : isWarning
+                  ? STATUS_BG.warning
+                  : "transparent";
+              return (
+                <tr key={item.id_orden} style={{ background: rowBg }}>
+                  <td style={{ ...tdStyle, fontWeight: 600 }}>
+                    {item.id_orden}
+                  </td>
+                  <td style={tdStyle}>{item.nombre_proveedor}</td>
+                  <td style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}>
+                    {item.prepacks_recibidos}/{item.total_prepacks}
+                  </td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      textAlign: "right",
+                      fontWeight: 700,
+                      color: timeColor,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {item.elapsed} min
+                    {isCritical && (
+                      <span
+                        style={{
+                          marginLeft: 6,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: STATUS_COLOR.error,
+                          background: STATUS_BG.error,
+                          border: `1px solid ${STATUS_COLOR.error}40`,
+                          borderRadius: 8,
+                          padding: "1px 5px",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Crítico
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </ChartCard>
+  );
+}
+
+const ETAPA_LABEL = {
+  preregistro: "Preregistro",
+  qa: "QA",
+  registro: "Registro",
+  sorter: "Sorter",
+  bahias: "Bahías",
+  auditoria: "Auditoría",
+  envio: "Envío",
+};
+
+function OrdenesActivasTable() {
+  const { data, loading } = useOrdenesActivas();
+  const [, setTick] = useState(0);
+  const [filtroProveedor, setFiltroProveedor] = useState("");
+  const [filtroEtapa, setFiltroEtapa] = useState("");
+  const [filtroAlerta, setFiltroAlerta] = useState("todos");
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 60000);
+    return () => clearInterval(id);
+  }, []);
+
+  const rows = data.map((item) => ({
+    ...item,
+    elapsed: elapsedMinutes(item.fecha_creacion),
+  }));
+
+  const proveedores = [...new Set(rows.map((r) => r.nombre_proveedor))]
+    .filter(Boolean)
+    .sort();
+  const etapas = [...new Set(rows.map((r) => r.etapa_actual))]
+    .filter(Boolean)
+    .sort();
+
+  const filtered = rows
+    .filter((r) => !filtroProveedor || r.nombre_proveedor === filtroProveedor)
+    .filter((r) => !filtroEtapa || r.etapa_actual === filtroEtapa)
+    .filter((r) => {
+      if (filtroAlerta === "critico") return r.elapsed >= BACKLOG_CRITICAL_MIN;
+      if (filtroAlerta === "atencion") return r.elapsed >= BACKLOG_WARNING_MIN;
+      return true;
+    })
+    .sort((a, b) => b.elapsed - a.elapsed);
+
+  const selectStyle = {
+    border: "1px solid #E7E2DC",
+    borderRadius: 6,
+    padding: "4px 8px",
+    fontSize: 12,
+    fontFamily: "var(--font)",
+    background: "#FFFFFF",
+    color: "#1F1F1F",
+    cursor: "pointer",
+    outline: "none",
+  };
+
+  const alertBtnStyle = (active, variant) => ({
+    border: `1px solid ${active ? STATUS_COLOR[variant] : "#E7E2DC"}`,
+    background: active ? STATUS_BG[variant] : "#FFFFFF",
+    color: active ? STATUS_COLOR[variant] : "#6B6B6B",
+    borderRadius: 6,
+    padding: "4px 10px",
+    fontSize: 11,
+    fontWeight: 600,
+    fontFamily: "var(--font)",
+    cursor: "pointer",
+  });
+
+  const tableStyle = {
+    width: "100%",
+    borderCollapse: "collapse",
+    fontSize: 13,
+    fontFamily: "Inter",
+  };
+  const thStyle = {
+    textAlign: "left",
+    padding: "8px 10px",
+    fontSize: 11,
+    fontWeight: 600,
+    color: "#6B6B6B",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    borderBottom: "1px solid #E7E2DC",
+    background: "#FAFAF8",
+  };
+  const tdStyle = {
+    padding: "9px 10px",
+    borderBottom: "1px solid #F0EDE8",
+    color: "#1F1F1F",
+    verticalAlign: "middle",
+  };
+
+  return (
+    <ChartCard title="Estatus de órdenes activas">
+      {/* Filter bar */}
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          alignItems: "center",
+          flexWrap: "wrap",
+          marginBottom: 14,
+          paddingBottom: 12,
+          borderBottom: "1px solid #F0EDE8",
+        }}
+      >
+        <select
+          value={filtroProveedor}
+          onChange={(e) => setFiltroProveedor(e.target.value)}
+          style={selectStyle}
+        >
+          <option value="">Todos los proveedores</option>
+          {proveedores.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filtroEtapa}
+          onChange={(e) => setFiltroEtapa(e.target.value)}
+          style={selectStyle}
+        >
+          <option value="">Todas las etapas</option>
+          {etapas.map((e) => (
+            <option key={e} value={e}>
+              {ETAPA_LABEL[e] ?? e}
+            </option>
+          ))}
+        </select>
+
+        <div style={{ display: "flex", gap: 4, marginLeft: "auto" }}>
+          {[
+            { key: "todos", label: "Todos", variant: "success" },
+            { key: "atencion", label: "Atención", variant: "warning" },
+            { key: "critico", label: "Crítico", variant: "error" },
+          ].map(({ key, label, variant }) => (
+            <button
+              key={key}
+              onClick={() => setFiltroAlerta(key)}
+              style={alertBtnStyle(filtroAlerta === key, variant)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div
+          style={{
+            height: 180,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#6B6B6B",
+            fontSize: 13,
+          }}
+        >
+          Cargando...
+        </div>
+      ) : filtered.length === 0 ? (
+        <div
+          style={{
+            height: 180,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#6B6B6B",
+            fontSize: 13,
+          }}
+        >
+          Sin órdenes activas con los filtros seleccionados
+        </div>
+      ) : (
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Orden</th>
+              <th style={thStyle}>Proveedor</th>
+              <th style={thStyle}>Etapa</th>
+              <th style={{ ...thStyle, textAlign: "right" }}>Prepacks</th>
+              <th style={{ ...thStyle, textAlign: "right" }}>Hora ingreso</th>
+              <th style={{ ...thStyle, textAlign: "right" }}>Tiempo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((item) => {
+              const isCritical = item.elapsed >= BACKLOG_CRITICAL_MIN;
+              const isWarning =
+                !isCritical && item.elapsed >= BACKLOG_WARNING_MIN;
+              const rowBg = isCritical
+                ? STATUS_BG.error
+                : isWarning
+                  ? STATUS_BG.warning
+                  : "transparent";
+              const timeColor = isCritical
+                ? STATUS_COLOR.error
+                : isWarning
+                  ? STATUS_COLOR.warning
+                  : "#6B6B6B";
+              const horaIngreso = new Date(
+                item.fecha_creacion,
+              ).toLocaleTimeString("es-MX", {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+              return (
+                <tr key={item.id_orden} style={{ background: rowBg }}>
+                  <td style={{ ...tdStyle, fontWeight: 600, fontSize: 12 }}>
+                    {item.id_orden}
+                  </td>
+                  <td style={tdStyle}>{item.nombre_proveedor}</td>
+                  <td style={tdStyle}>
+                    <span
+                      style={{
+                        background: "#F0EDE8",
+                        borderRadius: 10,
+                        padding: "2px 8px",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: "#1F1F1F",
+                      }}
+                    >
+                      {ETAPA_LABEL[item.etapa_actual] ?? item.etapa_actual}
+                    </span>
+                  </td>
+                  <td
+                    style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}
+                  >
+                    {item.prepacks_recibidos}/{item.total_prepacks}
+                  </td>
+                  <td
+                    style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}
+                  >
+                    {horaIngreso}
+                  </td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      textAlign: "right",
+                      fontWeight: 700,
+                      color: timeColor,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {item.elapsed} min
+                    {isCritical && (
+                      <span
+                        style={{
+                          marginLeft: 6,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: STATUS_COLOR.error,
+                          background: STATUS_BG.error,
+                          border: `1px solid ${STATUS_COLOR.error}40`,
+                          borderRadius: 8,
+                          padding: "1px 5px",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Crítico
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </ChartCard>
+  );
+}
+
+function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPorTurno) {
   // shared table styles
   const tableStyle = {
     width: "100%",
@@ -1320,19 +1780,11 @@ function buildStageData(preregistroKPIs, ordenesIncompletas) {
   );
 
   // ---- ENVÍO ----
-  const ordenesEnviadas = estatusOrdenes.filter(
-    (d) => d.etapaActual === "Envío",
-  ).length;
-  const ordenesEnBacklog = backlogOrdenes.filter(
-    (d) => d.minutosEnSistema > 30,
-  ).length;
-  const tiempoPromedioEnvio = formatNumber(
-    average(backlogOrdenes.map((d) => d.minutosEnSistema)),
-    1,
-  );
-  const ordenesCriticas = backlogOrdenes.filter(
-    (d) => d.minutosEnSistema >= 40,
-  ).length;
+  const ordenesEnviadas = envioKPIs?.ordenes_enviadas ?? 0;
+  const ordenesEnBacklog = envioKPIs?.ordenes_backlog ?? 0;
+  const tiempoPromedioEnvio = formatNumber(envioKPIs?.tiempo_promedio ?? 0, 1);
+  const ordenesCriticas = envioKPIs?.alertas_criticas ?? 0;
+  const prepacksTransito = envioKPIs?.prepacks_transito ?? 0;
 
   return {
     preregistro: {
@@ -2109,95 +2561,33 @@ function buildStageData(preregistroKPIs, ordenesIncompletas) {
         },
         {
           label: "Prepacks en tránsito",
-          value: backlogOrdenes.reduce((s, d) => s + d.prepacks, 0),
+          value: prepacksTransito,
           delta: null,
           unit: "",
         },
       ],
       charts: [
-        <ChartCard key="envio-backlog" title="Backlog de órdenes">
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Orden</th>
-                <th style={thStyle}>Proveedor</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Tiempo (min)</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Prepacks</th>
-              </tr>
-            </thead>
-            <tbody>
-              {backlogOrdenes.map((item) => (
-                <tr
-                  key={item.orden}
-                  style={{
-                    background: getBacklogRowBg(item.minutosEnSistema, 30, 40),
-                  }}
-                >
-                  <td style={{ ...tdStyle, fontWeight: 600 }}>{item.orden}</td>
-                  <td style={tdStyle}>{item.proveedor}</td>
-                  <td
-                    style={{
-                      ...tdStyle,
-                      textAlign: "right",
-                      fontWeight: 700,
-                      color:
-                        item.minutosEnSistema >= 40
-                          ? STATUS_COLOR.error
-                          : item.minutosEnSistema >= 30
-                            ? STATUS_COLOR.warning
-                            : "#1F1F1F",
-                    }}
-                  >
-                    {item.minutosEnSistema}
-                  </td>
-                  <td style={{ ...tdStyle, textAlign: "right" }}>
-                    {item.prepacks}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </ChartCard>,
-        <ChartCard key="envio-estatus" title="Estatus de órdenes">
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Orden</th>
-                <th style={thStyle}>Proveedor</th>
-                <th style={thStyle}>Etapa Actual</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Prepacks</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Hora Ingreso</th>
-              </tr>
-            </thead>
-            <tbody>
-              {estatusOrdenes.map((item) => (
-                <tr key={item.orden}>
-                  <td style={{ ...tdStyle, fontWeight: 600 }}>{item.orden}</td>
-                  <td style={tdStyle}>{item.proveedor}</td>
-                  <td style={tdStyle}>
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <StatusDot status={item.status} />
-                      {item.etapaActual}
-                    </span>
-                  </td>
-                  <td style={{ ...tdStyle, textAlign: "right" }}>
-                    {item.prepacks}
-                  </td>
-                  <td
-                    style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}
-                  >
-                    {item.horaIngreso}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <BacklogEnvioTable key="envio-backlog" />,
+        <div key="envio-ordenes-activas" style={{ gridColumn: "span 2" }}>
+          <OrdenesActivasTable />
+        </div>,
+        <ChartCard key="envio-turno" title="Envíos por turno" footer="Matutino 6-14 h · Vespertino 14-22 h">
+          {envioPorTurno.length === 0 ? (
+            <div style={{ height: 220, display: "flex", alignItems: "center", justifyContent: "center", color: "#6B6B6B", fontSize: 13 }}>
+              Sin envíos registrados hoy
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={envioPorTurno} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+                <CartesianGrid {...gridStyle} />
+                <XAxis dataKey="turno" tick={axisStyle} />
+                <YAxis tick={axisStyle} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="ordenes" name="Órdenes" fill="#111111" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="prepacks" name="Prepacks" fill="#A48F7A" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </ChartCard>,
       ],
     },
@@ -2205,13 +2595,13 @@ function buildStageData(preregistroKPIs, ordenesIncompletas) {
 }
 
 export default function Dashboard() {
-  const { kpis: preregistroKPIs} =
-    usePreregistroKPIs();
+  const { kpis: preregistroKPIs } = usePreregistroKPIs();
   const { data: ordenesIncompletas } = useOrdenesIncompletas();
+  const { kpis: envioKPIs, porTurno: envioPorTurno } = useEnvioKPIs();
   const [activeStage, setActiveStage] = useState(getCurrentStageId);
   const stageData = useMemo(
-    () => buildStageData(preregistroKPIs, ordenesIncompletas),
-    [preregistroKPIs, ordenesIncompletas],
+    () => buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPorTurno),
+    [preregistroKPIs, ordenesIncompletas, envioKPIs, envioPorTurno],
   );
   const currentStage = stageData[activeStage] || stageData.preregistro;
 
