@@ -104,6 +104,24 @@ export function getOrdenesConFiltro(filtros: FiltroOrdenes): ProgresoOrden[] {
 }
 
 /**
+ * Registra una falla de lectura RFID en un prepack sin avanzarlo de etapa.
+ * Marca hasFalla=true para que el frontend lo muestre como error en la etapa.
+ * Isaac Calderon Laflor
+ */
+export function registrarFallaPrepack(tagId: string, etapa: Etapa) {
+    for (const [orderId, prepacks] of Object.entries(ordenesPrueba)) {
+        const prepack = prepacks.find(p => p.id === tagId);
+        if (prepack) {
+            prepack.hasFalla  = true;
+            prepack.fallaEtapa = etapa;
+            console.log(`[FALLA] Prepack ${prepack.id} de orden ${orderId} — error lectura en ${etapa}`);
+            return { orderId, progreso: getProgresoOrden(orderId) };
+        }
+    }
+    return null;
+}
+
+/**
  * Simula recibir un escaneo RFID y avanza un prepack de etapa.
  * Author: Adrian Proano Bernal
  */

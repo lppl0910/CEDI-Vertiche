@@ -63,6 +63,8 @@ export interface Prepack {
     orderId: string;
     currentEtapa: Etapa; // Se asigna etapa cuando llega el primer escaneo
     historial: EventoEtapa[];
+    hasFalla?: boolean;   // true si tuvo un error de lectura RFID registrado
+    fallaEtapa?: Etapa;   // en qué etapa ocurrió la falla
 }
 
 /*

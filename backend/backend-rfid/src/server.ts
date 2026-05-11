@@ -4,7 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import ordenesRouter from './routes/ordenes';
 import alertasRouter from './routes/alertas';
-import { procesoEscaneoRFID } from './services/ordenService';
+import { procesoEscaneoRFID, registrarFallaPrepack } from './services/ordenService';
 import { type Etapa } from './types/rfid.types';
 import { connectDB } from './config/database';
 
@@ -46,6 +46,24 @@ app.post('/api/rfid/scan', (req, res) => {
     });
 
     res.json({ success: true, ...resultado });
+});
+
+// Endpoint para registrar errores de lectura RFID (fallas en sorter, QA, etc.)
+app.post('/api/rfid/falla', (req, res) => {
+    const { tagId, etapa } = req.body as { tagId: string; etapa: Etapa };
+
+    const resultado = registrarFallaPrepack(tagId, etapa);
+    if (!resultado) {
+        return res.status(404).json({ error: 'Prepack no encontrado' });
+    }
+
+    // Notificar al frontend para que actualice el stage afectado
+    io.emit('orden:progreso:actualizado', {
+        orderId: resultado.orderId,
+        progreso: resultado.progreso,
+    });
+
+    res.json({ success: true });
 });
 
 // Conexiones WebSocket

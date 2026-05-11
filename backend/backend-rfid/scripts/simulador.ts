@@ -162,19 +162,31 @@ async function obtenerPrepacks(): Promise<PrepackInfo[]> {
 async function escanearPrepack(pp: PrepackInfo): Promise<boolean> {
     const siguiente = siguienteEtapa(pp.currentEtapa)!;
 
-    // ── Error de Sorter: el prepack falla al entrar al sorter ────────────
+    // ── Error de Sorter: falla de lectura RFID al entrar al sorter ───────
     if (pp.currentEtapa === 'Registro' && Math.random() < P_ERROR_SORTER) {
         const ticks = Math.floor(Math.random() * 10) + 4;
         bloquear(pp.id, ticks);
         console.log(`  [SIM] ✗ ${pp.id.padEnd(18)} ${pp.orderId} | Error lectura Sorter → bloqueado ${Math.round(ticks * INTERVALO_MS / 1000)}s`);
+        // Notificar al backend para que lo marque como falla visible en el frontend
+        await fetch(`${BASE_URL}/api/rfid/falla`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tagId: pp.id, etapa: 'Sorter' }),
+        }).catch(() => {});
         return false;
     }
 
-    // ── Retención QA: el prepack no pasa inmediatamente ──────────────────
+    // ── Retención QA: revisión manual — falla transitoria ────────────────
     if (pp.currentEtapa === 'Preregistro' && Math.random() < P_RETENCION_QA) {
         const ticks = Math.floor(Math.random() * 8) + 3;
         bloquear(pp.id, ticks);
         console.log(`  [SIM] ⏸ ${pp.id.padEnd(18)} ${pp.orderId} | Retención QA — revisión manual ${Math.round(ticks * INTERVALO_MS / 1000)}s`);
+        // Notificar al backend
+        await fetch(`${BASE_URL}/api/rfid/falla`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tagId: pp.id, etapa: 'QA' }),
+        }).catch(() => {});
         return false;
     }
 

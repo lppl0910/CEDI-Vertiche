@@ -53,9 +53,15 @@ function adaptOrden(orden) {
 
     const done = proc >= total;
     const anyHereNow = rawPP.some(pp => pp.currentEtapa === etapa);
-    const status = done ? 'done' : anyHereNow ? 'active' : (proc > 0 ? 'active' : 'pending');
+    // Falla: algún prepack tiene error de lectura registrado en esta etapa
+    const fallaCount = rawPP.filter(pp => pp.hasFalla && pp.fallaEtapa === etapa).length;
+    const status = fallaCount > 0 ? 'falla'
+      : done       ? 'done'
+      : anyHereNow ? 'active'
+      : proc > 0   ? 'active'
+      : 'pending';
 
-    stages[key] = { proc, total, startMin, durMin, status, sent: false };
+    stages[key] = { proc, total, startMin, durMin, status, fallaCount, sent: false };
   });
 
   if (stages.envio) stages.envio.sent = stages.envio.status === 'done';
@@ -82,7 +88,7 @@ function adaptOrden(orden) {
     product: orden.orderId,
     pidx: 0,
     arrivalTs,
-    hasFalla: false,
+    hasFalla: rawPP.some(pp => pp.hasFalla),
     colors: ['—'],
     sizes: ['—'],
     prepacks: adaptedPrepacks,
@@ -91,7 +97,30 @@ function adaptOrden(orden) {
 }
 
 function buildIncidencias(prepacks) {
-  const detected = prepacks.filter(pp => {
+  const incidencias = [];
+
+  // ── 1. Fallas registradas por el backend (errores RFID reales) ────────
+  const conFalla = prepacks.filter(pp => pp.hasFalla);
+  conFalla.forEach((pp, i) => {
+    const etapa = pp.fallaEtapa ?? pp.currentEtapa;
+    const stage = ETAPA_TO_KEY[etapa] ?? etapa;
+    incidencias.push({
+      id:         `INC-${String(i + 1).padStart(3, '0')}`,
+      ppId:       pp.id,
+      orderId:    pp.orderId ?? '',
+      stage,
+      desc:       `Error de lectura RFID en ${etapa} — prepack ${pp.id} no pudo ser escaneado`,
+      status:     'open',
+      causa:      '',
+      ts:         Date.now(),
+      resolvedAt: null,
+    });
+  });
+
+  // ── 2. Prepacks detenidos más allá del SLA (detección por tiempo) ─────
+  const offset = conFalla.length;
+  const porSLA = prepacks.filter(pp => {
+    if (pp.hasFalla) return false; // ya está arriba
     const sla = SLA_POR_ETAPA[pp.currentEtapa];
     if (!sla) return false;
     const events = (pp.historial ?? [])
@@ -101,7 +130,7 @@ function buildIncidencias(prepacks) {
     return (Date.now() - Math.max(...events)) / 60000 > sla;
   });
 
-  return detected.map((pp, i) => {
+  porSLA.forEach((pp, i) => {
     const sla    = SLA_POR_ETAPA[pp.currentEtapa] ?? 0;
     const events = (pp.historial ?? [])
       .filter(e => e.etapa === pp.currentEtapa)
@@ -110,22 +139,22 @@ function buildIncidencias(prepacks) {
     const elapsedMin = lastTs ? Math.round((Date.now() - lastTs) / 60000) : 0;
     const status     = elapsedMin >= sla * 2 ? 'escalated' : 'open';
     const stage      = ETAPA_TO_KEY[pp.currentEtapa] ?? pp.currentEtapa;
-    const desc       = elapsedMin >= sla * 2
-      ? `Prepack crítico — detenido ${elapsedMin}min en ${pp.currentEtapa}, supera 2x SLA`
-      : `Prepack detenido ${elapsedMin}min en ${pp.currentEtapa} — revisar lectora RFID`;
-
-    return {
-      id:         `INC-${String(i + 1).padStart(3, '0')}`,
+    incidencias.push({
+      id:         `INC-${String(offset + i + 1).padStart(3, '0')}`,
       ppId:       pp.id,
-      orderId:    pp.orderId,
+      orderId:    pp.orderId ?? '',
       stage,
-      desc,
+      desc:       elapsedMin >= sla * 2
+        ? `Prepack crítico — detenido ${elapsedMin}min en ${pp.currentEtapa}, supera 2× SLA`
+        : `Prepack detenido ${elapsedMin}min en ${pp.currentEtapa} — revisar lectora RFID`,
       status,
       causa:      '',
       ts:         lastTs,
       resolvedAt: null,
-    };
+    });
   });
+
+  return incidencias;
 }
 
 export default function SicatRfid({ onInterfaceChange, onProfileOpen }) {
