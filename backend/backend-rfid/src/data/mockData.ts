@@ -6,19 +6,13 @@
     Author: Adrian Proano Bernal
 */
 
-import type { Prepack, Etapa } from '../types/rfid.types';
-
-const ETAPAS: Etapa[] = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
-
-function etapaRandom(maxIndex: number): Etapa {
-    return ETAPAS[Math.floor(Math.random() * Math.max(1, maxIndex))]!;
-}
+import type { Prepack } from '../types/rfid.types';
 
 function generarPrepack(orderId: string, count: number): Prepack[] {
     return Array.from({ length: count }, (_, i) => ({
         id: `PP-${orderId}-${String(i + 1).padStart(3, '0')}`,
         orderId,
-        currentEtapa: etapaRandom(ETAPAS.length),
+        currentEtapa: '', // Inicialmente sin etapa asignada
         historial: []
     }));
 }
@@ -36,7 +30,6 @@ function generarPrepack(orderId: string, count: number): Prepack[] {
 
 export const ordenesPrueba: Record<string, Prepack[]> = {
     'ORD-001': generarPrepack('ORD-001', 10),
-    'ORD-002': generarPrepack('ORD-002', 8),
-    'ORD-003': generarPrepack('ORD-003', 15)
+    'ORD-002': generarPrepack('ORD-002', 10),
+    'ORD-003': generarPrepack('ORD-003', 10),
 };
-

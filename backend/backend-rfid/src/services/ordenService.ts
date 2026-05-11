@@ -8,19 +8,34 @@ import type { ProgresoOrden, Etapa, ProgresoEtapa} from '../types/rfid.types';
     Author: Adrian Proano Bernal
 */
 
-const ALL_ETAPAS: Etapa[] = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
+const ALL_ETAPAS: Etapa[] = ['','Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
 
 export function getProgresoOrden(orderId: string): ProgresoOrden | null {
     const prepacks = ordenesPrueba[orderId];
     if (!prepacks) return null;
 
-    //Conteo de prepacks por etapa
+    //Conteo de prepacks por etapa (incluye historial para marcar etapas pasadas)
     const contarPorEtapa = ALL_ETAPAS.reduce<Record<Etapa, number>>(
         (acc, s) => ({ ...acc, [s]: 0 }),
         {} as Record<Etapa, number>
     );
 
-    prepacks.forEach((p) => contarPorEtapa[p.currentEtapa]++);
+    prepacks.forEach((p) => {
+        if (p.currentEtapa === '') {
+            contarPorEtapa['']++;
+            return;
+        }
+
+        const etapasVistas = new Set<Etapa>();
+        etapasVistas.add(p.currentEtapa);
+        (p.historial ?? []).forEach((e) => {
+            if (e.etapa) etapasVistas.add(e.etapa);
+        });
+
+        etapasVistas.forEach((etapa) => {
+            contarPorEtapa[etapa]++;
+        });
+    });
 
     const progresoEtapa: ProgresoEtapa[] = ALL_ETAPAS.map((etapa) => ({
         etapa,
@@ -47,7 +62,7 @@ export function procesoEscaneoRFID(tagId: string, readerId: string, newEtapa: Et
         if (prepack) {
             //Actualizar historial
             prepack.historial.push({
-                etapa: prepack.currentEtapa,
+                etapa: newEtapa,
                 timestamp: new Date(),
                 readerId
             });

@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import ordenesRouter from './routes/ordenes';
+import alertasRouter from './routes/alertas';
 import { procesoEscaneoRFID } from './services/ordenService';
 import { type Etapa } from './types/rfid.types';
 
@@ -19,6 +20,7 @@ app.use(express.json());
 
 // Definir rutas
 app.use('/api/ordenes', ordenesRouter);
+app.use('/api/alertas', alertasRouter);
 
 // Endpoint que recibira los escaneos de RFID
 app.post('/api/rfid/scan', (req, res) => {
