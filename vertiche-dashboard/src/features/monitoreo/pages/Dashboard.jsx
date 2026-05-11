@@ -18,7 +18,6 @@ import {
   bahiasGeneral,
   equipos,
   ordenesIncompletasPorProveedor,
-  tendenciaOrdenesIncompletas,
   proveedoresEstrella,
   erroresPPPorProveedor,
   prepacksRetornadosQA,
@@ -41,6 +40,8 @@ import {
 import KPICard from "../../../shared/components/ui/KPICard";
 
 import { usePreregistroKPIs } from "../hooks/usePreRegistroKPI";
+import { useOrdenesIncompletas } from "../hooks/useOrdenesIncompletas";
+import { useTendenciaSemanal } from "../hooks/useTendenciaSemanal";
 
 const STATUS_COLOR = {
   success: "#6E8B6B",
@@ -263,7 +264,7 @@ function ChartCard({ title, children, footer }) {
           {title}
         </h2>
         {footer && (
-          <span style={{ fontSize: 12, color: "#6B6B6B" }}>{footer}</span>
+          <div style={{ fontSize: 12, color: "#6B6B6B" }}>{footer}</div>
         )}
       </div>
       {children}
@@ -594,7 +595,119 @@ function getBacklogRowBg(minutos, umbral1, umbral2) {
   return "transparent";
 }
 
-function buildStageData(preregistroKPIs) {
+function TendenciaTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  const { total, variacion } = payload[0].payload;
+  return (
+    <div
+      style={{
+        background: "#FFFFFF",
+        border: "1px solid #E7E2DC",
+        borderRadius: 8,
+        padding: "8px 12px",
+        fontSize: 12,
+        fontFamily: "Inter",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+      }}
+    >
+      <div style={{ color: "#6B6B6B", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontWeight: 600, color: "#B65E4A" }}>Incompletas: {total}</div>
+      {variacion !== null && variacion !== undefined && (
+        <div style={{ color: variacion > 0 ? "#B65E4A" : "#6E8B6B", fontSize: 11, marginTop: 2 }}>
+          {variacion > 0 ? "+" : ""}{variacion}% vs sem. anterior
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TendenciaSemanalChart() {
+  const [semanas, setSemanas] = useState(8);
+  const { data, loading } = useTendenciaSemanal(semanas);
+  const avg =
+    data.length > 0
+      ? Math.round(data.reduce((s, d) => s + d.total, 0) / data.length)
+      : 0;
+
+  return (
+    <ChartCard
+      title="Tendencia semanal de órdenes incompletas"
+      footer={
+        <div style={{ display: "flex", gap: 4 }}>
+          {[4, 8, 12].map((n) => (
+            <button
+              key={n}
+              onClick={() => setSemanas(n)}
+              style={{
+                border: "1px solid #E7E2DC",
+                background: semanas === n ? "#111111" : "#FFFFFF",
+                color: semanas === n ? "#FFFFFF" : "#6B6B6B",
+                borderRadius: 6,
+                padding: "2px 8px",
+                fontSize: 11,
+                fontWeight: 600,
+                fontFamily: "var(--font)",
+                cursor: "pointer",
+              }}
+            >
+              {n}S
+            </button>
+          ))}
+        </div>
+      }
+    >
+      {loading ? (
+        <div
+          style={{
+            height: 220,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#6B6B6B",
+            fontSize: 13,
+          }}
+        >
+          Cargando...
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={220}>
+          <LineChart
+            data={data}
+            margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
+          >
+            <CartesianGrid {...gridStyle} />
+            <XAxis dataKey="semana" tick={axisStyle} />
+            <YAxis tick={axisStyle} />
+            <Tooltip content={<TendenciaTooltip />} />
+            {avg > 0 && (
+              <ReferenceLine
+                y={avg}
+                stroke="#BBBBBB"
+                strokeDasharray="4 4"
+                label={{
+                  value: `Prom ${avg}`,
+                  position: "insideTopRight",
+                  fontSize: 11,
+                  fill: "#BBBBBB",
+                }}
+              />
+            )}
+            <Line
+              type="monotone"
+              dataKey="total"
+              name="Incompletas"
+              stroke="#B65E4A"
+              strokeWidth={2}
+              dot={{ r: 3, fill: "#B65E4A" }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
+    </ChartCard>
+  );
+}
+
+function buildStageData(preregistroKPIs, ordenesIncompletas) {
   // shared table styles
   const tableStyle = {
     width: "100%",
@@ -632,7 +745,17 @@ function buildStageData(preregistroKPIs) {
   const tasaCompletas = preregistroKPIs.tasa_completas;
   const provConIncidencias = preregistroKPIs.proveedores_con_incidencias;
   const semanaEnCurso = preregistroKPIs.semana_en_curso;
-  const paretoPreregistro = calcularPareto(ordenesIncompletasPorProveedor, 'incompletas');
+  const paretoPreregistro = (ordenesIncompletas || []).map((item) => ({
+    proveedor: item.proveedor,
+    incompletas: item.incompletas,
+    pctAcum: item.pct_acumulado,
+    banda:
+      item.banda === "rojo"
+        ? "error"
+        : item.banda === "naranja"
+          ? "warning"
+          : "success",
+  }));
   // ---- QA ----
   const totalPrepacks = 1640;
   const totalErroresQA = erroresPPPorProveedor.reduce(
@@ -759,7 +882,7 @@ function buildStageData(preregistroKPIs) {
           delta: 0,
           unit: "",
         },
-        { label: 'Semana', value: semanaEnCurso, delta: null, unit: '' },
+        { label: "Semana", value: semanaEnCurso, delta: null, unit: "" },
       ],
       charts: [
         <ChartCard
@@ -780,7 +903,16 @@ function buildStageData(preregistroKPIs) {
                   key={item.proveedor}
                   style={{ background: STATUS_BG[item.banda] }}
                 >
-                  <td style={tdStyle}>{item.proveedor}</td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      textAlign: "right",
+                      fontWeight: 700,
+                      color: STATUS_COLOR[item.banda],
+                    }}
+                  >
+                    {item.pctAcum}%
+                  </td>
                   <td
                     style={{ ...tdStyle, textAlign: "right", fontWeight: 600 }}
                   >
@@ -801,30 +933,7 @@ function buildStageData(preregistroKPIs) {
             </tbody>
           </table>
         </ChartCard>,
-        <ChartCard
-          key="prereg-trend"
-          title="Tendencia semanal de órdenes incompletas"
-        >
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart
-              data={tendenciaOrdenesIncompletas}
-              margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
-            >
-              <CartesianGrid {...gridStyle} />
-              <XAxis dataKey="semana" tick={axisStyle} />
-              <YAxis tick={axisStyle} />
-              <Tooltip content={<CustomTooltip />} />
-              <Line
-                type="monotone"
-                dataKey="total"
-                name="Incompletas"
-                stroke="#B65E4A"
-                strokeWidth={2}
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartCard>,
+        <TendenciaSemanalChart key="prereg-trend" />,
         <ChartCard key="prereg-stars" title="Ranking de proveedores">
           <table style={tableStyle}>
             <thead>
@@ -1659,11 +1768,12 @@ function buildStageData(preregistroKPIs) {
 export default function Dashboard() {
   const { kpis: preregistroKPIs, loading: loadingPreregistro } =
     usePreregistroKPIs();
+  const { data: ordenesIncompletas } = useOrdenesIncompletas();
   const [activeStage, setActiveStage] = useState(getCurrentStageId);
   const stageData = useMemo(
-  () => buildStageData(preregistroKPIs),
-  [preregistroKPIs]
-);
+    () => buildStageData(preregistroKPIs, ordenesIncompletas),
+    [preregistroKPIs, ordenesIncompletas],
+  );
   const currentStage = stageData[activeStage] || stageData.preregistro;
 
   useEffect(() => {
