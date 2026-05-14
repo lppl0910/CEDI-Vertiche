@@ -157,7 +157,7 @@ function buildIncidencias(prepacks) {
   return incidencias;
 }
 
-export default function SicatRfid({ onInterfaceChange, onProfileOpen }) {
+export default function SicatRfid({ onInterfaceChange, onProfileOpen, onAdminOpen, allowedPanels, user }) {
   const [currentTab,      setCurrentTab]      = useState('flujo');
   const [incOverrides,    setIncOverrides]    = useState({}); // keyed by ppId
   // #217 — Filtros que se pasan al backend vía useOrdenes
@@ -198,6 +198,9 @@ export default function SicatRfid({ onInterfaceChange, onProfileOpen }) {
         activeOrderCount={activeOrdCount}
         onInterfaceChange={onInterfaceChange}
         onProfileOpen={onProfileOpen}
+        onAdminOpen={onAdminOpen}
+        allowedPanels={allowedPanels}
+        user={user}
       />
 
       {/* Indicador de conexión en tiempo real */}

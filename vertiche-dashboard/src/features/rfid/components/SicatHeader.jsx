@@ -1,27 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
-import { UserCircle, ChevronDown, Monitor } from 'lucide-react';
+import { UserCircle, ChevronDown, Monitor, ShieldCheck } from 'lucide-react';
 
 function pad(n) { return String(n).padStart(2, '0'); }
 
-const tabs = [
+const RFID_TABS = [
   { id: 'flujo',       label: 'Análisis de flujo' },
   { id: 'historial',   label: 'Historial' },
   { id: 'incidencias', label: 'Incidencias', badge: true },
   { id: 'alertas',     label: 'Historial Alertas' },
 ];
 
-const interfaces = [
+const ALL_INTERFACES = [
   { id: 'monitoreo', label: 'Monitoreo' },
   { id: 'rfid',      label: 'RFID' },
   { id: 'ventas',    label: 'Ventas' },
 ];
 
-export default function SicatHeader({ currentTab, onTabChange, incBadgeCount, activeOrderCount, onSearch, onInterfaceChange, onProfileOpen }) {
-  const [clock,      setClock]      = useState('--:--:--');
-  const [avatarOpen, setAvatarOpen] = useState(false);
-  const [comboOpen,  setComboOpen]  = useState(false);
-  const avatarRef = useRef(null);
-  const comboRef  = useRef(null);
+export default function SicatHeader({
+  currentTab, onTabChange,
+  incBadgeCount, activeOrderCount,
+  onSearch, onInterfaceChange,
+  onProfileOpen, onAdminOpen,
+  allowedPanels, user,
+}) {
+  const [clock,     setClock]     = useState('--:--:--');
+  const [comboOpen, setComboOpen] = useState(false);
+  const comboRef = useRef(null);
 
   useEffect(() => {
     const tick = () => {
@@ -35,12 +39,15 @@ export default function SicatHeader({ currentTab, onTabChange, incBadgeCount, ac
 
   useEffect(() => {
     const handler = e => {
-      if (avatarRef.current && !avatarRef.current.contains(e.target)) setAvatarOpen(false);
-      if (comboRef.current  && !comboRef.current.contains(e.target))  setComboOpen(false);
+      if (comboRef.current && !comboRef.current.contains(e.target)) setComboOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  const visibleInterfaces = allowedPanels?.length
+    ? ALL_INTERFACES.filter(i => allowedPanels.includes(i.id))
+    : ALL_INTERFACES;
 
   return (
     <nav style={{
@@ -59,7 +66,7 @@ export default function SicatHeader({ currentTab, onTabChange, incBadgeCount, ac
 
       {/* Center: Tabs */}
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
-        {tabs.map(tab => {
+        {RFID_TABS.map(tab => {
           const isActive = currentTab === tab.id;
           const badge = tab.badge ? incBadgeCount : 0;
           return (
@@ -93,8 +100,8 @@ export default function SicatHeader({ currentTab, onTabChange, incBadgeCount, ac
         })}
       </div>
 
-      {/* Right: search + live + clock + orders + interface switcher + avatar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      {/* Right */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
 
         {/* Search */}
         <div style={{ position: 'relative' }}>
@@ -104,7 +111,7 @@ export default function SicatHeader({ currentTab, onTabChange, incBadgeCount, ac
             placeholder="Buscar ID orden o prepack…"
             onChange={e => onSearch?.(e.target.value)}
             style={{
-              width: 220, height: 30, padding: '0 10px 0 28px',
+              width: 200, height: 30, padding: '0 10px 0 28px',
               border: '1px solid #E7E2DC', borderRadius: 8, fontSize: 12,
               fontFamily: 'var(--font)', background: '#F8F6F3', outline: 'none',
               transition: 'border-color .15s, background .15s',
@@ -132,102 +139,88 @@ export default function SicatHeader({ currentTab, onTabChange, incBadgeCount, ac
           <span>{activeOrderCount}</span>&nbsp;órdenes activas
         </div>
 
-        {/* Interface switcher */}
-        <div ref={comboRef} style={{ position: 'relative' }}>
+        {/* Interface switcher — hidden when user only has 1 panel */}
+        {visibleInterfaces.length > 1 && (
+          <div ref={comboRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setComboOpen(o => !o)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 10px', borderRadius: 8, fontSize: 13,
+                fontWeight: 500, color: '#1F1F1F',
+                background: '#F8F6F3', border: '1px solid #E7E2DC',
+                cursor: 'pointer', fontFamily: 'var(--font)',
+                transition: 'background 0.1s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#EDE8E2'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8F6F3'}
+            >
+              <Monitor size={14} color="#6B6B6B" />
+              RFID
+              <ChevronDown size={13} color="#6B6B6B" style={{ transition: 'transform 0.15s', transform: comboOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+            </button>
+
+            {comboOpen && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 6px)', right: 0,
+                background: '#FFFFFF', border: '1px solid #E7E2DC',
+                borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                minWidth: 160, overflow: 'hidden', zIndex: 300,
+              }}>
+                <div style={{ padding: '8px 14px 6px', fontSize: 11, color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 500, borderBottom: '1px solid #F0EDE8' }}>
+                  Mis interfaces
+                </div>
+                {visibleInterfaces.map((iface, i) => {
+                  const isActive = iface.id === 'rfid';
+                  const isLast = i === visibleInterfaces.length - 1;
+                  return (
+                    <button
+                      key={iface.id}
+                      onClick={() => { onInterfaceChange?.(iface.id); setComboOpen(false); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        width: '100%', textAlign: 'left', padding: '10px 14px',
+                        fontSize: 13, fontWeight: isActive ? 500 : 400,
+                        color: isActive ? '#111111' : '#1F1F1F',
+                        background: isActive ? '#F8F6F3' : '#FFFFFF',
+                        border: 'none', borderBottom: isLast ? 'none' : '1px solid #F0EDE8',
+                        cursor: 'pointer', fontFamily: 'var(--font)',
+                      }}
+                      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#F8F6F3'; }}
+                      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = '#FFFFFF'; }}
+                    >
+                      <span>{iface.label}</span>
+                      {isActive && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#111111', display: 'inline-block' }} />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Admin button (superadmin only) */}
+        {user?.role === 'superadmin' && (
           <button
-            onClick={() => setComboOpen(o => !o)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '6px 10px', borderRadius: 8, fontSize: 13,
-              fontWeight: 500, color: '#1F1F1F',
-              background: '#F8F6F3', border: '1px solid #E7E2DC',
-              cursor: 'pointer', fontFamily: 'var(--font)',
-              transition: 'background 0.1s',
-            }}
+            onClick={() => { window.history.pushState({}, '', '/admin'); onAdminOpen?.(); }}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: '#6B6B6B', background: '#F8F6F3', border: '1px solid #E7E2DC', cursor: 'pointer', fontFamily: 'var(--font)' }}
             onMouseEnter={e => e.currentTarget.style.background = '#EDE8E2'}
             onMouseLeave={e => e.currentTarget.style.background = '#F8F6F3'}
           >
-            <Monitor size={14} color="#6B6B6B" />
-            RFID
-            <ChevronDown size={13} color="#6B6B6B" style={{ transition: 'transform 0.15s', transform: comboOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+            <ShieldCheck size={13} />
+            Admin
           </button>
-
-          {comboOpen && (
-            <div style={{
-              position: 'absolute', top: 'calc(100% + 6px)', right: 0,
-              background: '#FFFFFF', border: '1px solid #E7E2DC',
-              borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-              minWidth: 160, overflow: 'hidden', zIndex: 300,
-            }}>
-              <div style={{ padding: '8px 14px 6px', fontSize: 11, color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 500, borderBottom: '1px solid #F0EDE8' }}>
-                Mis interfaces
-              </div>
-              {interfaces.map((iface, i) => {
-                const isActive = iface.id === 'rfid';
-                const isLast = i === interfaces.length - 1;
-                return (
-                  <button
-                    key={iface.id}
-                    onClick={() => { onInterfaceChange?.(iface.id); setComboOpen(false); }}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      width: '100%', textAlign: 'left', padding: '10px 14px',
-                      fontSize: 13, fontWeight: isActive ? 500 : 400,
-                      color: isActive ? '#111111' : '#1F1F1F',
-                      background: isActive ? '#F8F6F3' : '#FFFFFF',
-                      border: 'none', borderBottom: isLast ? 'none' : '1px solid #F0EDE8',
-                      cursor: 'pointer', fontFamily: 'var(--font)',
-                    }}
-                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#F8F6F3'; }}
-                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = '#FFFFFF'; }}
-                  >
-                    <span>{iface.label}</span>
-                    {isActive && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#111111', display: 'inline-block' }} />}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Avatar */}
-        <div ref={avatarRef} style={{ position: 'relative' }}>
-          <button
-            onClick={() => setAvatarOpen(o => !o)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}
-          >
-            <UserCircle size={24} color="#6B6B6B" />
-          </button>
-          {avatarOpen && (
-            <div style={{
-              position: 'absolute', top: 'calc(100% + 6px)', right: 0,
-              background: '#FFFFFF', border: '1px solid #E7E2DC',
-              borderRadius: 10, boxShadow: '0 6px 20px rgba(17,17,17,.12)',
-              minWidth: 172, zIndex: 400, overflow: 'hidden',
-            }}>
-              <div style={{ padding: '12px 14px 8px', borderBottom: '1px solid #E7E2DC' }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>Supervisor CEDIS</div>
-                <div style={{ fontSize: 11, color: '#6B6B6B', marginTop: 1 }}>Turno Matutino · Vertiche</div>
-              </div>
-              {[
-                { icon: '👤', label: 'Perfil', action: () => { setAvatarOpen(false); onProfileOpen?.(); } },
-                { icon: '🔄', label: 'Cambiar Turno', action: () => setAvatarOpen(false) },
-                { icon: '🚪', label: 'Logout', danger: true, action: () => setAvatarOpen(false) },
-              ].map(item => (
-                <div
-                  key={item.label}
-                  onClick={item.action}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', fontSize: 12, cursor: 'pointer', transition: 'background .1s', color: item.danger ? '#B65E4A' : '#1F1F1F' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#F8F6F3'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <span style={{ fontSize: 14 }}>{item.icon}</span>
-                  {item.label}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <button
+          onClick={onProfileOpen}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', borderRadius: 8, transition: 'background .1s' }}
+          onMouseEnter={e => e.currentTarget.style.background = '#F8F6F3'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+        >
+          <UserCircle size={24} color="#6B6B6B" />
+        </button>
       </div>
 
       <style>{`@keyframes sicat-blink { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
