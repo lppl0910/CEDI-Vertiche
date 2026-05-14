@@ -3,8 +3,18 @@ import './styles/ChatFAB.css';
 
 const CHATBOT_URL = 'http://localhost:8090';
 
+// Convierte **texto** en <strong>texto</strong>
+function renderMarkdown(text) {
+  const parts = text.split(/\*\*(.*?)\*\*/g);
+  return parts.map((part, i) =>
+    i % 2 === 1
+      ? <strong key={i}>{part}</strong>
+      : part
+  );
+}
+
 export function ChatFAB() {
-  const [open, setOpen]       = useState(false);
+  const [open, setOpen]         = useState(false);
   const [messages, setMessages] = useState([
     {
       role: 'bot',
@@ -17,7 +27,7 @@ export function ChatFAB() {
       ],
     },
   ]);
-  const [input, setInput]     = useState('');
+  const [input, setInput]   = useState('');
   const [loading, setLoading] = useState(false);
   const messagesRef = useRef(null);
 
@@ -27,7 +37,6 @@ export function ChatFAB() {
     }
   }, [messages, open]);
 
-  // Construye el historial para mandar al backend
   const buildHistory = () =>
     messages
       .filter(m => m.role !== 'bot' || messages.indexOf(m) > 0)
@@ -38,7 +47,11 @@ export function ChatFAB() {
     if (!msg || loading) return;
     setInput('');
 
-    const userMsg = { role: 'user', text: msg, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) };
+    const userMsg = {
+      role: 'user',
+      text: msg,
+      time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+    };
     setMessages(m => [...m, userMsg]);
     setLoading(true);
 
@@ -112,13 +125,14 @@ export function ChatFAB() {
                   {m.role === 'bot' ? 'Asistente' : 'Tú'}
                 </div>
                 <div className={`chat-fab__bubble ${m.role === 'bot' ? 'chat-fab__bubble--bot' : 'chat-fab__bubble--user'}`}>
-                  {m.text}
+                  {m.role === 'bot' ? renderMarkdown(m.text) : m.text}
                 </div>
                 <div className="chat-fab__message-time">{m.time}</div>
 
-                {/* Sugerencias como botones */}
+                {/* Sugerencias */}
                 {m.role === 'bot' && m.suggestions?.length > 0 && (
                   <div className="chat-fab__suggestions">
+                    <div className="chat-fab__suggestions-label">Sugerencias</div>
                     {m.suggestions.map((s, si) => (
                       <button
                         key={si}

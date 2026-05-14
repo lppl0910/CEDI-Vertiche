@@ -218,6 +218,7 @@
   background: var(--c-black);
   transform: rotate(0deg) scale(1);
 }
+
 /* ── Sugerencias ── */
 .chat-fab__suggestions {
   display: flex;
@@ -226,21 +227,31 @@
   margin-top: 6px;
 }
 
+.chat-fab__suggestions-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--c-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 2px;
+  margin-bottom: 2px;
+}
+
 .chat-fab__suggestion-btn {
-  background: var(--c-bg);
-  border: 1px solid var(--c-border);
+  background: #D9BFA0;   /* ← antes #C8A882 */
+  border: 1px solid #C8A882;
   border-radius: 8px;
   padding: 5px 10px;
   font-size: 11px;
   font-family: var(--font);
-  color: var(--c-black);
+  color: #1F1F1F;
   cursor: pointer;
   text-align: left;
   transition: background 0.1s;
 }
 
 .chat-fab__suggestion-btn:hover {
-  background: var(--c-border);
+  background: #C8A882; 
 }
 
 /* ── Loading dots ── */

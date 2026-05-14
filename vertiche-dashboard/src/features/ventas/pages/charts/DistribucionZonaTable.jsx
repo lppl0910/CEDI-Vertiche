@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Card } from '../Card';
 import { ChartTitle } from '../ChartTitle';
+import "../styles/DistribucionZonaTable.css";
 
 const HEADERS = ['ID', 'Sucursal', 'Zona', 'Ingresos', 'Ticket', 'Uds.'];
 const PAGE_SIZE = 10;

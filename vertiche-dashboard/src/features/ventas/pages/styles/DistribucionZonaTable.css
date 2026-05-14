@@ -1,0 +1,10 @@
+.section-tiendas__table-header {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+}
+
+.section-tiendas__search {
+ max-height: max-content; 
+}

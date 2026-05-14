@@ -143,84 +143,69 @@ export default class VentasController extends AbstractController {
 
   // ── GET /ventas/yoy ──────────────────────────────────────────────────
   private async getYoY(req: Request, res: Response) {
-    try {
-      const period = (req.query.period as string) || "30d";
-      const dias = diasMap[period] ?? 30;
+  try {
+    const anioActual = 2025;
+    const anioAnterior = anioActual - 1;
+    const zona = req.query.zona as string;
+    const temporada = req.query.temporada as string;
 
-      const region = (req.query.region as string) || "all";
+    const tiendaWhere = zona && zona !== "all" ? { region: zona } : undefined;
+    const productoWhere = temporada && temporada !== "all" ? { temporada } : undefined;
 
-      const anioActual = 2025;
-      const anioAnterior = anioActual - 1;
-      const zona = req.query.zona as string;
-      const temporada = req.query.temporada as string;
-
-      const tiendaWhere =
-        zona && zona !== "all" ? { region: zona } : undefined;
-      const productoWhere =
-        temporada && temporada !== "all" ? { temporada } : undefined;
-
-      const query = async (anio: number) => {
-        return db.Fact_Ventas.findAll({
-          attributes: [
-            [col("Dim_Tiempo.mes_nombre"), "mes"],
-            [fn("SUM", col("precio_final")), "ingresos"],
-          ],
-          include: [
-            {
-              model: db.Dim_Tiempo,
-              attributes: [],
-              where: literal(
-                `Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY) AND ${anio}`,
-              ),
-            },
-            {
-              model: db.Dim_Tienda,
-              attributes: [],
-              where: literal(
-                `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
-              ),
-            },
-            {
-              model: db.Dim_Tienda,
-              attributes: [],
-              where: tiendaWhere,
-            },
-            ...(productoWhere
-              ? [{ model: db.Dim_Producto, attributes: [], where: productoWhere }]
-              : []),
-          ],
-          group: ["Dim_Tiempo.mes_nombre"],
-          raw: true,
-        });
-      };
-
-      const meses = [
-        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
-      ];
-
-      const toArray = (rows: any[]) =>
-        meses.map((mes) => {
-          const row = rows.find((r: any) => r.mes === mes);
-          return row ? Math.round(parseFloat(row.ingresos) / 1000) : 0;
-        });
-
-      const [actual, anterior] = await Promise.all([
-        query(anioActual),
-        query(anioAnterior),
-      ]);
-
-      res.status(200).json({
-        anioActual,
-        anioAnterior,
-        actual: toArray(actual),
-        anterior: toArray(anterior),
+    const query = async (anio: number) => {
+      return db.Fact_Ventas.findAll({
+        attributes: [
+          [col("Dim_Tiempo.mes_nombre"), "mes"],
+          [fn("SUM", col("precio_final")), "ingresos"],
+        ],
+        include: [
+          {
+            model: db.Dim_Tiempo,
+            attributes: [],
+            where: { anio },           // ← solo filtra por año, sin período
+          },
+          {
+            model: db.Dim_Tienda,
+            attributes: [],
+            where: tiendaWhere,
+            required: !!tiendaWhere,
+          },
+          ...(productoWhere
+            ? [{ model: db.Dim_Producto, attributes: [], where: productoWhere, required: true }]
+            : []),
+        ],
+        group: ["Dim_Tiempo.mes_nombre"],
+        raw: true,
       });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
-    }
+    };
+
+    const meses = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+    ];
+
+    const toArray = (rows: any[]) =>
+      meses.map((mes) => {
+        const row = rows.find((r: any) => r.mes === mes);
+        return row ? Math.round(parseFloat(row.ingresos) / 1000) : 0;
+      });
+
+    const [actual, anterior] = await Promise.all([
+      query(anioActual),
+      query(anioAnterior),
+    ]);
+
+    res.status(200).json({
+      anioActual,
+      anioAnterior,
+      actual: toArray(actual),
+      anterior: toArray(anterior),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ mensaje: err });
   }
+}
 
   // ── GET /ventas/performance ──────────────────────────────────────────
   private async getPerformance(req: Request, res: Response) {

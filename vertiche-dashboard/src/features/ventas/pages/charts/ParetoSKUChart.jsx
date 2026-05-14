@@ -16,6 +16,10 @@ import { grid, ax, C } from '../CONSTANTES';
  *   pct = porcentaje acumulado de ingresos hasta ese SKU
  */
 export function ParetoSKUChart({ paretoData }) {
+  // Calcula el ancho necesario para el nombre más largo (aprox. 6.5px por carácter a font-size 10)
+  const maxLabelLength = Math.max(...paretoData.map(p => p.name.length));
+  const labelWidth = Math.min(Math.max(maxLabelLength * 4, 100), 80);
+
   return (
     <Card>
       <ChartTitle
@@ -27,13 +31,13 @@ export function ParetoSKUChart({ paretoData }) {
         <LegendDot color={C.taupe} />B — 15% &nbsp;
         <LegendDot color={C.beige} />C — 5%
       </div>
-      <ResponsiveContainer width="100%" height={160}>
-        <ComposedChart data={paretoData} margin={{ top: 2, right: 30, bottom: 0, left: -10 }}>
+      <ResponsiveContainer width="100%" height={300}>
+        <ComposedChart data={paretoData} margin={{ top: 2, right: 5, bottom: 0, left: -10 }}>
           <CartesianGrid strokeDasharray="3 3" {...grid} />
           <XAxis
             dataKey="name"
             tick={{ ...ax, fontSize: 9 }} axisLine={false} tickLine={false}
-            angle={-20} textAnchor="end" height={36}
+            angle={-20} textAnchor="end" height={labelWidth}
           />
           <YAxis
             yAxisId="l" tick={ax} axisLine={false} tickLine={false}
