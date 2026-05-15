@@ -1,0 +1,143 @@
+/**
+ * Lógica de negocio para órdenes y prepacks RFID.
+ * Incluye filtrado/ordenamiento optimizado en backend (#215 — Isaac Calderon Laflor).
+ * Author: Adrian Proano Bernal
+ */
+import { ordenesPrueba } from '../data/mockData';
+import type { ProgresoOrden, Etapa, ProgresoEtapa } from '../types/rfid.types';
+
+const ALL_ETAPAS: Etapa[] = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
+
+export function getProgresoOrden(orderId: string): ProgresoOrden | null {
+    const prepacks = ordenesPrueba[orderId];
+    if (!prepacks) return null;
+
+    const contarPorEtapa = ALL_ETAPAS.reduce<Record<Etapa, number>>(
+        (acc, s) => ({ ...acc, [s]: 0 }),
+        {} as Record<Etapa, number>
+    );
+
+    prepacks.forEach((p) => contarPorEtapa[p.currentEtapa]++);
+
+    const progresoEtapa: ProgresoEtapa[] = ALL_ETAPAS.map((etapa) => ({
+        etapa,
+        count: contarPorEtapa[etapa],
+        total: prepacks.length,
+        percentage: Math.round((contarPorEtapa[etapa] / prepacks.length) * 100),
+    }));
+
+    return { orderId, totalPrepacks: prepacks.length, progresoEtapa, prepacks };
+}
+
+/** Índice de avance: cuántas etapas tienen al menos un prepack */
+function calcularAvance(orden: ProgresoOrden): number {
+    return orden.progresoEtapa.filter(pe => pe.count > 0).length;
+}
+
+/** Timestamp mínimo (llegada) de una orden, calculado desde el historial */
+function calcularLlegada(orden: ProgresoOrden): number {
+    const ts = orden.prepacks
+        .flatMap(pp => pp.historial.map(e => new Date(e.timestamp).getTime()))
+        .filter(Boolean);
+    return ts.length > 0 ? Math.min(...ts) : 0;
+}
+
+interface FiltroOrdenes {
+    sort?:   string;
+    etapa?:  string;
+    search?: string;
+    status?: string;
+}
+
+/**
+ * Filtrado y ordenamiento en backend — queries optimizadas (#215).
+ * Isaac Calderon Laflor
+ */
+export function getOrdenesConFiltro(filtros: FiltroOrdenes): ProgresoOrden[] {
+    const { sort, etapa, search, status } = filtros;
+
+    let ordenes = Object.keys(ordenesPrueba)
+        .map(id => getProgresoOrden(id))
+        .filter((o): o is ProgresoOrden => o !== null);
+
+    // Buscar por orderId o prepackId
+    if (search) {
+        const q = search.toLowerCase();
+        ordenes = ordenes.filter(o =>
+            o.orderId.toLowerCase().includes(q) ||
+            o.prepacks.some(pp => pp.id.toLowerCase().includes(q))
+        );
+    }
+
+    // Filtrar por etapa activa
+    if (etapa) {
+        ordenes = ordenes.filter(o =>
+            o.prepacks.some(pp => pp.currentEtapa === etapa)
+        );
+    }
+
+    // Filtrar por status
+    if (status === 'completed') {
+        ordenes = ordenes.filter(o => {
+            const envio = o.progresoEtapa.find(pe => pe.etapa === 'Envio');
+            return envio && envio.count >= envio.total && envio.total > 0;
+        });
+    } else if (status === 'active') {
+        ordenes = ordenes.filter(o => {
+            const envio = o.progresoEtapa.find(pe => pe.etapa === 'Envio');
+            return !envio || envio.count < envio.total;
+        });
+    }
+
+    // Ordenar
+    switch (sort) {
+        case 'id-asc':      ordenes.sort((a, b) => a.orderId.localeCompare(b.orderId)); break;
+        case 'id-desc':     ordenes.sort((a, b) => b.orderId.localeCompare(a.orderId)); break;
+        case 'arrival-asc': ordenes.sort((a, b) => calcularLlegada(a) - calcularLlegada(b)); break;
+        case 'arrival-desc':ordenes.sort((a, b) => calcularLlegada(b) - calcularLlegada(a)); break;
+        case 'adv-desc':    ordenes.sort((a, b) => calcularAvance(b) - calcularAvance(a)); break;
+        case 'adv-asc':     ordenes.sort((a, b) => calcularAvance(a) - calcularAvance(b)); break;
+        default:            ordenes.sort((a, b) => a.orderId.localeCompare(b.orderId));
+    }
+
+    return ordenes;
+}
+
+/**
+ * Registra una falla de lectura RFID en un prepack sin avanzarlo de etapa.
+ * Marca hasFalla=true para que el frontend lo muestre como error en la etapa.
+ * Isaac Calderon Laflor
+ */
+export function registrarFallaPrepack(tagId: string, etapa: Etapa) {
+    for (const [orderId, prepacks] of Object.entries(ordenesPrueba)) {
+        const prepack = prepacks.find(p => p.id === tagId);
+        if (prepack) {
+            prepack.hasFalla  = true;
+            prepack.fallaEtapa = etapa;
+            console.log(`[FALLA] Prepack ${prepack.id} de orden ${orderId} — error lectura en ${etapa}`);
+            return { orderId, progreso: getProgresoOrden(orderId) };
+        }
+    }
+    return null;
+}
+
+/**
+ * Simula recibir un escaneo RFID y avanza un prepack de etapa.
+ * Author: Adrian Proano Bernal
+ */
+export function procesoEscaneoRFID(tagId: string, readerId: string, newEtapa: Etapa) {
+    for (const [orderId, prepacks] of Object.entries(ordenesPrueba)) {
+        const prepack = prepacks.find((p) => p.id === tagId);
+        if (prepack) {
+            prepack.historial.push({
+                etapa: prepack.currentEtapa,
+                timestamp: new Date(),
+                readerId,
+            });
+            prepack.currentEtapa = newEtapa;
+            console.log(`Prepack ${prepack.id} de orden ${orderId} avanzado a etapa ${newEtapa}`);
+            return { prepack, orderId, progreso: getProgresoOrden(orderId) };
+        }
+    }
+    return null;
+}

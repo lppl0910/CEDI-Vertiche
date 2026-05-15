@@ -6,6 +6,9 @@ export default function AppShell({
   ventasSection, onVentasSectionChange,
   ventasFilters, onVentasFilterChange,
   onProfileOpen,
+  onAdminOpen,
+  allowedPanels,
+  user,
   children,
 }) {
   return (
@@ -20,6 +23,9 @@ export default function AppShell({
         ventasFilters={ventasFilters}
         onVentasFilterChange={onVentasFilterChange}
         onProfileOpen={onProfileOpen}
+        onAdminOpen={onAdminOpen}
+        allowedPanels={allowedPanels}
+        user={user}
       />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {children}
