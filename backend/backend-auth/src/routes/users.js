@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { requireAdmin } from '../middleware/auth.js';
+import { sendWelcomeEmail } from '../services/email.js';
 
 const router = Router();
 
@@ -46,9 +47,22 @@ router.post('/', requireAdmin, async (req, res) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { nombre, cargo: cargo ?? '', role: role ?? 'operador', panels, empleadoId },
+      user_metadata: {
+        nombre,
+        cargo: cargo ?? '',
+        role: role ?? 'operador',
+        panels,
+        empleadoId,
+        mustChangePassword: true,
+      },
     });
     if (error) throw error;
+
+    // Send welcome email with temporary credentials (non-blocking)
+    sendWelcomeEmail({ email, nombre, empleadoId, password }).catch(err => {
+      console.error('[email] Error enviando correo de bienvenida:', err.message);
+    });
+
     res.status(201).json(data.user);
   } catch (err) {
     res.status(500).json({ error: err.message });
