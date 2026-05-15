@@ -1,6 +1,11 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy init: dotenv aún no ha corrido cuando este módulo se importa en ESM
+let _resend;
+function getResend() {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+  return _resend;
+}
 
 export async function sendWelcomeEmail({ email, nombre, empleadoId, password }) {
   const html = `
@@ -110,7 +115,7 @@ export async function sendWelcomeEmail({ email, nombre, empleadoId, password }) 
 </html>
   `.trim();
 
-  const { error } = await resend.emails.send({
+  const { error } = await getResend().emails.send({
     from: process.env.RESEND_FROM,
     to: email,
     subject: 'Tu cuenta en Vertiche ha sido creada',
