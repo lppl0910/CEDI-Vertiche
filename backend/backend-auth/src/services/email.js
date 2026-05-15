@@ -1,14 +1,6 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-const transporter = nodemailer.createTransport({
-  host:   process.env.SMTP_HOST,
-  port:   parseInt(process.env.SMTP_PORT ?? '587'),
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendWelcomeEmail({ email, nombre, empleadoId, password }) {
   const html = `
@@ -118,10 +110,11 @@ export async function sendWelcomeEmail({ email, nombre, empleadoId, password }) 
 </html>
   `.trim();
 
-  await transporter.sendMail({
-    from: `"Vertiche CEDIS" <${process.env.SMTP_USER}>`,
+  const { error } = await resend.emails.send({
+    from: process.env.RESEND_FROM,
     to: email,
     subject: 'Tu cuenta en Vertiche ha sido creada',
     html,
   });
+  if (error) throw new Error(error.message);
 }
