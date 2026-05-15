@@ -260,17 +260,18 @@ export const distribucionAlmacen = [
 ];
 
 export const rankingEquiposRegistro = [
-  { equipo: 'Delta', tiempoPromedio: '9 min',  status: 'success' },
-  { equipo: 'Alpha', tiempoPromedio: '11 min', status: 'warning' },
-  { equipo: 'Beta',  tiempoPromedio: '14 min', status: 'error'   },
+  { equipo: 'Delta', tiempoPromedio: '9 min',  tiempoMin: 9,  ppMin: 43, ppCrossDock: 41, status: 'success' },
+  { equipo: 'Alpha', tiempoPromedio: '11 min', tiempoMin: 11, ppMin: 35, ppCrossDock: 34, status: 'warning' },
+  { equipo: 'Beta',  tiempoPromedio: '14 min', tiempoMin: 14, ppMin: 29, ppCrossDock: 28, status: 'error'   },
 ];
 
 export const backlogPPs = [
-  { pp: 'PP-4502', proveedor: 'Moda Express',     minutosEnSistema: 7,  equipo: 'Alpha' },
-  { pp: 'PP-4498', proveedor: 'Prov Estrella SA', minutosEnSistema: 13, equipo: 'Beta'  },
-  { pp: 'PP-4491', proveedor: 'Importa Fácil',    minutosEnSistema: 11, equipo: 'Beta'  },
-  { pp: 'PP-4487', proveedor: 'Textiles Norte',   minutosEnSistema: 24, equipo: 'Beta'  },
-  { pp: 'PP-4483', proveedor: 'Confecciones GDL', minutosEnSistema: 9,  equipo: 'Delta' },
+  { pp: 'PP-4502', proveedor: 'Moda Express',     minutosEnSistema: 7,  equipo: 'Alpha', etapa: 'Registro' },
+  { pp: 'PP-4498', proveedor: 'Prov Estrella SA', minutosEnSistema: 13, equipo: 'Beta',  etapa: 'Registro' },
+  { pp: 'PP-4491', proveedor: 'Importa Fácil',    minutosEnSistema: 11, equipo: 'Beta',  etapa: 'Registro' },
+  { pp: 'PP-4487', proveedor: 'Textiles Norte',   minutosEnSistema: 24, equipo: 'Beta',  etapa: 'Sorter'   },
+  { pp: 'PP-4483', proveedor: 'Confecciones GDL', minutosEnSistema: 9,  equipo: 'Delta', etapa: 'Registro' },
+  { pp: 'PP-4479', proveedor: 'FastThread',        minutosEnSistema: 31, equipo: 'Alpha', etapa: 'Sorter'  },
 ];
 
 export const tendenciaTiemposRegistro = [
@@ -344,12 +345,14 @@ export const capacidadBahias = [
 // AUDITORÍA
 // =========================================================
 export const cajasIncorrectas = [
-  { caja: 'CJA-1021', tipo: 'Sobrante',      equipo: 'Alpha', minutosAuditoria: 4.2,  hora: '07:55' },
-  { caja: 'CJA-1034', tipo: 'Faltante',       equipo: 'Beta',  minutosAuditoria: 9.8,  hora: '08:22' },
-  { caja: 'CJA-1047', tipo: 'Error etiqueta', equipo: 'Beta',  minutosAuditoria: 6.1,  hora: '08:49' },
-  { caja: 'CJA-1058', tipo: 'Dañado',         equipo: 'Delta', minutosAuditoria: 5.3,  hora: '09:10' },
-  { caja: 'CJA-1063', tipo: 'Faltante',       equipo: 'Alpha', minutosAuditoria: 11.4, hora: '09:31' },
-  { caja: 'CJA-1071', tipo: 'Sobrante',       equipo: 'Beta',  minutosAuditoria: 3.7,  hora: '09:44' },
+  { caja: 'CJA-1021', tipo: 'Sobrante',      equipo: 'Alpha', minutosAuditoria: 4.2,  hora: '07:55', piezas: 2,  proveedor: 'FastThread'      },
+  { caja: 'CJA-1034', tipo: 'Faltante',       equipo: 'Beta',  minutosAuditoria: 9.8,  hora: '08:22', piezas: 5,  proveedor: 'Prov Estrella SA' },
+  { caja: 'CJA-1047', tipo: 'Error etiqueta', equipo: 'Beta',  minutosAuditoria: 6.1,  hora: '08:49', piezas: 1,  proveedor: 'Importa Fácil'   },
+  { caja: 'CJA-1058', tipo: 'Dañado',         equipo: 'Delta', minutosAuditoria: 5.3,  hora: '09:10', piezas: 3,  proveedor: 'Textiles Norte'  },
+  { caja: 'CJA-1063', tipo: 'Faltante',       equipo: 'Alpha', minutosAuditoria: 11.4, hora: '09:31', piezas: 8,  proveedor: 'Moda Express'    },
+  { caja: 'CJA-1071', tipo: 'Sobrante',       equipo: 'Beta',  minutosAuditoria: 3.7,  hora: '09:44', piezas: 1,  proveedor: 'Confecciones GDL'},
+  { caja: 'CJA-1079', tipo: 'Dañado',         equipo: 'Delta', minutosAuditoria: 13.2, hora: '10:05', piezas: 4,  proveedor: 'Moda Express'    },
+  { caja: 'CJA-1085', tipo: 'Error etiqueta', equipo: 'Alpha', minutosAuditoria: 2.9,  hora: '10:18', piezas: 1,  proveedor: 'FastThread'      },
 ];
 
 export const distribucionTiemposAuditoria = [
@@ -364,19 +367,21 @@ export const distribucionTiemposAuditoria = [
 // ENVÍO
 // =========================================================
 export const backlogOrdenes = [
-  { orden: 'ORD-2891', proveedor: 'FastThread',       minutosEnSistema: 22, prepacks: 45, status: 'success' },
-  { orden: 'ORD-2892', proveedor: 'Prov Estrella SA', minutosEnSistema: 35, prepacks: 38, status: 'warning' },
-  { orden: 'ORD-2893', proveedor: 'Textiles Norte',   minutosEnSistema: 18, prepacks: 52, status: 'success' },
-  { orden: 'ORD-2894', proveedor: 'Moda Express',     minutosEnSistema: 43, prepacks: 29, status: 'error'   },
-  { orden: 'ORD-2895', proveedor: 'Importa Fácil',    minutosEnSistema: 31, prepacks: 61, status: 'warning' },
+  { orden: 'ORD-2891', proveedor: 'FastThread',       minutosEnSistema: 22, prepacks: 45, status: 'success', etapaActual: 'Envío',     tienda: 'T-101 Satélite'  },
+  { orden: 'ORD-2892', proveedor: 'Prov Estrella SA', minutosEnSistema: 35, prepacks: 38, status: 'warning', etapaActual: 'Auditoría', tienda: 'T-204 Interlomas' },
+  { orden: 'ORD-2893', proveedor: 'Textiles Norte',   minutosEnSistema: 18, prepacks: 52, status: 'success', etapaActual: 'Envío',     tienda: 'T-312 Perinorte'  },
+  { orden: 'ORD-2894', proveedor: 'Moda Express',     minutosEnSistema: 43, prepacks: 29, status: 'error',   etapaActual: 'Sorter',    tienda: 'T-087 Toreo'      },
+  { orden: 'ORD-2895', proveedor: 'Importa Fácil',    minutosEnSistema: 31, prepacks: 61, status: 'warning', etapaActual: 'Bahías',    tienda: 'T-155 Santa Fe'   },
+  { orden: 'ORD-2896', proveedor: 'Confecciones GDL', minutosEnSistema: 12, prepacks: 33, status: 'success', etapaActual: 'Registro',  tienda: 'T-220 Coyoacán'   },
 ];
 
 export const estatusOrdenes = [
-  { orden: 'ORD-2891', proveedor: 'FastThread',       prepacks: 45, etapaActual: 'Envío',     status: 'success', horaIngreso: '08:10' },
-  { orden: 'ORD-2892', proveedor: 'Prov Estrella SA', prepacks: 38, etapaActual: 'Auditoría', status: 'warning', horaIngreso: '08:22' },
-  { orden: 'ORD-2893', proveedor: 'Textiles Norte',   prepacks: 52, etapaActual: 'Envío',     status: 'success', horaIngreso: '08:35' },
-  { orden: 'ORD-2894', proveedor: 'Moda Express',     prepacks: 29, etapaActual: 'Sorter',    status: 'error',   horaIngreso: '08:48' },
-  { orden: 'ORD-2895', proveedor: 'Importa Fácil',    prepacks: 61, etapaActual: 'Bahías',    status: 'warning', horaIngreso: '09:01' },
+  { orden: 'ORD-2891', proveedor: 'FastThread',       prepacks: 45, etapaActual: 'Envío',     status: 'success', horaIngreso: '08:10', progresoEtapa: 100 },
+  { orden: 'ORD-2892', proveedor: 'Prov Estrella SA', prepacks: 38, etapaActual: 'Auditoría', status: 'warning', horaIngreso: '08:22', progresoEtapa: 85  },
+  { orden: 'ORD-2893', proveedor: 'Textiles Norte',   prepacks: 52, etapaActual: 'Envío',     status: 'success', horaIngreso: '08:35', progresoEtapa: 100 },
+  { orden: 'ORD-2894', proveedor: 'Moda Express',     prepacks: 29, etapaActual: 'Sorter',    status: 'error',   horaIngreso: '08:48', progresoEtapa: 57  },
+  { orden: 'ORD-2895', proveedor: 'Importa Fácil',    prepacks: 61, etapaActual: 'Bahías',    status: 'warning', horaIngreso: '09:01', progresoEtapa: 71  },
+  { orden: 'ORD-2896', proveedor: 'Confecciones GDL', prepacks: 33, etapaActual: 'Registro',  status: 'success', horaIngreso: '09:14', progresoEtapa: 28  },
 ];
 
 export const mockChartData = {

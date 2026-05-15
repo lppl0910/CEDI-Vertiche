@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { UserCircle, ChevronDown, Monitor, SlidersHorizontal } from 'lucide-react';
+import { UserCircle, ChevronDown, Monitor, SlidersHorizontal, ShieldCheck } from 'lucide-react';
 
 const monitoreoTabs = [
   { id: 'flujo',     label: 'Análisis de flujo' },
@@ -33,6 +33,9 @@ export default function TopNav({
   ventasSection, onVentasSectionChange,
   ventasFilters, onVentasFilterChange,
   onProfileOpen,
+  onAdminOpen,
+  allowedPanels,
+  user,
 }) {
   const [comboOpen,  setComboOpen]  = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -48,7 +51,11 @@ export default function TopNav({
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const activeInterface = interfaces.find(i => i.id === currentInterface) || interfaces[0];
+  const visibleInterfaces = allowedPanels?.length
+    ? interfaces.filter(i => allowedPanels.includes(i.id))
+    : interfaces;
+
+  const activeInterface = visibleInterfaces.find(i => i.id === currentInterface) || visibleInterfaces[0];
   const isVentas = currentInterface === 'ventas';
   const tabs = isVentas ? ventasTabs : monitoreoTabs;
   const activeTabId = isVentas ? ventasSection : currentTab;
@@ -253,106 +260,121 @@ export default function TopNav({
           </div>
         )}
 
-        {/* Interface switcher */}
-        <div ref={comboRef} style={{ position: 'relative' }}>
+        {/* Interface switcher — hidden when the user only has 1 panel */}
+        {visibleInterfaces.length > 1 && (
+          <div ref={comboRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setComboOpen(o => !o)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 10px',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 500,
+                color: '#1F1F1F',
+                background: '#F8F6F3',
+                border: '1px solid #E7E2DC',
+                cursor: 'pointer',
+                fontFamily: 'var(--font)',
+                transition: 'background 0.1s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#EDE8E2'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8F6F3'}
+            >
+              <Monitor size={14} color="#6B6B6B" />
+              {activeInterface.label}
+              <ChevronDown
+                size={13}
+                color="#6B6B6B"
+                style={{ transition: 'transform 0.15s', transform: comboOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              />
+            </button>
+
+            {comboOpen && (
+              <div style={{
+                position: 'absolute',
+                top: 'calc(100% + 6px)',
+                right: 0,
+                background: '#FFFFFF',
+                border: '1px solid #E7E2DC',
+                borderRadius: 10,
+                boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                minWidth: 160,
+                overflow: 'hidden',
+                zIndex: 30,
+              }}>
+                <div style={{
+                  padding: '8px 14px 6px',
+                  fontSize: 11,
+                  color: '#6B6B6B',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  fontWeight: 500,
+                  borderBottom: '1px solid #F0EDE8',
+                }}>
+                  Mis interfaces
+                </div>
+
+                {visibleInterfaces.map((iface, i) => {
+                  const isActive = currentInterface === iface.id;
+                  const isLast = i === visibleInterfaces.length - 1;
+                  return (
+                    <button
+                      key={iface.id}
+                      onClick={() => {
+                        if (iface.available) { onInterfaceChange?.(iface.id); setComboOpen(false); }
+                      }}
+                      disabled={!iface.available}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '10px 14px',
+                        fontSize: 13,
+                        fontWeight: isActive ? 500 : 400,
+                        color: !iface.available ? '#BBBBBB' : isActive ? '#111111' : '#1F1F1F',
+                        background: isActive ? '#F8F6F3' : '#FFFFFF',
+                        border: 'none',
+                        borderBottom: isLast ? 'none' : '1px solid #F0EDE8',
+                        cursor: iface.available ? 'pointer' : 'not-allowed',
+                        fontFamily: 'var(--font)',
+                      }}
+                      onMouseEnter={e => { if (iface.available && !isActive) e.currentTarget.style.background = '#F8F6F3'; }}
+                      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = '#FFFFFF'; }}
+                    >
+                      <span>{iface.label}</span>
+                      {!iface.available && (
+                        <span style={{ fontSize: 10, color: '#AAAAAA', background: '#F5F5F5', borderRadius: 10, padding: '2px 7px', fontWeight: 500 }}>
+                          Próximamente
+                        </span>
+                      )}
+                      {isActive && iface.available && (
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#111111', display: 'inline-block' }} />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Admin button (superadmin only) */}
+        {user?.role === 'superadmin' && (
           <button
-            onClick={() => setComboOpen(o => !o)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 10px',
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 500,
-              color: '#1F1F1F',
-              background: '#F8F6F3',
-              border: '1px solid #E7E2DC',
-              cursor: 'pointer',
-              fontFamily: 'var(--font)',
-              transition: 'background 0.1s',
-            }}
+            onClick={() => { window.history.pushState({}, '', '/admin'); onAdminOpen?.(); }}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 8, fontSize: 12, fontWeight: 500, color: '#6B6B6B', background: '#F8F6F3', border: '1px solid #E7E2DC', cursor: 'pointer', fontFamily: 'var(--font)' }}
             onMouseEnter={e => e.currentTarget.style.background = '#EDE8E2'}
             onMouseLeave={e => e.currentTarget.style.background = '#F8F6F3'}
           >
-            <Monitor size={14} color="#6B6B6B" />
-            {activeInterface.label}
-            <ChevronDown
-              size={13}
-              color="#6B6B6B"
-              style={{ transition: 'transform 0.15s', transform: comboOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
-            />
+            <ShieldCheck size={13} />
+            Admin
           </button>
-
-          {comboOpen && (
-            <div style={{
-              position: 'absolute',
-              top: 'calc(100% + 6px)',
-              right: 0,
-              background: '#FFFFFF',
-              border: '1px solid #E7E2DC',
-              borderRadius: 10,
-              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-              minWidth: 160,
-              overflow: 'hidden',
-              zIndex: 30,
-            }}>
-              <div style={{
-                padding: '8px 14px 6px',
-                fontSize: 11,
-                color: '#6B6B6B',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                fontWeight: 500,
-                borderBottom: '1px solid #F0EDE8',
-              }}>
-                Mis interfaces
-              </div>
-
-              {interfaces.map((iface, i) => {
-                const isActive = currentInterface === iface.id;
-                const isLast = i === interfaces.length - 1;
-                return (
-                  <button
-                    key={iface.id}
-                    onClick={() => {
-                      if (iface.available) { onInterfaceChange?.(iface.id); setComboOpen(false); }
-                    }}
-                    disabled={!iface.available}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '10px 14px',
-                      fontSize: 13,
-                      fontWeight: isActive ? 500 : 400,
-                      color: !iface.available ? '#BBBBBB' : isActive ? '#111111' : '#1F1F1F',
-                      background: isActive ? '#F8F6F3' : '#FFFFFF',
-                      border: 'none',
-                      borderBottom: isLast ? 'none' : '1px solid #F0EDE8',
-                      cursor: iface.available ? 'pointer' : 'not-allowed',
-                      fontFamily: 'var(--font)',
-                    }}
-                    onMouseEnter={e => { if (iface.available && !isActive) e.currentTarget.style.background = '#F8F6F3'; }}
-                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = '#FFFFFF'; }}
-                  >
-                    <span>{iface.label}</span>
-                    {!iface.available && (
-                      <span style={{ fontSize: 10, color: '#AAAAAA', background: '#F5F5F5', borderRadius: 10, padding: '2px 7px', fontWeight: 500 }}>
-                        Próximamente
-                      </span>
-                    )}
-                    {isActive && iface.available && (
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#111111', display: 'inline-block' }} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Avatar */}
         <button

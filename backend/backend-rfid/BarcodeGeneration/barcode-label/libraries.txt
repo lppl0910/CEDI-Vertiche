@@ -1,0 +1,9 @@
+bwip-js -> es una librería que genera códigos de barras, buena opción
+           para hacer el diseño inicial del código de barras.
+
+fs ------> Usado para guardar archivos, importante para el formato de 
+           impresión de más adelante.
+
+canvas --> Una librería que encombinación de bwip, podemos generar el
+           sticker completo con el texto para proveer info visual.
+

@@ -109,11 +109,29 @@ function ExpandedRow({ order, allOrders, allHistorical, onOpenModal }) {
   );
 }
 
-export default function AnalisisFlujo({ orders }) {
+/**
+ * @param {{ orders: object[], onFiltersChange?: (f: object) => void }} props
+ * onFiltersChange — callback opcional que recibe { sort, search, status }
+ * cada vez que cambia un filtro, para que el padre actualice la query al backend (#217).
+ */
+export default function AnalisisFlujo({ orders, onFiltersChange }) {
   const [sort,        setSort]        = useState('id-asc');
   const [teamFilter,  setTeamFilter]  = useState('');
   const [statusFilter,setStatusFilter]= useState('');
   const [searchQ,     setSearchQ]     = useState('');
+
+  // Notifica al padre para que re-haga el fetch con los filtros actuales.
+  // teamFilter y 'falla' son solo cliente; no se envían al backend.
+  const notifyFilters = (overrides = {}) => {
+    if (!onFiltersChange) return;
+    const merged = {
+      sort:   overrides.sort   ?? sort,
+      search: overrides.search ?? searchQ,
+      // 'falla' no tiene soporte en backend — se envía vacío
+      status: (overrides.status ?? statusFilter) === 'falla' ? '' : (overrides.status ?? statusFilter),
+    };
+    onFiltersChange(merged);
+  };
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [bahiaPopup,  setBahiaPopup]  = useState(null); // { order, rect }
   const [modal,       setModal]       = useState(null); // { orderId, ppId }
@@ -174,7 +192,7 @@ export default function AnalisisFlujo({ orders }) {
       {/* Filter bar */}
       <div style={{ padding: '0 24px 12px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '.5px' }}>Ordenar:</span>
-        <select style={selStyle} value={sort} onChange={e => setSort(e.target.value)}>
+        <select style={selStyle} value={sort} onChange={e => { setSort(e.target.value); notifyFilters({ sort: e.target.value }); }}>
           <option value="id-asc">ID Orden ↑</option>
           <option value="id-desc">ID Orden ↓</option>
           <option value="arrival-asc">Llegada (primero)</option>
@@ -191,7 +209,7 @@ export default function AnalisisFlujo({ orders }) {
           <option value="Delta">Delta</option>
           <option value="Gamma">Gamma</option>
         </select>
-        <select style={selStyle} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+        <select style={selStyle} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); notifyFilters({ status: e.target.value }); }}>
           <option value="">Estado (todos)</option>
           <option value="completed">Completados</option>
           <option value="active">En progreso</option>
