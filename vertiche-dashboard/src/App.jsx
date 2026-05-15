@@ -8,6 +8,7 @@ import UserProfile from './shared/pages/UserProfile';
 import Login from './features/auth/Login';
 import ForgotPassword from './features/auth/ForgotPassword';
 import ResetPassword from './features/auth/ResetPassword';
+import ChangePassword from './features/auth/ChangePassword';
 import AdminPanel from './features/admin/AdminPanel';
 import { getSession, logout, onAuthStateChange } from './features/auth/authService';
 
@@ -89,6 +90,10 @@ export default function App() {
   }
 
   if (!user) return <Login onLogin={handleLogin} />;
+
+  if (user.mustChangePassword) {
+    return <ChangePassword user={user} onDone={session => { setUser(session); setCurrentInterface(getInterfaceFromPath(session.panels)); }} />;
+  }
 
   const allowedPanels = user.panels ?? [];
 
