@@ -4,6 +4,7 @@ import { ChatFAB } from './ChatFAB';
 import './styles/Ventas.css';
 import { SectionProductos } from './SectionProductos';
 import { SectionTiendas } from './SectionTiendas';
+import ComponenteEsquina from './components/ComponenteEsquina';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const SECTIONS = {
@@ -20,6 +21,7 @@ export default function Ventas({
 
   return (
     <div className="ventas">
+      <ComponenteEsquina periodoParametro={filters.period} />
       <SectionPerformance filters={filters} />
       <ActiveSection filters={filters} />
       <ChatFAB />
