@@ -2053,76 +2053,84 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
           unit: "",
         },
         {
-          label: "Tiempo mejor equipo",
-          value: mejorEquipo.tiempoPromedio,
+          label: "pp/min mejor equipo",
+          value: mejorEquipo.ppMin,
           delta: null,
-          unit: "",
+          unit: "pp/min",
         },
       ],
       charts: [
         /* ── Pastel con leyenda detallada ── */
         <ChartCard key="reg-pie" title="Distribución por almacén">
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie
-                data={distribucionAlmacen}
-                dataKey="prepacks"
-                nameKey="almacen"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label={({ almacen, percent }) =>
-                  `${almacen}: ${(percent * 100).toFixed(0)}%`
-                }
-                labelLine={false}
-              >
-                {distribucionAlmacen.map((_, i) => (
-                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartCard>,
-        <ChartCard key="reg-equipos" title="Ranking de equipos">
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={{ ...thStyle, width: 32 }}>#</th>
-                <th style={thStyle}>Equipo</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>
-                  Tiempo Promedio
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rankingEquiposRegistro.map((item, i) => (
-                <tr
-                  key={item.equipo}
-                  style={{ background: STATUS_BG[item.status] }}
-                >
-                  <td style={{ ...tdStyle, color: "#6B6B6B" }}>{i + 1}</td>
-                  <td
-                    style={{
-                      ...tdStyle,
-                      fontWeight: 600,
-                      color: STATUS_COLOR[item.status],
-                    }}
-                  >
-                    {item.equipo}
-                  </td>
-                  <td
-                    style={{ ...tdStyle, textAlign: "right", fontWeight: 700 }}
-                  >
-                    {item.tiempoPromedio}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <ResponsiveContainer width={200} height={200}>
+              <PieChart>
+                <Pie data={distribucionAlmacen} dataKey="prepacks" nameKey="almacen"
+                  cx="50%" cy="50%" innerRadius={48} outerRadius={82}>
+                  {distribucionAlmacen.map((_, i) => (
+                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div style={{ flex: 1, display: "grid", gap: 10 }}>
+              {(() => {
+                const totalAlmacen = distribucionAlmacen.reduce((s, d) => s + d.prepacks, 0);
+                return distribucionAlmacen.map((item, i) => (
+                  <div key={item.almacen} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 2, background: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1F1F1F" }}>{item.almacen}</div>
+                      <div style={{ fontSize: 11, color: "#6B6B6B" }}>{item.prepacks} pp · {((item.prepacks / totalAlmacen) * 100).toFixed(1)}%</div>
+                    </div>
+                  </div>
+                ));
+              })()}
+              <div style={{ borderTop: "1px solid #E7E2DC", paddingTop: 8, fontSize: 12, fontWeight: 700, color: "#1F1F1F" }}>
+                Total: {distribucionAlmacen.reduce((s, d) => s + d.prepacks, 0)} prepacks
+              </div>
+            </div>
+          </div>
         </ChartCard>,
 
-        /* ── Backlog con alertas precisas y umbrales ── */
+        /* ── Ranking con ppMin y barra de rendimiento ── */
+        <ChartCard key="reg-equipos" title="Ranking de equipos por tiempo de registro">
+          <div style={{ display: "grid", gap: 10 }}>
+            {rankingEquiposRegistro.map((item, i) => (
+              <div key={item.equipo} style={{
+                border: `1px solid ${STATUS_COLOR[item.status]}44`,
+                borderRadius: 8, padding: "12px 14px", background: STATUS_BG[item.status],
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{
+                      width: 24, height: 24, borderRadius: "50%", background: STATUS_COLOR[item.status],
+                      color: "#fff", fontSize: 11, fontWeight: 700,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>{i + 1}</span>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#1F1F1F" }}>{item.equipo}</div>
+                      <div style={{ fontSize: 11, color: "#6B6B6B" }}>{item.ppCrossDock} pp en cross-dock</div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: STATUS_COLOR[item.status] }}>{item.tiempoPromedio}</div>
+                    <div style={{ fontSize: 11, color: "#6B6B6B" }}>{item.ppMin} pp/min</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ flex: 1, height: 6, borderRadius: 6, background: "#E7E2DC", overflow: "hidden" }}>
+                    <div style={{ width: `${Math.min(100, (item.tiempoMin / 15) * 100)}%`, height: "100%", background: STATUS_COLOR[item.status], borderRadius: 6 }} />
+                  </div>
+                  <span style={{ fontSize: 10, color: "#6B6B6B", whiteSpace: "nowrap" }}>target 10 min</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ChartCard>,
+
+        /* ── Backlog con alertas precisas, etapa y semáforo ── */
         <ChartCard key="reg-backlog" title="Backlog de PPs desde preregistro"
           footer={`Umbrales: ⚠ >10 min · 🔴 >20 min`}>
           <table style={tableStyle}>
@@ -2131,71 +2139,56 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
                 <th style={thStyle}>PP</th>
                 <th style={thStyle}>Proveedor</th>
                 <th style={thStyle}>Equipo</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Tiempo (min)</th>
+                <th style={thStyle}>Etapa</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Tiempo</th>
+                <th style={{ ...thStyle, textAlign: "center" }}>Alerta</th>
               </tr>
             </thead>
             <tbody>
-              {backlogPPs.map((item) => (
-                <tr
-                  key={item.pp}
-                  style={{
-                    background: getBacklogRowBg(item.minutosEnSistema, 10, 20),
-                  }}
-                >
-                  <td style={{ ...tdStyle, fontWeight: 600 }}>{item.pp}</td>
-                  <td style={tdStyle}>{item.proveedor}</td>
-                  <td style={tdStyle}>{item.equipo}</td>
-                  <td
-                    style={{
-                      ...tdStyle,
-                      textAlign: "right",
-                      fontWeight: 700,
-                      color:
-                        item.minutosEnSistema >= 20
-                          ? STATUS_COLOR.error
-                          : item.minutosEnSistema >= 10
-                            ? STATUS_COLOR.warning
-                            : "#1F1F1F",
-                    }}
-                  >
-                    {item.minutosEnSistema}
-                  </td>
-                </tr>
-              ))}
+              {backlogPPs.map((item) => {
+                const nivel = item.minutosEnSistema >= 20 ? "error" : item.minutosEnSistema >= 10 ? "warning" : null;
+                return (
+                  <tr key={item.pp} style={{ background: nivel ? STATUS_BG[nivel] : "transparent" }}>
+                    <td style={{ ...tdStyle, fontWeight: 600 }}>{item.pp}</td>
+                    <td style={tdStyle}>{item.proveedor}</td>
+                    <td style={tdStyle}>{item.equipo}</td>
+                    <td style={tdStyle}>
+                      <span style={{ fontSize: 11, background: "#F0EDE8", borderRadius: 4, padding: "2px 6px" }}>
+                        {item.etapa}
+                      </span>
+                    </td>
+                    <td style={{ ...tdStyle, textAlign: "right", fontWeight: 700, color: nivel ? STATUS_COLOR[nivel] : "#1F1F1F" }}>
+                      {item.minutosEnSistema} min
+                    </td>
+                    <td style={{ ...tdStyle, textAlign: "center" }}>
+                      {nivel === "error" ? "🔴" : nivel === "warning" ? "⚠️" : <span style={{ color: "#6B6B6B" }}>—</span>}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </ChartCard>,
 
-        /* ── Tendencia detallada con target, dots críticos y último valor ── */
+        /* ── Tendencia detallada con target, línea crítica y dots de color ── */
         <ChartCard key="reg-tendencia" title="Tendencia de tiempos de registro por semana"
           footer={`Último: ${tendenciaTiemposRegistro[tendenciaTiemposRegistro.length - 1].tiempoPromedio} min`}>
           <ResponsiveContainer width="100%" height={220}>
-            <LineChart
-              data={tendenciaTiemposRegistro}
-              margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
-            >
+            <LineChart data={tendenciaTiemposRegistro} margin={{ top: 8, right: 24, left: 0, bottom: 4 }}>
               <CartesianGrid {...gridStyle} />
               <XAxis dataKey="semana" tick={axisStyle} />
               <YAxis tick={axisStyle} domain={[8, 16]} />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine
-                y={10}
-                stroke="#BBBBBB"
-                strokeDasharray="4 4"
-                label={{
-                  value: "Target 10 min",
-                  position: "insideTopRight",
-                  fontSize: 11,
-                  fill: "#BBBBBB",
+              <ReferenceLine y={10} stroke="#6E8B6B" strokeDasharray="5 3"
+                label={{ value: "✓ Target 10 min", position: "insideTopLeft", fontSize: 11, fill: "#6E8B6B" }} />
+              <ReferenceLine y={13} stroke="#B65E4A" strokeDasharray="4 4"
+                label={{ value: "⚠ Crítico 13 min", position: "insideBottomLeft", fontSize: 10, fill: "#B65E4A" }} />
+              <Line type="monotone" dataKey="tiempoPromedio" name="Tiempo prom (min)"
+                stroke="#111111" strokeWidth={2.5}
+                dot={({ cx, cy, payload }) => {
+                  const color = payload.tiempoPromedio > 13 ? "#B65E4A" : payload.tiempoPromedio > 10 ? "#C9963B" : "#6E8B6B";
+                  return <circle key={cx} cx={cx} cy={cy} r={5} fill={color} stroke="#fff" strokeWidth={1.5} />;
                 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="tiempoPromedio"
-                name="Tiempo prom (min)"
-                stroke="#111111"
-                strokeWidth={2}
-                dot={false}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -2486,14 +2479,14 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
           unit: "%",
         },
         {
-          label: "Auditoría lenta (>8 min)",
+          label: "Cajas lentas (>8 min)",
           value: cajasIncorrectas.filter((d) => d.minutosAuditoria > 8).length,
           delta: 0,
           unit: "",
         },
       ],
       charts: [
-        /* ── Lista completa: proveedor, piezas, badge de tipo y barra de tiempo ── */
+        /* ── Lista completa: badge de tipo, proveedor, piezas y barra de tiempo ── */
         <ChartCard key="audit-cajas" title="Detalle completo de cajas incorrectas">
           <table style={tableStyle}>
             <thead>
@@ -2502,63 +2495,92 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
                 <th style={thStyle}>Tipo</th>
                 <th style={thStyle}>Proveedor</th>
                 <th style={thStyle}>Equipo</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Tiempo (min)</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Piezas</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Tiempo</th>
                 <th style={{ ...thStyle, textAlign: "right" }}>Hora</th>
               </tr>
             </thead>
             <tbody>
-              {cajasIncorrectas.map((item) => (
-                <tr key={item.caja}>
-                  <td style={{ ...tdStyle, fontWeight: 600 }}>{item.caja}</td>
-                  <td style={tdStyle}>{item.tipo}</td>
-                  <td style={tdStyle}>{item.equipo}</td>
-                  <td
-                    style={{
-                      ...tdStyle,
-                      textAlign: "right",
-                      fontWeight: 700,
-                      color:
-                        item.minutosAuditoria > 8
-                          ? STATUS_COLOR.error
-                          : "#1F1F1F",
-                    }}
-                  >
-                    {item.minutosAuditoria}
-                  </td>
-                  <td
-                    style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}
-                  >
-                    {item.hora}
-                  </td>
-                </tr>
-              ))}
+              {cajasIncorrectas.map((item) => {
+                const tipoColor = { Faltante: "error", Dañado: "error", Sobrante: "warning", "Error etiqueta": "warning" }[item.tipo] || "warning";
+                return (
+                  <tr key={item.caja}>
+                    <td style={{ ...tdStyle, fontWeight: 600 }}>{item.caja}</td>
+                    <td style={tdStyle}>
+                      <span style={{
+                        background: STATUS_BG[tipoColor], color: STATUS_COLOR[tipoColor],
+                        borderRadius: 4, padding: "2px 7px", fontSize: 11, fontWeight: 700,
+                      }}>{item.tipo}</span>
+                    </td>
+                    <td style={{ ...tdStyle, fontSize: 12, color: "#6B6B6B" }}>{item.proveedor}</td>
+                    <td style={tdStyle}>{item.equipo}</td>
+                    <td style={{ ...tdStyle, textAlign: "right", fontWeight: 600 }}>{item.piezas}</td>
+                    <td style={{ ...tdStyle, textAlign: "right" }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}>
+                        <span style={{ fontWeight: 700, color: item.minutosAuditoria > 8 ? STATUS_COLOR.error : "#1F1F1F" }}>
+                          {item.minutosAuditoria} min
+                        </span>
+                        <div style={{ width: 48, height: 4, borderRadius: 4, background: "#F0EDE8", overflow: "hidden" }}>
+                          <div style={{
+                            width: `${Math.min(100, (item.minutosAuditoria / 15) * 100)}%`,
+                            height: "100%",
+                            background: item.minutosAuditoria > 8 ? STATUS_COLOR.error : STATUS_COLOR.warning,
+                            borderRadius: 4,
+                          }} />
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}>{item.hora}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </ChartCard>,
-        <ChartCard
-          key="audit-dist"
-          title="¿Por qué tardan más algunos casos?"
-          footer="Distribución de tiempos de auditoría"
-        >
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart
-              data={distribucionTiemposAuditoria}
-              margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
-            >
-              <CartesianGrid {...gridStyle} />
-              <XAxis dataKey="rango" tick={axisStyle} />
-              <YAxis tick={axisStyle} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="cajas" name="Cajas" radius={[3, 3, 0, 0]}>
-                {distribucionTiemposAuditoria.map((item, i) => (
-                  <Cell
-                    key={i}
-                    fill={item.rango === "> 12 min" ? "#B65E4A" : "#A48F7A"}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+
+        /* ── Histograma preciso con curva de Pareto acumulada y colores por severidad ── */
+        <ChartCard key="audit-dist" title="Distribución de tiempos de auditoría"
+          footer="Línea = % acumulado (eje derecho)">
+          {(() => {
+            const totalCajas = distribucionTiemposAuditoria.reduce((s, d) => s + d.cajas, 0);
+            let acum = 0;
+            const dataConAcum = distribucionTiemposAuditoria.map((d) => {
+              acum += d.cajas;
+              return { ...d, pctAcum: parseFloat(((acum / totalCajas) * 100).toFixed(1)) };
+            });
+            return (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={dataConAcum} margin={{ top: 8, right: 40, left: 0, bottom: 4 }}>
+                  <CartesianGrid {...gridStyle} />
+                  <XAxis dataKey="rango" tick={axisStyle} />
+                  <YAxis yAxisId="left" tick={axisStyle} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ ...axisStyle, fill: "#C9963B" }}
+                    domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <ReferenceLine yAxisId="right" y={80} stroke="#C9963B" strokeDasharray="4 4"
+                    label={{ value: "80%", position: "right", fontSize: 10, fill: "#C9963B" }} />
+                  <Bar yAxisId="left" dataKey="cajas" name="Cajas" radius={[3, 3, 0, 0]}>
+                    {dataConAcum.map((item, i) => (
+                      <Cell key={i} fill={item.rango === "> 12 min" ? "#B65E4A" : item.rango === "8–12 min" ? "#C9963B" : "#A48F7A"} />
+                    ))}
+                  </Bar>
+                  <Line yAxisId="right" type="monotone" dataKey="pctAcum" name="% acumulado"
+                    stroke="#C9963B" strokeWidth={2} dot={{ r: 4, fill: "#C9963B", stroke: "#fff", strokeWidth: 1.5 }} />
+                </BarChart>
+              </ResponsiveContainer>
+            );
+          })()}
+          <div style={{ display: "flex", gap: 16, marginTop: 8, justifyContent: "center" }}>
+            {[
+              { color: "#A48F7A", label: "< 8 min (normal)" },
+              { color: "#C9963B", label: "8–12 min (lento)" },
+              { color: "#B65E4A", label: "> 12 min (crítico)" },
+            ].map((l) => (
+              <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#6B6B6B" }}>
+                <div style={{ width: 10, height: 10, background: l.color, borderRadius: 2 }} />{l.label}
+              </div>
+            ))}
+          </div>
         </ChartCard>,
       ],
     },
