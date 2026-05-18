@@ -42,9 +42,15 @@ function adaptOrden(orden) {
   const tsPerEtapa    = new Map();  // etapa → { min, max }
   let arrivalTs = Infinity;
 
-  for (const pp of rawPP) {
+  for (let i = 0; i < rawPP.length; i++) {
+    const pp = rawPP[i];
     if (pp.hasFalla && pp.fallaEtapa) {
-      fallaPerEtapa.set(pp.fallaEtapa, (fallaPerEtapa.get(pp.fallaEtapa) ?? 0) + 1);
+      const fallaIdx = ETAPA_NAMES.indexOf(pp.fallaEtapa);
+      // Falla ACTIVA: solo si el prepack sigue en la etapa donde ocurrió o antes.
+      // Si ya avanzó más allá, la falla es histórica → va a Incidencias, no al panel.
+      if (fallaIdx >= 0 && ppEtapaIdx[i] <= fallaIdx) {
+        fallaPerEtapa.set(pp.fallaEtapa, (fallaPerEtapa.get(pp.fallaEtapa) ?? 0) + 1);
+      }
     }
     for (const e of pp.historial ?? []) {
       const t = new Date(e.timestamp).getTime();
@@ -132,7 +138,13 @@ function adaptOrden(orden) {
     product: orden.orderId,
     pidx: 0,
     arrivalTs,
-    hasFalla: rawPP.some(pp => pp.hasFalla),
+    // hasFalla a nivel de orden: solo si hay fallas ACTIVAS (prepack aún atascado).
+    // Las fallas resueltas quedan en Incidencias como historial, no en el panel.
+    hasFalla: rawPP.some((pp, i) => {
+      if (!pp.hasFalla || !pp.fallaEtapa) return false;
+      const fallaIdx = ETAPA_NAMES.indexOf(pp.fallaEtapa);
+      return fallaIdx >= 0 && ppEtapaIdx[i] <= fallaIdx;
+    }),
     colors: ['—'],
     sizes: ['—'],
     prepacks: adaptedPrepacks,
