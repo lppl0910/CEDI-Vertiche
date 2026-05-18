@@ -60,10 +60,15 @@ function adaptOrden(orden) {
   }
   if (!isFinite(arrivalTs)) arrivalTs = now;
 
-  // 4. Prepacks rechazados en QA → ajusta el total efectivo en etapas siguientes
+  // 4. Prepacks GENUINAMENTE rechazados en QA (siguen atascados en QA o antes).
+  //    Si un prepack tuvo hasFalla='QA' pero luego reanudó y avanzó más allá de QA,
+  //    NO se descuenta: su falla fue transitoria y SÍ contribuye al flujo posterior.
+  //    Solo contar prepacks que están en índice <= QA_IDX para no inflar proc > effectiveTotal.
   //    Display:    49/50  (total original visible — info relevante)
   //    Porcentaje: 49/49 = 100% (sobre los que sí deben avanzar)
-  const failedQACount = fallaPerEtapa.get('QA') ?? 0;
+  const failedQACount = rawPP.reduce((count, pp, i) =>
+    (pp.hasFalla && pp.fallaEtapa === 'QA' && ppEtapaIdx[i] <= QA_IDX) ? count + 1 : count
+  , 0);
 
   // ── Construcción de etapas ──────────────────────────────────────────
   const stages = {};
