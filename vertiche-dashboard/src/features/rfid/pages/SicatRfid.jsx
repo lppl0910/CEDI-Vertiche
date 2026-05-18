@@ -111,7 +111,8 @@ function adaptOrden(orden) {
     const stageResults  = STAGE_KEYS.map((key, si) => {
       const etapa = ETAPA_NAMES[si];
       const s     = stages[key];
-      if (pp.currentEtapa === etapa)    return 'act';
+      // Prepack rechazado en esta etapa → rojo en fila individual, coherente con el rojo de la columna
+      if (pp.currentEtapa === etapa) return (pp.hasFalla && pp.fallaEtapa === etapa) ? 'fail' : 'act';
       if (!s || s.status === 'pending') return 'pend';
       if (histEtapaSet.has(etapa))      return 'ok';
       if (currentIdx >= 0 && si < currentIdx) return 'pend';
@@ -213,11 +214,21 @@ export default function SicatRfid({ onInterfaceChange, onProfileOpen, onAdminOpe
 
   const handleUpdateIncidencia = (incId, changes) => {
     const inc = incidencias.find(i => i.id === incId);
-    if (inc) setIncOverrides(prev => ({ ...prev, [inc.ppId]: { ...(prev[inc.ppId] || {}), ...changes } }));
+    if (!inc) return;
+    setIncOverrides(prev => ({ ...prev, [inc.ppId]: { ...(prev[inc.ppId] || {}), ...changes } }));
+    // Persistir cambio al backend (best-effort — no bloquea UI si falla)
+    fetch('http://localhost:3001/api/alertas', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ ...inc, ...changes }),
+    }).catch(err => console.warn('[RFID] No se pudo persistir incidencia:', err.message));
   };
 
   const openIncCount   = incidencias.filter(i => i.status === 'open' || i.status === 'escalated').length;
   const activeOrdCount = adaptedOrders.filter(o => !o.envio?.sent).length;
+
+  // Conecta la búsqueda del header con los filtros del backend
+  const handleSearch = (q) => setBackendFilters(prev => ({ ...prev, search: q || undefined }));
 
   return (
     <div style={{ minHeight: '100vh', background: '#F8F6F3', fontFamily: 'var(--font)' }}>
@@ -226,6 +237,7 @@ export default function SicatRfid({ onInterfaceChange, onProfileOpen, onAdminOpe
         onTabChange={setCurrentTab}
         incBadgeCount={openIncCount}
         activeOrderCount={activeOrdCount}
+        onSearch={handleSearch}
         onInterfaceChange={onInterfaceChange}
         onProfileOpen={onProfileOpen}
         onAdminOpen={onAdminOpen}

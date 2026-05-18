@@ -10,8 +10,9 @@ export default function BahiasPopup({ order, triggerRect, onClose }) {
     return () => { clearTimeout(t); document.removeEventListener('click', handler); };
   }, [onClose]);
 
-  const dist  = order?.bahias?.dist || [];
-  const sumPP = dist.reduce((a, b) => a + b, 0);
+  const dist     = order?.bahias?.dist || [];
+  const sumPP    = dist.reduce((a, b) => a + b, 0);
+  const hasDist  = dist.length > 0 && sumPP > 0;
 
   const pw   = 236;
   const left = triggerRect
@@ -30,10 +31,14 @@ export default function BahiasPopup({ order, triggerRect, onClose }) {
       }}
     >
       <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px', color: '#6B6B6B', marginBottom: 8 }}>
-        Distribución {order?.id} ({sumPP} pp)
+        Distribución {order?.id}{hasDist ? ` (${sumPP} pp)` : ''}
       </div>
-      {dist.map((pp, i) => {
-        const pct = sumPP > 0 ? Math.round(pp / sumPP * 100) : 0;
+      {!hasDist ? (
+        <div style={{ fontSize: 10, color: '#6B6B6B', padding: '6px 0', fontStyle: 'italic' }}>
+          Distribución por bahía no disponible aún — los datos se calculan cuando los prepacks llegan a esta etapa.
+        </div>
+      ) : dist.map((pp, i) => {
+        const pct = Math.round(pp / sumPP * 100);
         return (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
             <span style={{ fontSize: 9, color: '#6B6B6B', width: 56, flexShrink: 0 }}>
