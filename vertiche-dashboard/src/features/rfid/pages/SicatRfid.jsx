@@ -3,82 +3,120 @@ import SicatHeader from '../components/SicatHeader';
 import AnalisisFlujo from '../components/SicatAnalisisFlujo';
 import Historial from '../components/Historial';
 import Incidencias from '../components/Incidencias';
-import HistorialAlertas from '../components/HistorialAlertas';
 import { useOrdenes } from '../hooks/useOrdenes';
-import { useAlertas } from '../hooks/useAlertas';
 import { SLA_POR_ETAPA } from '../utils/alertas';
 
 // Maps real API etapa names to the original stage keys
-const ETAPA_NAMES = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
-const STAGE_KEYS  = ['prereg', 'qa', 'reg', 'sorter', 'bahias', 'audit', 'envio'];
+const ETAPA_NAMES  = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
+const STAGE_KEYS   = ['prereg', 'qa', 'reg', 'sorter', 'bahias', 'audit', 'envio'];
 const ETAPA_TO_KEY = Object.fromEntries(ETAPA_NAMES.map((n, i) => [n, STAGE_KEYS[i]]));
+const QA_IDX       = 1; // índice de QA en STAGE_KEYS / ETAPA_NAMES
 
+/**
+ * Convierte una ProgresoOrden del backend al formato interno del dashboard.
+ *
+ * Optimizaciones (#task — Isaac Calderon Laflor):
+ *  - ppEtapaIdx   pre-computa el índice de etapa de cada prepack una sola vez (O(n))
+ *                 eliminando O(7n) llamadas a indexOf dentro de los loops.
+ *  - ocupadas     Set para lookup O(1) de etapas actualmente ocupadas.
+ *  - fallaPerEtapa Map construida en O(n) en lugar de 7 filtros O(n) separados.
+ *  - tsPerEtapa   min/max de timestamps en un solo recorrido de historial.
+ *  - effectiveTotal total efectivo post-QA: descuenta rechazados de QA para que
+ *                 el porcentaje en etapas siguientes pueda llegar a 100%
+ *                 manteniendo el display original (49/50).
+ */
 function adaptOrden(orden) {
   const rawPP = orden.prepacks ?? [];
   const total = orden.totalPrepacks ?? rawPP.length;
+  const now   = Date.now();
 
-  // Arrival = earliest timestamp in any prepack's historial
-  const allTs = rawPP
-    .flatMap(pp => (pp.historial ?? []).map(e => new Date(e.timestamp).getTime()))
-    .filter(Boolean);
-  const arrivalTs = allTs.length > 0 ? Math.min(...allTs) : Date.now();
+  // ── Pre-computaciones O(n) ──────────────────────────────────────────
+  // 1. Índice de etapa de cada prepack (reutilizado en todos los loops)
+  const ppEtapaIdx = rawPP.map(pp => ETAPA_NAMES.indexOf(pp.currentEtapa ?? ''));
 
+  // 2. Set de etapas con al menos un prepack → O(1) lookup en lugar de .some()
+  const ocupadas = new Set(rawPP.map(pp => pp.currentEtapa));
+
+  // 3. Fallas por etapa y min/max de timestamps en un único recorrido
+  const fallaPerEtapa = new Map();  // etapa → count
+  const tsPerEtapa    = new Map();  // etapa → { min, max }
+  let arrivalTs = Infinity;
+
+  for (const pp of rawPP) {
+    if (pp.hasFalla && pp.fallaEtapa) {
+      fallaPerEtapa.set(pp.fallaEtapa, (fallaPerEtapa.get(pp.fallaEtapa) ?? 0) + 1);
+    }
+    for (const e of pp.historial ?? []) {
+      const t = new Date(e.timestamp).getTime();
+      if (!t) continue;
+      if (t < arrivalTs) arrivalTs = t;
+      const cur = tsPerEtapa.get(e.etapa);
+      if (!cur) tsPerEtapa.set(e.etapa, { min: t, max: t });
+      else {
+        if (t < cur.min) cur.min = t;
+        if (t > cur.max) cur.max = t;
+      }
+    }
+  }
+  if (!isFinite(arrivalTs)) arrivalTs = now;
+
+  // 4. Prepacks rechazados en QA → ajusta el total efectivo en etapas siguientes
+  //    Display:    49/50  (total original visible — info relevante)
+  //    Porcentaje: 49/49 = 100% (sobre los que sí deben avanzar)
+  const failedQACount = fallaPerEtapa.get('QA') ?? 0;
+
+  // ── Construcción de etapas ──────────────────────────────────────────
   const stages = {};
   STAGE_KEYS.forEach((key, idx) => {
     const etapa = ETAPA_NAMES[idx];
 
-    // Progreso ACUMULATIVO: cuenta prepacks que ya llegaron a esta etapa
-    // o la superaron (currentEtapa index >= idx). Así los porcentajes
-    // solo suben conforme el simulador avanza prepacks.
-    const proc = rawPP.filter(pp => {
-      const ppIdx = ETAPA_NAMES.indexOf(pp.currentEtapa ?? '');
-      return ppIdx >= idx;
-    }).length;
+    // Progreso acumulativo: prepacks en esta etapa o más allá
+    let proc = 0;
+    for (const pIdx of ppEtapaIdx) if (pIdx >= idx) proc++;
 
     if (proc === 0) {
-      stages[key] = { proc: 0, total, startMin: 0, durMin: null, status: 'pending', sent: false };
+      stages[key] = { proc: 0, total, effectiveTotal: total, startMin: 0, durMin: null, status: 'pending', sent: false };
       return;
     }
 
-    // Timestamps: historial registra cuándo salió un prepack de una etapa
-    // (el campo "etapa" del evento = etapa que estaba ABANDONANDO)
-    const etapaTs = rawPP
-      .flatMap(pp => (pp.historial ?? []).filter(e => e.etapa === etapa).map(e => new Date(e.timestamp).getTime()))
-      .filter(Boolean);
-
-    const minTs    = etapaTs.length > 0 ? Math.min(...etapaTs) : null;
-    const maxTs    = etapaTs.length > 0 ? Math.max(...etapaTs) : null;
+    const ts       = tsPerEtapa.get(etapa);
+    const minTs    = ts?.min ?? null;
+    const maxTs    = ts?.max ?? null;
     const startMin = minTs ? Math.max(0, Math.round((minTs - arrivalTs) / 60000)) : 0;
     const durMin   = (minTs && maxTs && maxTs > minTs) ? Math.round((maxTs - minTs) / 60000) : null;
 
-    const done = proc >= total;
-    const anyHereNow = rawPP.some(pp => pp.currentEtapa === etapa);
-    // Falla: algún prepack tiene error de lectura registrado en esta etapa
-    const fallaCount = rawPP.filter(pp => pp.hasFalla && pp.fallaEtapa === etapa).length;
+    const fallaCount = fallaPerEtapa.get(etapa) ?? 0;
+    const anyHereNow = ocupadas.has(etapa);
+
+    // Total efectivo: etapas tras QA descuentan los rechazados en QA
+    const effectiveTotal = idx > QA_IDX ? Math.max(1, total - failedQACount) : total;
+    const done           = proc >= effectiveTotal;
+
     const status = fallaCount > 0 ? 'falla'
       : done       ? 'done'
       : anyHereNow ? 'active'
       : proc > 0   ? 'active'
       : 'pending';
 
-    stages[key] = { proc, total, startMin, durMin, status, fallaCount, sent: false };
+    stages[key] = { proc, total, effectiveTotal, startMin, durMin, status, fallaCount, sent: false };
   });
 
   if (stages.envio) stages.envio.sent = stages.envio.status === 'done';
 
-  const adaptedPrepacks = rawPP.map(pp => {
-    const currentIdx = ETAPA_NAMES.indexOf(pp.currentEtapa ?? '');
-    const stageResults = STAGE_KEYS.map((key, si) => {
+  // ── Prepacks adaptados ──────────────────────────────────────────────
+  // Pre-agrupa historial por etapa → O(1) lookup en el map interno
+  const adaptedPrepacks = rawPP.map((pp, i) => {
+    const currentIdx    = ppEtapaIdx[i];
+    const histEtapaSet  = new Set((pp.historial ?? []).map(e => e.etapa));
+    const stageResults  = STAGE_KEYS.map((key, si) => {
       const etapa = ETAPA_NAMES[si];
       const s     = stages[key];
-      if (pp.currentEtapa === etapa) return 'act';
+      if (pp.currentEtapa === etapa)    return 'act';
       if (!s || s.status === 'pending') return 'pend';
-      const ppEvents = (pp.historial ?? []).filter(e => e.etapa === etapa);
-      if (ppEvents.length > 0) return 'ok';
+      if (histEtapaSet.has(etapa))      return 'ok';
       if (currentIdx >= 0 && si < currentIdx) return 'pend';
       return 'pend';
     });
-
     return { id: pp.id, color: '—', size: '—', store: '—', bahiaIdx: 0, stageResults };
   });
 
@@ -163,7 +201,6 @@ export default function SicatRfid({ onInterfaceChange, onProfileOpen, onAdminOpe
   // #217 — Filtros que se pasan al backend vía useOrdenes
   const [backendFilters,  setBackendFilters]  = useState({});
   const { ordenes, loading, error, connected } = useOrdenes(backendFilters);
-  const { alertasBD, sendAlertas }            = useAlertas();
 
   const adaptedOrders = useMemo(() => ordenes.map(adaptOrden), [ordenes]);
   const allPrepacks   = useMemo(() => ordenes.flatMap(o => o.prepacks ?? []), [ordenes]);
@@ -173,13 +210,6 @@ export default function SicatRfid({ onInterfaceChange, onProfileOpen, onAdminOpe
     () => baseIncidencias.map(inc => ({ ...inc, ...(incOverrides[inc.ppId] || {}) })),
     [baseIncidencias, incOverrides],
   );
-
-  // Sincronizar las incidencias detectadas dinámicamente con la BD
-  useEffect(() => {
-    if (baseIncidencias.length > 0) {
-      sendAlertas(baseIncidencias);
-    }
-  }, [baseIncidencias, sendAlertas]);
 
   const handleUpdateIncidencia = (incId, changes) => {
     const inc = incidencias.find(i => i.id === incId);
@@ -248,9 +278,6 @@ export default function SicatRfid({ onInterfaceChange, onProfileOpen, onAdminOpe
               incidencias={incidencias}
               onUpdateIncidencia={handleUpdateIncidencia}
             />
-          )}
-          {currentTab === 'alertas' && (
-            <HistorialAlertas alertas={alertasBD} />
           )}
         </main>
       )}
