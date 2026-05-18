@@ -305,7 +305,6 @@ export default function SicatRfid({ onInterfaceChange, onProfileOpen, onAdminOpe
           {currentTab === 'incidencias' && (
             <Incidencias
               incidencias={incidencias}
-              onUpdateIncidencia={handleUpdateIncidencia}
             />
           )}
         </main>
