@@ -1,4 +1,5 @@
-export function ChartStatus({ type, message, onRetry }) {
+import "../styles/ChartStatus.css";
+export function ChartStatus({ type, message }) {
   const isError = type === 'error';
   return (
     <div className={`chart-status chart-status--${type}`}>
@@ -10,10 +11,10 @@ export function ChartStatus({ type, message, onRetry }) {
         {isError ? (message ?? 'Error al conectar con el servidor')
                  : 'No hay información para este período o filtro'}
       </p>
-      {isError && onRetry && (
-        <button className="chart-status__retry" onClick={onRetry}>
-          Reintentar
-        </button>
+      {isError && (
+        <p className="chart-status__retry">
+          Espere un momento y refresque la página
+        </p>
       )}
     </div>
   );
