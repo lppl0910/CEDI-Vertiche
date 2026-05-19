@@ -7,6 +7,10 @@ import alertasRouter from './routes/alertas';
 import { procesoEscaneoRFID } from './services/ordenService';
 import { type Etapa } from './types/rfid.types';
 import { registrarTagDesconocido } from './services/alertasService';
+import { connectDB } from './config/database';
+
+// Intentar conectar a MongoDB (si MONGODB_URI está en .env)
+connectDB();
 
 const app = express();
 const httpServer = createServer(app);
