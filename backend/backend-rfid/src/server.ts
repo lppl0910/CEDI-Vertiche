@@ -6,6 +6,7 @@ import ordenesRouter from './routes/ordenes';
 import alertasRouter from './routes/alertas';
 import { procesoEscaneoRFID } from './services/ordenService';
 import { type Etapa } from './types/rfid.types';
+import { registrarTagDesconocido } from './services/alertasService';
 
 const app = express();
 const httpServer = createServer(app);
@@ -32,6 +33,7 @@ app.post('/api/rfid/scan', (req, res) => {
 
     const resultado = procesoEscaneoRFID(tagId, readerId, etapa);
     if (!resultado) {
+        registrarTagDesconocido(tagId, readerId, etapa);
         return res.status(404).json({ error: 'Prepack no encontrado' });
     }
 
