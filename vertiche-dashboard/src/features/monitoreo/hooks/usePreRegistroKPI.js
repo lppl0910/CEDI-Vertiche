@@ -13,7 +13,7 @@ export function usePreregistroKPIs() {
 
   const fetchKPIs = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/preregistro/kpis');
+      const res = await fetch('http://localhost:3002/api/preregistro/kpis');
       if (!res.ok) throw new Error('Error en el servidor');
       const data = await res.json();
       setKpis(data);

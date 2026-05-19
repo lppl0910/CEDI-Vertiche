@@ -6,7 +6,7 @@ export function useOrdenesIncompletas() {
 
   const fetchData = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/preregistro/ordenes-incompletas')
+      const res = await fetch('http://localhost:3002/api/preregistro/ordenes-incompletas')
       if (!res.ok) throw new Error('Error en el servidor')
       const json = await res.json()
       setData(json)

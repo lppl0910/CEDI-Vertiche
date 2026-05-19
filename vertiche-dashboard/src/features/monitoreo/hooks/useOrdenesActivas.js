@@ -6,7 +6,7 @@ export function useOrdenesActivas() {
 
   const fetchData = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/envio/ordenes-activas')
+      const res = await fetch('http://localhost:3002/api/envio/ordenes-activas')
       if (!res.ok) throw new Error('Error en el servidor')
       setData(await res.json())
     } catch (err) {

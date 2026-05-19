@@ -768,7 +768,7 @@ function ProveedoresEstrellaTable() {
     setLoadingHistorial(true);
     try {
       const res = await fetch(
-        `http://localhost:3001/api/preregistro/proveedores/${encodeURIComponent(item.id_proveedor)}/historial`,
+        `http://localhost:3002/api/preregistro/proveedores/${encodeURIComponent(item.id_proveedor)}/historial`,
       );
       if (!res.ok) throw new Error("Error en el servidor");
       setHistorial(await res.json());
