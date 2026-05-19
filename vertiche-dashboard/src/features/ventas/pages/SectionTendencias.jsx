@@ -76,20 +76,33 @@ export function SectionTendencias({ filters }) {
       <SectionSep label="Tendencias Temporales" />
 
       <TwoCol>
-        {render(yoyData, null, () => (
-          <IngresosMensualesChart yoyData={yoyData} />
-        ))}
-        {render(lineData, null, () => (
-          <IngresosUnidadesChart lineData={lineData} />
-        ))}
+        {render(yoyData, null, (data) => {
+          const mapped = MESES.map((mes, i) => ({
+            mes,
+            2025: data.actual?.[i] ?? 0,
+            2024: data.anterior?.[i] ?? 0,
+          }));
+          return <IngresosMensualesChart yoyData={mapped} />;
+        })}
+        {render(lineData, null, (data) => {
+          const mapped = data.labels.map((label, i) => ({
+            label:
+              data.period === "7d" || data.period === "1y"
+                ? label
+                : `S${label}`,
+            ingresos: data.revenue[i],
+            unidades: +(data.units[i] / 10).toFixed(1),
+          }));
+          return <IngresosUnidadesChart lineData={mapped} />;
+        })}
       </TwoCol>
 
       <TwoCol>
-        {render(trimestralData, null, () => ( 
-          <VentasTrimestralChart data={trimestralData} />
+        {render(trimestralData, null, (data) => (
+          <VentasTrimestralChart data={data} />
         ))}
-        {render(festivosData, null, () => (
-          <FestivosVsNormalesGrid data={festivosData} />
+        {render(festivosData, null, (data) => (
+          <FestivosVsNormalesGrid data={data} />
         ))}
       </TwoCol>
     </div>
