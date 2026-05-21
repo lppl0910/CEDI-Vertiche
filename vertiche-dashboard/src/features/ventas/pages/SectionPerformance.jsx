@@ -26,9 +26,10 @@ export function SectionPerformance({ filters, onStatusChange }) {
   }, [sectionStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // KPIs: datos reales si llegaron, fallback si no
-  const kpis = performance.status === "success" && performance.data?.kpis
-    ? performance.data.kpis
-    : fallback.kpis;
+  const kpis =
+    performance.status === "success" && performance.data?.kpis
+      ? performance.data.kpis
+      : {};
 
   return (
     <div className="section-performance">
@@ -48,15 +49,13 @@ export function SectionPerformance({ filters, onStatusChange }) {
 
       {performance.status !== "loading" && (
         <div className="section-performance__kpi-grid">
+          {kpis.map((kpi, i) => (
             <VentasKPI key={i} kpi={kpi} />
           ))}
         </div>
       )}
 
-      {performance.status === "empty" && (
-        <ChartStatus type="empty" />
-      )}
-
+      {performance.status === "empty" && <ChartStatus type="empty" />}
     </div>
   );
 }
