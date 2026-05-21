@@ -1,11 +1,12 @@
-// SectionTiendas.jsx — diff mínimo
-import { useVentasFetch } from "./useVentasFetch.js";
-import { ChartStatus } from "./components/ChartStatus.jsx";
+import { useEffect } from "react";
 import {
   fetchTicketZona,
   fetchRankingTiendas,
   fetchVentasEstado,
 } from "../data/ventasApi";
+import { useVentasFetch } from "./useVentasFetch";
+import { useSectionStatus } from "../hooks/useSectionStatus.js";
+import { ChartStatus } from "./components/ChartStatus";
 import { SectionSep } from "./SectionSep";
 import { TwoCol } from "./TwoCol";
 import { TicketPromedioZonaChart } from "./charts/TicketPromedioZonaChart";
@@ -14,7 +15,9 @@ import { RankingTiendasTable } from "./charts/RankingTiendasTable";
 import { MapaCalorMexico } from "./charts/MapaCalorMexico";
 import "./styles/SectionTiendas.css";
 
-export function SectionTiendas({ filters }) {
+// filters contiene los parámetros de los filtros
+// onStatusChange se usa para notificar a Ventas.jsx en caso de error global
+export function SectionTiendas({ filters, onStatusChange }) {
   const { period, zona, temporada } = filters;
 
   const ticket = useVentasFetch(
@@ -30,14 +33,31 @@ export function SectionTiendas({ filters }) {
     [period, zona, temporada],
   );
 
-  // Helper para no repetir el if loading/error/empty
-  const render = ({ status, data, error, retry }, emptyCheck, children) => {
+  const { sectionStatus } = useSectionStatus(ticket, tiendas, mapa);
+
+  useEffect(() => {
+    onStatusChange?.(sectionStatus);
+  }, [sectionStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const render = ({ status, data, error, retry }, children) => {
     if (status === "loading")
       return <div className="chart-loading">Cargando...</div>;
-    if (status === "error" || status === "empty"){
-      return <ChartStatus type={status} message={error} onRetry={retry} />;}
+    if (status === "error" || status === "empty")
+      return <ChartStatus type={status} message={error} onRetry={retry} />;
     return children(data);
   };
+
+  if (sectionStatus === "error" || sectionStatus === "empty") {
+    return (
+      <div className="section-tiendas">
+        <SectionSep label="Rendimiento por Tienda" />
+        <ChartStatus
+          type={sectionStatus}
+          message="No se pudieron cargar los datos de esta sección"
+        />
+      </div>
+    );
+  }
 
   const ticketMapped = ticket.data
     ? ticket.data.labels.map((label, i) => ({
@@ -50,19 +70,22 @@ export function SectionTiendas({ filters }) {
   return (
     <div className="section-tiendas">
       <SectionSep label="Rendimiento por Tienda" />
+
       <TwoCol>
-        {render(ticket, null, () => (
+        {render(ticket, () => (
           <TicketPromedioZonaChart ticketData={ticketMapped} />
         ))}
-        {render(tiendas, null, () => (
-          <DistribucionZonaTable tiendas={tiendas.data} />
+        {render(tiendas, (data) => (
+          <DistribucionZonaTable tiendas={data} />
         ))}
       </TwoCol>
-      {render(mapa, null, () => (
-        <MapaCalorMexico data={mapa.data} zona={zona} />
+
+      {render(mapa, (data) => (
+        <MapaCalorMexico data={data} zona={zona} />
       ))}
-      {render(tiendas, null, () => (
-        <RankingTiendasTable tiendas={tiendas.data} />
+
+      {render(tiendas, (data) => (
+        <RankingTiendasTable tiendas={data} />
       ))}
     </div>
   );
