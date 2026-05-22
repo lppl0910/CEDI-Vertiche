@@ -225,26 +225,23 @@ function SectionHeader({ title, summary, status }) {
 
 function KpiStrip({ primaryKpi, secondaryKpis }) {
   return (
-    <div style={{ display: "flex", gap: 14, marginBottom: 22 }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <KPICard
-          label={primaryKpi.label}
-          value={primaryKpi.value}
-          delta={primaryKpi.delta}
-          unit={primaryKpi.unit}
-          description={primaryKpi.description}
-        />
-      </div>
+    <div className="kpi-grid">
+      <KPICard
+        label={primaryKpi.label}
+        value={primaryKpi.value}
+        delta={primaryKpi.delta}
+        unit={primaryKpi.unit}
+        description={primaryKpi.description}
+      />
       {secondaryKpis.map((item) => (
-        <div key={item.label} style={{ flex: 1, minWidth: 0 }}>
-          <KPICard
-            label={item.label}
-            value={item.value}
-            delta={item.delta}
-            unit={item.unit}
-            description={item.description}
-          />
-        </div>
+        <KPICard
+          key={item.label}
+          label={item.label}
+          value={item.value}
+          delta={item.delta}
+          unit={item.unit}
+          description={item.description}
+        />
       ))}
     </div>
   );
@@ -795,7 +792,7 @@ function ProveedoresEstrellaTable() {
           Cargando...
         </div>
       ) : (
-        <table style={tableStyle}>
+        <div className="table-scroll"><table style={tableStyle}>
           <thead>
             <tr>
               <th style={{ ...thStyle, width: 32 }}>#</th>
@@ -950,7 +947,7 @@ function ProveedoresEstrellaTable() {
               </React.Fragment>
             ))}
           </tbody>
-        </table>
+        </table></div>
       )}
     </ChartCard>
   );
@@ -1304,7 +1301,7 @@ function BacklogEnvioTable() {
           Sin órdenes activas en las últimas 12 h
         </div>
       ) : (
-        <table style={tableStyle}>
+        <div className="table-scroll"><table style={tableStyle}>
           <thead>
             <tr>
               <th style={thStyle}>Orden</th>
@@ -1369,7 +1366,7 @@ function BacklogEnvioTable() {
               );
             })}
           </tbody>
-        </table>
+        </table></div>
       )}
     </ChartCard>
   );
@@ -1551,7 +1548,7 @@ function OrdenesActivasTable() {
           Sin órdenes activas con los filtros seleccionados
         </div>
       ) : (
-        <table style={tableStyle}>
+        <div className="table-scroll"><table style={tableStyle}>
           <thead>
             <tr>
               <th style={thStyle}>Orden</th>
@@ -1645,7 +1642,7 @@ function OrdenesActivasTable() {
               );
             })}
           </tbody>
-        </table>
+        </table></div>
       )}
     </ChartCard>
   );
@@ -1825,7 +1822,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
           key="prereg-pareto"
           title="Órdenes incompletas por proveedor (Pareto)"
         >
-          <table style={tableStyle}>
+          <div className="table-scroll"><table style={tableStyle}>
             <thead>
               <tr>
                 <th style={thStyle}>Proveedor</th>
@@ -1867,7 +1864,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </ChartCard>,
         <TendenciaSemanalChart key="prereg-trend" />,
         <ProveedoresEstrellaTable key="prereg-stars" />,
@@ -1913,7 +1910,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
       ],
       charts: [
         <ChartCard key="qa-pareto" title="Errores por proveedor (Pareto)">
-          <table style={tableStyle}>
+          <div className="table-scroll"><table style={tableStyle}>
             <thead>
               <tr>
                 <th style={thStyle}>Proveedor</th>
@@ -1946,10 +1943,10 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </ChartCard>,
         <ChartCard key="qa-retornados" title="Prepacks retornados por QA">
-          <table style={tableStyle}>
+          <div className="table-scroll"><table style={tableStyle}>
             <thead>
               <tr>
                 <th style={thStyle}>PP</th>
@@ -1974,7 +1971,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </ChartCard>,
         <ChartCard key="qa-prenda" title="Rechazo por tipo de prenda">
           <ResponsiveContainer width="100%" height={220}>
@@ -2133,7 +2130,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
         /* ── Backlog con alertas precisas, etapa y semáforo ── */
         <ChartCard key="reg-backlog" title="Backlog de PPs desde preregistro"
           footer={`Umbrales: ⚠ >10 min · 🔴 >20 min`}>
-          <table style={tableStyle}>
+          <div className="table-scroll"><table style={tableStyle}>
             <thead>
               <tr>
                 <th style={thStyle}>PP</th>
@@ -2167,7 +2164,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         </ChartCard>,
 
         /* ── Tendencia detallada con target, línea crítica y dots de color ── */
@@ -2281,7 +2278,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
           key="sorter-incorrectos"
           title="Paquetes sorteados incorrectamente"
         >
-          <table style={tableStyle}>
+          <div className="table-scroll"><table style={tableStyle}>
             <thead>
               <tr>
                 <th style={thStyle}>PP</th>
@@ -2327,7 +2324,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </ChartCard>,
         <ChartCard
           key="sorter-tiempo"
@@ -2488,7 +2485,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
       charts: [
         /* ── Lista completa: badge de tipo, proveedor, piezas y barra de tiempo ── */
         <ChartCard key="audit-cajas" title="Detalle completo de cajas incorrectas">
-          <table style={tableStyle}>
+          <div className="table-scroll"><table style={tableStyle}>
             <thead>
               <tr>
                 <th style={thStyle}>Caja</th>
@@ -2535,7 +2532,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         </ChartCard>,
 
         /* ── Histograma preciso con curva de Pareto acumulada y colores por severidad ── */
