@@ -29,7 +29,7 @@ export function SectionPerformance({ filters, onStatusChange }) {
   const kpis =
     performance.status === "success" && performance.data?.kpis
       ? performance.data.kpis
-      : {};
+      : [];
 
   return (
     <div className="section-performance">
