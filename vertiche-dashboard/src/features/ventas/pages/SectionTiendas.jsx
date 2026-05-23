@@ -1,86 +1,92 @@
-import { useState, useEffect } from 'react';
-import { fetchTicketZona, fetchRankingTiendas, fetchVentasEstado } from '../data/ventasApi';
-import { SectionSep } from './SectionSep';
-import { TwoCol } from './TwoCol';
-import { TicketPromedioZonaChart } from './charts/TicketPromedioZonaChart';
-import { DistribucionZonaTable } from './charts/DistribucionZonaTable';
-import { RankingTiendasTable } from './charts/RankingTiendasTable';
-import { MapaCalorMexico } from './charts/MapaCalorMexico';
-import './styles/SectionTiendas.css';
+import { useEffect } from "react";
+import {
+  fetchTicketZona,
+  fetchRankingTiendas,
+  fetchVentasEstado,
+} from "../data/ventasApi";
+import { useVentasFetch } from "./useVentasFetch";
+import { useSectionStatus } from "../hooks/useSectionStatus.js";
+import { ChartStatus } from "./components/ChartStatus";
+import { SectionSep } from "./SectionSep";
+import { TwoCol } from "./TwoCol";
+import { TicketPromedioZonaChart } from "./charts/TicketPromedioZonaChart";
+import { DistribucionZonaTable } from "./charts/DistribucionZonaTable";
+import { RankingTiendasTable } from "./charts/RankingTiendasTable";
+import { MapaCalorMexico } from "./charts/MapaCalorMexico";
+import "./styles/SectionTiendas.css";
 
-export function SectionTiendas({ filters }) {
+// filters contiene los parámetros de los filtros
+// onStatusChange se usa para notificar a Ventas.jsx en caso de error global
+export function SectionTiendas({ filters, onStatusChange }) {
   const { period, zona, temporada } = filters;
 
-  const [ticketData, setTicketData]         = useState([]);
-  const [tiendas, setTiendas]               = useState([]);
-  const [estadosData, setEstadosData]       = useState([]);
-  const [loadingTicket, setLoadingTicket]   = useState(true);
-  const [loadingTiendas, setLoadingTiendas] = useState(true);
-  const [loadingMapa, setLoadingMapa]       = useState(true);
-
-  // Ticket Promedio — period y temporada (sin zona)
-  useEffect(() => {
-    fetchTicketZona({ period, temporada })
-      .then(data => {
-        const mapped = data.labels.map((label, i) => ({
-          mes:   label,
-          Norte: data.norte[i],
-          Sur:   data.sur[i],
-        }));
-        setTicketData(mapped);
-        setLoadingTicket(false);
-      })
-      .catch(err => {
-        console.error('fetchTicketZona:', err);
-        setLoadingTicket(false);
-      });
-  }, [period, temporada]);
-
-  // Ranking + Distribución — los 3 filtros
-  useEffect(() => {
-    fetchRankingTiendas({ period, zona, temporada })
-      .then(data => {
-        setTiendas(data);
-        setLoadingTiendas(false);
-      })
-      .catch(err => {
-        console.error('fetchRankingTiendas:', err);
-        setLoadingTiendas(false);
-      });
-  }, [period, zona, temporada]);
-
-  // Mapa de calor — los 3 filtros
-  useEffect(() => {
-    fetchVentasEstado({ period, zona, temporada })
-      .then(data => {
-        setEstadosData(data);
-        setLoadingMapa(false);
-      })
-      .catch(err => {
-        console.error('fetchVentasEstado:', err);
-        setLoadingMapa(false);
-      });
-  }, [period, zona, temporada]);
-
-  const loading = (
-    <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Cargando...</div>
+  const ticket = useVentasFetch(
+    () => fetchTicketZona({ period, temporada }),
+    [period, temporada],
   );
+  const tiendas = useVentasFetch(
+    () => fetchRankingTiendas({ period, zona, temporada }),
+    [period, zona, temporada],
+  );
+  const mapa = useVentasFetch(
+    () => fetchVentasEstado({ period, zona, temporada }),
+    [period, zona, temporada],
+  );
+
+  const { sectionStatus } = useSectionStatus(ticket, tiendas, mapa);
+
+  useEffect(() => {
+    onStatusChange?.(sectionStatus);
+  }, [sectionStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const render = ({ status, data, error, retry }, children) => {
+    if (status === "loading")
+      return <div className="chart-loading">Cargando...</div>;
+    if (status === "error" || status === "empty")
+      return <ChartStatus type={status} message={error} onRetry={retry} />;
+    return children(data);
+  };
+
+  if (sectionStatus === "error" || sectionStatus === "empty") {
+    return (
+      <div className="section-tiendas">
+        <SectionSep label="Rendimiento por Tienda" />
+        <ChartStatus
+          type={sectionStatus}
+          message="No se pudieron cargar los datos de esta sección"
+        />
+      </div>
+    );
+  }
+
+  const ticketMapped = ticket.data
+    ? ticket.data.labels.map((label, i) => ({
+        mes: label,
+        Norte: ticket.data.norte[i],
+        Sur: ticket.data.sur[i],
+      }))
+    : [];
 
   return (
     <div className="section-tiendas">
       <SectionSep label="Rendimiento por Tienda" />
 
       <TwoCol>
-        {loadingTicket  ? loading : <TicketPromedioZonaChart ticketData={ticketData} />}
-        {loadingTiendas ? loading : <DistribucionZonaTable tiendas={tiendas} />}
+        {render(ticket, () => (
+          <TicketPromedioZonaChart ticketData={ticketMapped} />
+        ))}
+        {render(tiendas, (data) => (
+          <DistribucionZonaTable tiendas={data} />
+        ))}
       </TwoCol>
 
-      {loadingMapa
-        ? <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Cargando mapa...</div>
-        : <MapaCalorMexico data={estadosData} zona={zona} />
-      }
+      {render(mapa, (data) => (
+        <MapaCalorMexico data={data} zona={zona} />
+      ))}
 
-      {loadingTiendas ? loading : <RankingTiendasTable tiendas={tiendas} />}
+      {render(tiendas, (data) => (
+        <RankingTiendasTable tiendas={data} />
+      ))}
     </div>
   );
 }

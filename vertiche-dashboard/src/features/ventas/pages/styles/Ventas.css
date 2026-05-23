@@ -7,3 +7,15 @@
   flex-direction: column;
   gap: 16px;
 }
+
+.ventas__global-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.ventas__global-error .chart-status {
+  max-width: 480px;
+  padding: 40px 32px;
+}
