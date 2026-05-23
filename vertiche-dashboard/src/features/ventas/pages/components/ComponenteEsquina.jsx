@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "../styles/ComponenteEsquina.css";
+import { FlechaIzquierda } from "./FlechaIzquierda.jsx";
 
 const ComponenteEsquina = ({ periodoParametro }) => {
   const [estadoVisible, setEstadoVisible] = useState(true);
@@ -23,21 +24,19 @@ const ComponenteEsquina = ({ periodoParametro }) => {
   const strFechaHoy = objFechaHoy.toLocaleDateString(locale, opcionesFecha);
 
   return (
-    <div className="componente-esquina" onClick={cambiarEstadoComponenteEsq}>
+    <div>
       {estadoVisible ? (
-        <>
+        <div className="componente-esquina" onClick={cambiarEstadoComponenteEsq}>
           <p>Fechas seleccionadas:</p>
           <p>{strFechaPeriodo}</p>
           <p>al</p>
           <p>{strFechaHoy}</p>
-        </>
+        </div>
       ) : (
-        <>...</>
+        <FlechaIzquierda onClick={cambiarEstadoComponenteEsq} size={30}/>
       )}
     </div>
   );
 };
-
-
 
 export default ComponenteEsquina;

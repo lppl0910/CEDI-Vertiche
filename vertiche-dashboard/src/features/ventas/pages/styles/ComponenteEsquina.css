@@ -8,5 +8,5 @@
   color: white;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  z-index: 1000; /* Ensures it stays on top */
+  z-index: 1000;
 }
