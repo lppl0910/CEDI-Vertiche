@@ -4,6 +4,10 @@ import express from 'express';
 import cors from 'cors';
 
 import VentasController from './controllers/VentasController';
+import TiendaController from './controllers/TiendaController';
+import ProductoController from './controllers/ProductoController';
+import TiempoController from './controllers/TiempoController';
+import InventarioController from './controllers/InventarioController';
 
 const server:Server = new Server ({
     port:PORT,
@@ -13,10 +17,13 @@ const server:Server = new Server ({
         express.urlencoded({extended:true}),
         cors()
     ],
-    controllers:[
-        VentasController.instance
-        
-    ]
+    controllers: [
+    VentasController.instance,      
+    TiendaController.instance,      
+    ProductoController.instance,    
+    TiempoController.instance,      
+    InventarioController.instance,  
+]
 })
 
 server.init();

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import AbstractController from "./AbstractController";
 import db from "../models";
-const { Op, fn, col, literal } = require("sequelize");
+const { fn, col, literal } = require("sequelize");
 
 const diasMap: Record<string, number> = {
   "7d": 7,
@@ -19,31 +19,19 @@ export default class VentasController extends AbstractController {
   }
 
   protected initRoutes(): void {
-    // Dim_Tienda
-    this.router.get("/tiendas", this.getTiendas.bind(this));
-    this.router.post("/tiendas", this.postTienda.bind(this));
-
-    // Dim_Producto
-    this.router.get("/productos", this.getProductos.bind(this));
-    this.router.post("/productos", this.postProducto.bind(this));
-
-    // Fact_Ventas
-    this.router.get("/ventas", this.getVentas.bind(this));
-    this.router.post("/ventas", this.postVenta.bind(this));
-
     // Tendencias
-    this.router.get("/yoy", this.getYoY.bind(this));
+    this.router.get("/yoy",         this.getYoY.bind(this));
     this.router.get("/performance", this.getPerformance.bind(this));
-    this.router.get("/trimestral", this.getTrimestral.bind(this));
-    this.router.get("/festivos", this.getFestivos.bind(this));
+    this.router.get("/trimestral",  this.getTrimestral.bind(this));
+    this.router.get("/festivos",    this.getFestivos.bind(this));
 
     // Productos
-    this.router.get("/tallas", this.getTallas.bind(this));
+    this.router.get("/tallas",               this.getTallas.bind(this));
     this.router.get("/temporadas-categoria", this.getTemporadasCategoria.bind(this));
-    this.router.get("/top-productos", this.getTopProductos.bind(this));
+    this.router.get("/top-productos",        this.getTopProductos.bind(this));
 
     // Tiendas
-    this.router.get("/ticket-zona", this.getTicketZona.bind(this));
+    this.router.get("/ticket-zona",     this.getTicketZona.bind(this));
     this.router.get("/ranking-tiendas", this.getRankingTiendas.bind(this));
 
     // Mapa de calor
@@ -52,7 +40,7 @@ export default class VentasController extends AbstractController {
 
   // ── Helper: construye wheres a partir de query params ───────────────
   private buildWhere(req: Request) {
-    const zona = req.query.zona as string;
+    const zona      = req.query.zona      as string;
     const temporada = req.query.temporada as string;
 
     const tiendaWhere =
@@ -69,160 +57,83 @@ export default class VentasController extends AbstractController {
     return { tiendaWhere, productoWhere, tiempoWhere };
   }
 
-  // ── GET /ventas/tiendas ──────────────────────────────────────────────
-  private async getTiendas(req: Request, res: Response) {
-    try {
-      const tiendas = await db.Dim_Tienda.findAll();
-      res.status(200).json(tiendas);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
-    }
-  }
-
-  // ── POST /ventas/tiendas ─────────────────────────────────────────────
-  private async postTienda(req: Request, res: Response) {
-    try {
-      await db.Dim_Tienda.create(req.body);
-      res.status(200).json({ mensaje: "Tienda creada exitosamente" });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
-    }
-  }
-
-  // ── GET /ventas/productos ────────────────────────────────────────────
-  private async getProductos(req: Request, res: Response) {
-    try {
-      const productos = await db.Dim_Producto.findAll();
-      res.status(200).json(productos);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
-    }
-  }
-
-  // ── POST /ventas/productos ───────────────────────────────────────────
-  private async postProducto(req: Request, res: Response) {
-    try {
-      await db.Dim_Producto.create(req.body);
-      res.status(200).json({ mensaje: "Producto creado exitosamente" });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
-    }
-  }
-
-  // ── GET /ventas/ventas ───────────────────────────────────────────────
-  private async getVentas(req: Request, res: Response) {
-    try {
-      const ventas = await db.Fact_Ventas.findAll({
-        include: [
-          { model: db.Dim_Producto },
-          { model: db.Dim_Tienda },
-          { model: db.Dim_Tiempo },
-        ],
-      });
-      res.status(200).json(ventas);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
-    }
-  }
-
-  // ── POST /ventas/ventas ──────────────────────────────────────────────
-  private async postVenta(req: Request, res: Response) {
-    try {
-      await db.Fact_Ventas.create(req.body);
-      res.status(200).json({ mensaje: "Venta creada exitosamente" });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
-    }
-  }
-
   // ── GET /ventas/yoy ──────────────────────────────────────────────────
   private async getYoY(req: Request, res: Response) {
-  try {
-    const anioActual = 2025;
-    const anioAnterior = anioActual - 1;
-    const zona = req.query.zona as string;
-    const temporada = req.query.temporada as string;
+    try {
+      const anioActual  = 2025;
+      const anioAnterior = anioActual - 1;
+      const zona      = req.query.zona      as string;
+      const temporada = req.query.temporada as string;
 
-    const tiendaWhere = zona && zona !== "all" ? { region: zona } : undefined;
-    const productoWhere = temporada && temporada !== "all" ? { temporada } : undefined;
+      const tiendaWhere   = zona      && zona      !== "all" ? { region: zona }  : undefined;
+      const productoWhere = temporada && temporada !== "all" ? { temporada }      : undefined;
 
-    const query = async (anio: number) => {
-      return db.Fact_Ventas.findAll({
-        attributes: [
-          [col("Dim_Tiempo.mes_nombre"), "mes"],
-          [fn("SUM", col("precio_final")), "ingresos"],
-        ],
-        include: [
-          {
-            model: db.Dim_Tiempo,
-            attributes: [],
-            where: { anio },           // ← solo filtra por año, sin período
-          },
-          {
-            model: db.Dim_Tienda,
-            attributes: [],
-            where: tiendaWhere,
-            required: !!tiendaWhere,
-          },
-          ...(productoWhere
-            ? [{ model: db.Dim_Producto, attributes: [], where: productoWhere, required: true }]
-            : []),
-        ],
-        group: ["Dim_Tiempo.mes_nombre"],
-        raw: true,
+      const query = async (anio: number) => {
+        return db.Fact_Ventas.findAll({
+          attributes: [
+            [col("Dim_Tiempo.mes_nombre"), "mes"],
+            [fn("SUM", col("precio_final")), "ingresos"],
+          ],
+          include: [
+            {
+              model: db.Dim_Tiempo,
+              attributes: [],
+              where: { anio },
+            },
+            {
+              model: db.Dim_Tienda,
+              attributes: [],
+              where: tiendaWhere,
+              required: !!tiendaWhere,
+            },
+            ...(productoWhere
+              ? [{ model: db.Dim_Producto, attributes: [], where: productoWhere, required: true }]
+              : []),
+          ],
+          group: ["Dim_Tiempo.mes_nombre"],
+          raw: true,
+        });
+      };
+
+      const meses = [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+      ];
+
+      const toArray = (rows: any[]) =>
+        meses.map((mes) => {
+          const row = rows.find((r: any) => r.mes === mes);
+          return row ? Math.round(parseFloat(row.ingresos) / 1000) : 0;
+        });
+
+      const [actual, anterior] = await Promise.all([
+        query(anioActual),
+        query(anioAnterior),
+      ]);
+
+      res.status(200).json({
+        anioActual,
+        anioAnterior,
+        actual:   toArray(actual),
+        anterior: toArray(anterior),
       });
-    };
-
-    const meses = [
-      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
-    ];
-
-    const toArray = (rows: any[]) =>
-      meses.map((mes) => {
-        const row = rows.find((r: any) => r.mes === mes);
-        return row ? Math.round(parseFloat(row.ingresos) / 1000) : 0;
-      });
-
-    const [actual, anterior] = await Promise.all([
-      query(anioActual),
-      query(anioAnterior),
-    ]);
-
-    res.status(200).json({
-      anioActual,
-      anioAnterior,
-      actual: toArray(actual),
-      anterior: toArray(anterior),
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ mensaje: err });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ mensaje: err });
+    }
   }
-}
 
   // ── GET /ventas/performance ──────────────────────────────────────────
   private async getPerformance(req: Request, res: Response) {
     try {
-      console.log(req.query);
-
       const period = (req.query.period as string) || "30d";
-      const dias = diasMap[period] ?? 30;
+      const dias   = diasMap[period] ?? 30;
       const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
 
-      const region = (req.query.region as string) || "all";
-      console.log("region: ", region);
-
       let groupBy: string;
-      if (period === "7d") groupBy = "dia_semana";
+      if (period === "7d")      groupBy = "dia_semana";
       else if (period === "1y") groupBy = "mes_nombre";
-      else groupBy = "semana";
+      else                      groupBy = "semana";
 
       const ORDEN_MESES = [
         "Enero","Febrero","Marzo","Abril","Mayo","Junio",
@@ -254,13 +165,6 @@ export default class VentasController extends AbstractController {
             attributes: [],
             where: productoWhere,
             required: !!productoWhere,
-          },
-          {
-            model: db.Dim_Tienda,
-            attributes: [],
-            where: literal(
-              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
-            ),
           },
         ],
         group: [`Dim_Tiempo.${groupBy}`],
@@ -301,51 +205,38 @@ export default class VentasController extends AbstractController {
             where: productoWhere,
             required: !!productoWhere,
           },
-          {
-            model: db.Dim_Tienda,
-            attributes: [],
-            where: literal(
-              `'${region}' = Dim_Tienda.region OR ('${region}' = 'all' AND Fact_Ventas.id_tienda = Dim_Tienda.id_tienda)`,
-            ),
-          },
         ],
         raw: true,
       });
 
-      const kpi = ventasKpi[0] as any;
+      const kpi      = ventasKpi[0] as any;
       const ingresos = parseFloat(kpi.ingresos_totales) || 0;
-      const folios = parseInt(kpi.num_folios) || 1;
-      const unidades = parseInt(kpi.unidades_vendidas) || 0;
+      const folios   = parseInt(kpi.num_folios)         || 1;
+      const unidades = parseInt(kpi.unidades_vendidas)  || 0;
 
       const kpis = [
         {
           label: "Ingresos Totales",
           value: `$${(ingresos / 1000000).toFixed(2)}M`,
-          delta: "",
-          pos: true,
-          cl: "c1",
+          delta: "", pos: true, cl: "c1",
         },
         {
           label: "Ticket Promedio / Folio",
           value: `$${Math.round(ingresos / folios).toLocaleString("es-MX")}`,
-          delta: "",
-          pos: true,
-          cl: "c2",
+          delta: "", pos: true, cl: "c2",
         },
         {
           label: "Unidades Vendidas",
           value: unidades.toLocaleString("es-MX"),
-          delta: "",
-          pos: true,
-          cl: "c3",
+          delta: "", pos: true, cl: "c3",
         },
       ];
 
       res.status(200).json({
         period,
-        labels: serieOrdenada.map((r: any) => r.label),
+        labels:  serieOrdenada.map((r: any) => r.label),
         revenue: serieOrdenada.map((r: any) => Math.round(parseFloat(r.revenue) / 1000)),
-        units: serieOrdenada.map((r: any) => parseInt(r.units)),
+        units:   serieOrdenada.map((r: any) => parseInt(r.units)),
         kpis,
       });
     } catch (err) {
@@ -358,7 +249,6 @@ export default class VentasController extends AbstractController {
   private async getTrimestral(req: Request, res: Response) {
     try {
       const { tiendaWhere } = this.buildWhere(req);
-      // ↑ sin period, sin productoWhere
 
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
@@ -366,26 +256,13 @@ export default class VentasController extends AbstractController {
           [fn("SUM", col("Fact_Ventas.precio_final")), "value"],
         ],
         include: [
-          {
-            model: db.Dim_Producto,
-            attributes: [],
-            required: true,
-          },
-          {
-            model: db.Dim_Tiempo,
-            attributes: [],
-            required: true,          // ← sin where de fecha
-          },
+          { model: db.Dim_Producto, attributes: [], required: true },
+          { model: db.Dim_Tiempo,   attributes: [], required: true },
           {
             model: db.Dim_Tienda,
             attributes: [],
             where: tiendaWhere,
             required: !!tiendaWhere,
-          },
-          {
-            model: db.Dim_Tienda,
-            attributes: [],
-            where: tiendaWhere
           },
         ],
         group: ["Dim_Producto.temporada"],
@@ -395,10 +272,9 @@ export default class VentasController extends AbstractController {
 
       const result = rows.map((r: any) => ({
         season: r.season,
-        value: Math.round(parseFloat(r.value) / 1000),
+        value:  Math.round(parseFloat(r.value) / 1000),
       }));
 
-      console.log('trimestral result:', result);
       res.status(200).json(result);
     } catch (err) {
       console.error(err);
@@ -410,7 +286,7 @@ export default class VentasController extends AbstractController {
   private async getFestivos(req: Request, res: Response) {
     try {
       const period = (req.query.period as string) || "30d";
-      const dias = diasMap[period] ?? 30;
+      const dias   = diasMap[period] ?? 30;
       const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
 
       const rows = await db.Fact_Ventas.findAll({
@@ -440,7 +316,7 @@ export default class VentasController extends AbstractController {
       });
 
       const festivo = rows.find((r: any) => r.es_festivo == 1) as any;
-      const normal = rows.find((r: any) => r.es_festivo == 0) as any;
+      const normal  = rows.find((r: any) => r.es_festivo == 0) as any;
 
       const ingFestivo = festivo
         ? parseFloat(festivo.ingresos_total) / parseInt(festivo.num_dias)
@@ -448,34 +324,32 @@ export default class VentasController extends AbstractController {
       const ingNormal = normal
         ? parseFloat(normal.ingresos_total) / parseInt(normal.num_dias)
         : 0;
-      const ratio = ingNormal > 0 ? (ingFestivo / ingNormal).toFixed(1) : "0";
+      const ratio      = ingNormal > 0 ? (ingFestivo / ingNormal).toFixed(1) : "0";
       const ticketFest = festivo ? Math.round(parseFloat(festivo.ticket_prom)) : 0;
-      const ticketNorm = normal ? Math.round(parseFloat(normal.ticket_prom)) : 0;
+      const ticketNorm = normal  ? Math.round(parseFloat(normal.ticket_prom))  : 0;
 
       res.status(200).json([
         {
           label: "Ingreso prom. festivo",
-          val: `$${Math.round(ingFestivo).toLocaleString("es-MX")}`,
-          color: "#C9963B",
-          sub: "por día",
+          val:   `$${Math.round(ingFestivo).toLocaleString("es-MX")}`,
+          color: "#C9963B", sub: "por día",
         },
         {
           label: "Ingreso prom. normal",
-          val: `$${Math.round(ingNormal).toLocaleString("es-MX")}`,
-          color: "#111",
-          sub: "por día",
+          val:   `$${Math.round(ingNormal).toLocaleString("es-MX")}`,
+          color: "#111", sub: "por día",
         },
         {
           label: "Ratio festivo/normal",
-          val: `${ratio}×`,
+          val:   `${ratio}×`,
           color: "#6E8B6B",
-          sub: `los festivos venden ${ratio}× más`,
+          sub:   `los festivos venden ${ratio}× más`,
         },
         {
           label: "Ticket prom. festivo",
-          val: `$${ticketFest.toLocaleString("es-MX")}`,
+          val:   `$${ticketFest.toLocaleString("es-MX")}`,
           color: "#A48F7A",
-          sub: `vs $${ticketNorm.toLocaleString("es-MX")} días normales`,
+          sub:   `vs $${ticketNorm.toLocaleString("es-MX")} días normales`,
         },
       ]);
     } catch (err) {
@@ -488,10 +362,8 @@ export default class VentasController extends AbstractController {
   private async getTallas(req: Request, res: Response) {
     try {
       const period = (req.query.period as string) || "30d";
-      const dias = diasMap[period] ?? 30;
+      const dias   = diasMap[period] ?? 30;
       const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
-
-      const region = (req.query.region as string) || "all";
 
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
@@ -518,12 +390,9 @@ export default class VentasController extends AbstractController {
         raw: true,
       });
 
-      const result = rows.map((r: any) => ({
-        name: String(r.name),
-        value: parseInt(r.value),
-      }));
-
-      res.status(200).json(result);
+      res.status(200).json(
+        rows.map((r: any) => ({ name: String(r.name), value: parseInt(r.value) }))
+      );
     } catch (err) {
       console.error(err);
       res.status(500).json({ mensaje: err });
@@ -534,7 +403,6 @@ export default class VentasController extends AbstractController {
   private async getTemporadasCategoria(req: Request, res: Response) {
     try {
       const { tiendaWhere } = this.buildWhere(req);
-      // ↑ sin period ni productoWhere — igual que getTrimestral
 
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
@@ -543,26 +411,13 @@ export default class VentasController extends AbstractController {
           [fn("SUM", col("Fact_Ventas.precio_final")), "ingresos"],
         ],
         include: [
-          {
-            model: db.Dim_Producto,
-            attributes: [],
-            required: true,
-          },
-          {
-            model: db.Dim_Tiempo,
-            attributes: [],
-            required: true,          // sin where de fecha
-          },
+          { model: db.Dim_Producto, attributes: [], required: true },
+          { model: db.Dim_Tiempo,   attributes: [], required: true },
           {
             model: db.Dim_Tienda,
             attributes: [],
             where: tiendaWhere,
             required: !!tiendaWhere,
-          },
-          {
-            model: db.Dim_Tienda,
-            attributes: [],
-            where: tiendaWhere
           },
         ],
         group: ["Dim_Producto.temporada", "Dim_Producto.categoria"],
@@ -602,11 +457,8 @@ export default class VentasController extends AbstractController {
   private async getTopProductos(req: Request, res: Response) {
     try {
       const period = (req.query.period as string) || "30d";
-      const dias = diasMap[period] ?? 30;
-
-      const region = (req.query.region as string) || "all";
-
-      const limit = parseInt(req.query.limit as string) || 10;
+      const dias   = diasMap[period] ?? 30;
+      const limit  = parseInt(req.query.limit as string) || 10;
       const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
 
       const rows = await db.Fact_Ventas.findAll({
@@ -636,13 +488,13 @@ export default class VentasController extends AbstractController {
         raw: true,
       });
 
-      const result = rows.map((r: any) => ({
-        name: r.name,
-        rev: Math.round(parseFloat(r.rev) / 1000),
-        units: parseInt(r.units),
-      }));
-
-      res.status(200).json(result);
+      res.status(200).json(
+        rows.map((r: any) => ({
+          name:  r.name,
+          rev:   Math.round(parseFloat(r.rev) / 1000),
+          units: parseInt(r.units),
+        }))
+      );
     } catch (err) {
       console.error(err);
       res.status(500).json({ mensaje: err });
@@ -651,109 +503,97 @@ export default class VentasController extends AbstractController {
 
   // ── GET /ventas/ticket-zona ──────────────────────────────────────────
   private async getTicketZona(req: Request, res: Response) {
-  try {
-    const period = (req.query.period as string) || "30d";
-    const dias   = diasMap[period] ?? 30;
-    const { productoWhere, tiempoWhere } = this.buildWhere(req);
-    // ↑ tiendaWhere ignorado — la gráfica siempre muestra Norte vs Sur
+    try {
+      const period = (req.query.period as string) || "30d";
+      const dias   = diasMap[period] ?? 30;
+      const { productoWhere, tiempoWhere } = this.buildWhere(req);
 
-    let groupBy: string;
-    if (period === "7d")      groupBy = "dia_semana";
-    else if (period === "1y") groupBy = "mes_nombre";
-    else                      groupBy = "semana";
+      let groupBy: string;
+      if (period === "7d")      groupBy = "dia_semana";
+      else if (period === "1y") groupBy = "mes_nombre";
+      else                      groupBy = "semana";
 
-    const ORDEN_MESES = [
-      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
-    ];
+      const ORDEN_MESES = [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+      ];
 
-    const rows = await db.Fact_Ventas.findAll({
-      attributes: [
-        [col(`Dim_Tiempo.${groupBy}`), "label"],
-        [col("Dim_Tienda.region"), "zona"],
-        [fn("AVG", col("Fact_Ventas.precio_final")), "ticket"],
-      ],
-      include: [
-        {
-          model: db.Dim_Tiempo,
-          attributes: [],
-          where: tiempoWhere(dias),
-          required: true,
-        },
-        {
-          model: db.Dim_Tienda,
-          attributes: [],
-          required: true,           // sin where — siempre ambas zonas
-        },
-        {
-          model: db.Dim_Producto,
-          attributes: [],
-          where: productoWhere,
-          required: !!productoWhere,
-        },
-      ],
-      group: [`Dim_Tiempo.${groupBy}`, "Dim_Tienda.region"],
-      raw: true,
-    });
+      const rows = await db.Fact_Ventas.findAll({
+        attributes: [
+          [col(`Dim_Tiempo.${groupBy}`), "label"],
+          [col("Dim_Tienda.region"), "zona"],
+          [fn("AVG", col("Fact_Ventas.precio_final")), "ticket"],
+        ],
+        include: [
+          {
+            model: db.Dim_Tiempo,
+            attributes: [],
+            where: tiempoWhere(dias),
+            required: true,
+          },
+          { model: db.Dim_Tienda, attributes: [], required: true },
+          {
+            model: db.Dim_Producto,
+            attributes: [],
+            where: productoWhere,
+            required: !!productoWhere,
+          },
+        ],
+        group: [`Dim_Tiempo.${groupBy}`, "Dim_Tienda.region"],
+        raw: true,
+      });
 
-    // Construir labels ordenados según el period
-    const labelsSet = new Set(rows.map((r: any) => String(r.label)));
-    let labels: string[];
+      const labelsSet = new Set(rows.map((r: any) => String(r.label)));
+      let labels: string[];
 
-    if (period === "1y") {
-      // Ordenar cronológicamente por mes
-      labels = ORDEN_MESES
-        .filter(m => labelsSet.has(m))
-        .map(m => m.slice(0, 3)); // "Enero" → "Ene"
-    } else if (period === "7d") {
-      const ORDEN_DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-      labels = ORDEN_DIAS.filter(d => labelsSet.has(d));
-    } else {
-      // semanas — ordenar numéricamente y prefijar con S
-      labels = [...labelsSet]
-        .sort((a, b) => Number(a) - Number(b))
-        .map(s => `S${s}`);
+      if (period === "1y") {
+        labels = ORDEN_MESES.filter(m => labelsSet.has(m)).map(m => m.slice(0, 3));
+      } else if (period === "7d") {
+        const ORDEN_DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+        labels = ORDEN_DIAS.filter(d => labelsSet.has(d));
+      } else {
+        labels = [...labelsSet].sort((a, b) => Number(a) - Number(b)).map(s => `S${s}`);
+      }
+
+      const rawLabels = period === "1y"
+        ? ORDEN_MESES.filter(m => labelsSet.has(m))
+        : period === "7d"
+          ? ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].filter(d => labelsSet.has(d))
+          : [...labelsSet].sort((a, b) => Number(a) - Number(b));
+
+      const norte = rawLabels.map(l => {
+        const r = rows.find((r: any) => String(r.label) === l && r.zona === "Norte") as any;
+        return r ? Math.round(parseFloat(r.ticket)) : 0;
+      });
+
+      const sur = rawLabels.map(l => {
+        const r = rows.find((r: any) => String(r.label) === l && r.zona === "Sur") as any;
+        return r ? Math.round(parseFloat(r.ticket)) : 0;
+      });
+
+      res.status(200).json({ labels, norte, sur });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ mensaje: err });
     }
-
-    // Construir arrays norte y sur alineados con labels
-    const rawLabels = period === "1y"
-      ? ORDEN_MESES.filter(m => labelsSet.has(m))
-      : period === "7d"
-        ? ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].filter(d => labelsSet.has(d))
-        : [...labelsSet].sort((a, b) => Number(a) - Number(b));
-
-    const norte: number[] = rawLabels.map(l => {
-      const r = rows.find((r: any) => String(r.label) === l && r.zona === "Norte") as any;
-      return r ? Math.round(parseFloat(r.ticket)) : 0;
-    });
-
-    const sur: number[] = rawLabels.map(l => {
-      const r = rows.find((r: any) => String(r.label) === l && r.zona === "Sur") as any;
-      return r ? Math.round(parseFloat(r.ticket)) : 0;
-    });
-
-    res.status(200).json({ labels, norte, sur });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ mensaje: err });
   }
-}
+
   // ── GET /ventas/ranking-tiendas ──────────────────────────────────────
   private async getRankingTiendas(req: Request, res: Response) {
     try {
       const period = (req.query.period as string) || "30d";
-      const dias = diasMap[period] ?? 30;
+      const dias   = diasMap[period] ?? 30;
       const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
 
-      const query = async (anio: number) => {
-        return db.Fact_Ventas.findAll({
+      const query = async (anio: number) =>
+        db.Fact_Ventas.findAll({
           attributes: [
             [col("Dim_Tienda.id_tienda"), "id"],
-            [col("Dim_Tienda.nombre"), "nombre"],
-            [col("Dim_Tienda.region"), "zona"],
+            [col("Dim_Tienda.nombre"),    "nombre"],
+            [col("Dim_Tienda.region"),    "zona"],
             [fn("SUM", col("Fact_Ventas.precio_final")), "ingresos"],
             [fn("AVG", col("Fact_Ventas.precio_final")), "ticket"],
-            [fn("SUM", col("Fact_Ventas.cantidad")), "uds"],
+            [fn("SUM", col("Fact_Ventas.cantidad")),     "uds"],
           ],
           include: [
             {
@@ -770,14 +610,9 @@ export default class VentasController extends AbstractController {
               ? [{ model: db.Dim_Producto, attributes: [], where: productoWhere }]
               : []),
           ],
-          group: [
-            "Dim_Tienda.id_tienda",
-            "Dim_Tienda.nombre",
-            "Dim_Tienda.region",
-          ],
+          group: ["Dim_Tienda.id_tienda", "Dim_Tienda.nombre", "Dim_Tienda.region"],
           raw: true,
         });
-      };
 
       const [actual, anterior] = await Promise.all([query(2025), query(2024)]);
 
@@ -788,17 +623,17 @@ export default class VentasController extends AbstractController {
 
       const result = (actual as any[])
         .map((r: any) => {
-          const ingActual = Math.round(parseFloat(r.ingresos) / 1000);
+          const ingActual  = Math.round(parseFloat(r.ingresos) / 1000);
           const ingAnterior = anteriorMap[r.id] ?? ingActual;
-          const diff = ingActual - ingAnterior;
+          const diff        = ingActual - ingAnterior;
           return {
-            id: r.id,
-            nombre: r.nombre,
-            zona: r.zona,
+            id:       r.id,
+            nombre:   r.nombre,
+            zona:     r.zona,
             ingresos: ingActual,
-            ticket: Math.round(parseFloat(r.ticket)),
-            uds: parseInt(r.uds),
-            delta: `${diff >= 0 ? "+" : ""}${diff}K`,
+            ticket:   Math.round(parseFloat(r.ticket)),
+            uds:      parseInt(r.uds),
+            delta:    `${diff >= 0 ? "+" : ""}${diff}K`,
             deltaPos: diff >= 0,
           };
         })
@@ -811,19 +646,20 @@ export default class VentasController extends AbstractController {
     }
   }
 
+  // ── GET /ventas/ventas-estado ────────────────────────────────────────
   private async getVentasEstado(req: Request, res: Response) {
     try {
-      const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
       const period = (req.query.period as string) || "30d";
-      const dias = diasMap[period] ?? 30;
+      const dias   = diasMap[period] ?? 30;
+      const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
 
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
-          [col("Dim_Tienda.estado"), "estado"],
-          [col("Dim_Tienda.region"), "region"],
+          [col("Dim_Tienda.estado"),  "estado"],
+          [col("Dim_Tienda.region"),  "region"],
           [fn("SUM", col("Fact_Ventas.precio_final")), "ingresos"],
           [fn("AVG", col("Fact_Ventas.precio_final")), "ticket"],
-          [fn("SUM", col("Fact_Ventas.cantidad")), "unidades"],
+          [fn("SUM", col("Fact_Ventas.cantidad")),     "unidades"],
         ],
         include: [
           {
@@ -846,15 +682,15 @@ export default class VentasController extends AbstractController {
         raw: true,
       });
 
-      const result = rows.map((r: any) => ({
-        estado: r.estado,
-        region: r.region,
-        ingresos: Math.round(parseFloat(r.ingresos) / 1000),
-        ticket: Math.round(parseFloat(r.ticket)),
-        unidades: parseInt(r.unidades),
-      }));
-
-      res.status(200).json(result);
+      res.status(200).json(
+        rows.map((r: any) => ({
+          estado:   r.estado,
+          region:   r.region,
+          ingresos: Math.round(parseFloat(r.ingresos) / 1000),
+          ticket:   Math.round(parseFloat(r.ticket)),
+          unidades: parseInt(r.unidades),
+        }))
+      );
     } catch (err) {
       console.error(err);
       res.status(500).json({ mensaje: err });
