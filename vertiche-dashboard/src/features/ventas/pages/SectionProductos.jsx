@@ -11,6 +11,16 @@ import { VentasTemporadaChart } from "./charts/VentasTemporadaChart";
 import { UnidadesTallaChart } from "./charts/UnidadesTallaChart";
 import "./styles/SectionProductos.css";
 
+/**
+ * Calcula el array de Pareto a partir del array de productos.
+ * Ordena por ingreso descendente y agrega `pct` = porcentaje acumulado de ingresos.
+ * El nombre se trunca a las primeras 2 palabras para el eje X de ParetoSKUChart.
+ *
+ * ParetoSKUChart usa `pct` para colorear segmentos: ≤80% = A, ≤95% = B, >95% = C.
+ *
+ * @param {Array<{ name: string, rev: number }>} products
+ * @returns {Array<{ name: string, rev: number, pct: number }>}
+ */
 function buildParetoData(products) {
   const sorted = [...products].sort((a, b) => b.rev - a.rev);
   const total  = sorted.reduce((sum, p) => sum + p.rev, 0);
@@ -25,8 +35,21 @@ function buildParetoData(products) {
   });
 }
 
-// filters contiene los parámetros de los filtros
-// onStatusChange se usa para notificar a Ventas.jsx en caso de error global
+/**
+ * Sección "Análisis de Producto" — 4 gráficas en 2 filas TwoCol.
+ *
+ * Fetches y filtros aplicados:
+ *   topProductos: fetchTopProductos(period, zona, temporada)
+ *   seasonData:   fetchTemporadasCategoria(zona)   — solo zona, sin period ni temporada
+ *   tallas:       fetchTallas(period, zona, temporada)
+ *
+ * topProductos se pasa a DOS charts: TopProductosChart (datos directos) y
+ * ParetoSKUChart (transformado via buildParetoData). No se hacen dos fetches.
+ *
+ * @param {Object} props
+ * @param {{ period: string, zona: string, temporada: string }} props.filters
+ * @param {(status: string) => void} [props.onStatusChange]
+ */
 export function SectionProductos({ filters, onStatusChange }) {
   const { period, zona, temporada } = filters;
 

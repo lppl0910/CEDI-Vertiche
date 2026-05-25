@@ -1,5 +1,13 @@
 import "../styles/FlechaIzquierda.css";
 
+/**
+ * Icono de flecha (apunta izquierda) como botón clickeable.
+ * Usado por ComponenteEsquina para re-expandir el panel de fechas colapsado.
+ *
+ * @param {Object} props
+ * @param {() => void} props.onClick - Callback al hacer click sobre el icono
+ * @param {number} [props.size=25]   - Tamaño en px del SVG
+ */
 export const FlechaIzquierda = ({ onClick, size=25 }) => {
   return (
     <div className="flecha-izquierda" onClick={onClick}>

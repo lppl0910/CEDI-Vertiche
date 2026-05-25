@@ -9,8 +9,18 @@ import { C } from "./CONSTANTES";
 import { VentasKPI } from "./VentasKPI";
 import "./styles/SectionPerformance.css";
 
-// filters contiene los parámetros de los filtros
-// onStatusChange se usa para notificar a Ventas.jsx en caso de error global
+/**
+ * Sección de KPIs generales de performance — siempre visible en la parte superior.
+ * Realiza un único fetch a /performance y renderiza las tarjetas VentasKPI.
+ *
+ * Si el fetch falla, notifica a Ventas.jsx via onStatusChange. Ventas combina
+ * este estado con el de la sección activa para decidir si mostrar el error global.
+ *
+ * @param {Object} props
+ * @param {{ period: string, zona: string, temporada: string }} props.filters
+ * @param {(status: string) => void} [props.onStatusChange]
+ *   Callback que recibe el sectionStatus cada vez que cambia.
+ */
 export function SectionPerformance({ filters, onStatusChange }) {
   const { period, zona, temporada } = filters;
 

@@ -8,12 +8,19 @@ import { LegendDot } from '../LegendDot';
 import { grid, ax, C } from '../CONSTANTES';
 
 /**
- * ParetoSKUChart
- * Análisis de Pareto: barras de ingreso por SKU + línea de porcentaje
- * acumulado. Colorea las barras según el segmento A/B/C.
+ * Gráfica de Pareto de concentración de ingresos por SKU.
+ * Combina barras de ingreso (eje izquierdo, $K) con una línea de porcentaje
+ * acumulado (eje derecho, 0–100%).
  *
- * @param {{ name: string, rev: number, pct: number }[]} paretoData
- *   pct = porcentaje acumulado de ingresos hasta ese SKU
+ * `paretoData` llega pre-calculado por buildParetoData en SectionProductos.
+ *
+ * Segmentación de color por barra basada en `pct` acumulado:
+ *   pct ≤ 80 → Segmento A (negro)  — modelos que generan el 80% del ingreso
+ *   pct ≤ 95 → Segmento B (taupe)  — el siguiente 15%
+ *   pct > 95  → Segmento C (beige)  — la cola larga (último 5%)
+ *
+ * @param {Array<{ name: string, rev: number, pct: number }>} paretoData
+ *   Ordenado de mayor a menor ingreso. `pct` es porcentaje acumulado (0–100).
  */
 export function ParetoSKUChart({ paretoData }) {
   // Calcula el ancho necesario para el nombre más largo (aprox. 6.5px por carácter a font-size 10)

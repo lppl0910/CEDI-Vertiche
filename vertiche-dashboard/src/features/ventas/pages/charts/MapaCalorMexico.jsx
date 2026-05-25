@@ -4,14 +4,53 @@ import GEO_DATA from '../../data/mexicoGeo.json';
 import { Card } from '../Card';
 import { ChartTitle } from '../ChartTitle';
 
+/**
+ * Métricas disponibles para el selector de vista del mapa.
+ * Cada entrada define la clave del campo en los datos del API,
+ * la etiqueta del botón y el formateador para el tooltip.
+ * @type {Array<{ key: string, label: string, fmt: (v: number) => string }>}
+ */
 const METRICS = [
   { key: 'ingresos', label: 'Ingresos ($K)', fmt: v => `$${v}K` },
   { key: 'ticket',   label: 'Ticket Prom.',  fmt: v => `$${v.toLocaleString('es-MX')}` },
   { key: 'unidades', label: 'Unidades',      fmt: v => v.toLocaleString('es-MX') },
 ];
 
+/**
+ * Color máximo de la escala de gradiente según la zona activa.
+ * El color mínimo es siempre beige #F0EDE9 (equivale a "sin actividad").
+ * Norte usa negro; Sur usa taupe; 'all' usa verde — para diferenciación visual por zona.
+ * @type {{ Norte: string, Sur: string, all: string }}
+ */
 const ZONE_COLOR = { Norte: '#111111', Sur: '#A48F7A', all: '#6E8B6B' };
 
+/**
+ * Mapa de calor de ventas por estado de la república mexicana, renderizado con D3.
+ *
+ * Arquitectura D3 dentro de React:
+ *   - useRef controla el elemento SVG nativo (D3 lo manipula directamente)
+ *   - El useEffect ejecuta toda la lógica D3; el tooltip es estado de React
+ *     para que las variables CSS del sistema de diseño se apliquen correctamente
+ *
+ * El mapa se redibuja completamente (svg.selectAll('*').remove()) en cada cambio
+ * de datos, métrica o zona — esto es intencional para garantizar que la escala
+ * de color se recalcule con los nuevos valores máximos.
+ *
+ * Proyección: Mercator con fitSize — centra y escala automáticamente el GeoJSON
+ * al viewport del SVG sin necesidad de calcular coordenadas manualmente.
+ *
+ * @param {Object} props
+ * @param {Array<{
+ *   estado: string,
+ *   region: 'Norte' | 'Sur',
+ *   ingresos: number,
+ *   ticket: number,
+ *   unidades: number
+ * }>} [props.data=[]]
+ *   Estados con métricas. Los estados ausentes se colorean en gris (#E8E4DF).
+ *   El campo `estado` debe coincidir con la propiedad `nom_edo` de mexicoGeo.json.
+ * @param {'Norte'|'Sur'|'all'} [props.zona='all'] - Controla el color máximo del gradiente
+ */
 export function MapaCalorMexico({ data = [], zona = 'all' }) {
   const svgRef                = useRef(null);
   const [metric, setMetric]   = useState('ingresos');
@@ -23,14 +62,17 @@ export function MapaCalorMexico({ data = [], zona = 'all' }) {
     const width  = svgRef.current.clientWidth || 560;
     const height = 320;
 
-    // Índice de datos por estado
+    // Índice por nombre de estado para lookup O(1) al colorear features del GeoJSON.
+    // La clave debe coincidir exactamente con `nom_edo` del archivo mexicoGeo.json.
     const dataMap = {};
     data.forEach(d => { dataMap[d.estado] = d; });
 
-    // Escala de color — data ya viene pre-filtrada por zona desde el backend
+    // Los valores 0 o negativos se filtran para que una tienda sin ventas
+    // no distorsione el máximo de la escala de color.
     const values = data.map(d => d[metric]).filter(v => v > 0);
     const maxVal = values.length > 0 ? Math.max(...values) : 1;
 
+    // Escala D3: interpola de beige (#F0EDE9 = sin actividad) al color de zona (máxima actividad).
     const colorScale = d3.scaleSequential()
       .domain([0, maxVal])
       .interpolator(d3.interpolate('#F0EDE9', ZONE_COLOR[zona] || ZONE_COLOR.all));

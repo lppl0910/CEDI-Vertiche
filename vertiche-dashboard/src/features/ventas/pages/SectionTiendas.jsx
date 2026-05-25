@@ -15,8 +15,22 @@ import { RankingTiendasTable } from "./charts/RankingTiendasTable";
 import { MapaCalorMexico } from "./charts/MapaCalorMexico";
 import "./styles/SectionTiendas.css";
 
-// filters contiene los parámetros de los filtros
-// onStatusChange se usa para notificar a Ventas.jsx en caso de error global
+/**
+ * Sección "Rendimiento por Tienda" — ticket, tabla de distribución, mapa y ranking.
+ *
+ * Fetches y filtros aplicados:
+ *   ticket:  fetchTicketZona(period, temporada)            — zona OMITIDA intencionalmente
+ *   tiendas: fetchRankingTiendas(period, zona, temporada)
+ *   mapa:    fetchVentasEstado(period, zona, temporada)
+ *
+ * DECISIÓN: fetchTicketZona omite `zona` porque el propósito de TicketPromedioZonaChart
+ * es comparar Norte vs Sur. Enviar zona=Norte eliminaría la columna Sur y rompería
+ * esa comparación. El endpoint sí acepta `zona` — es una elección del caller, no del API.
+ *
+ * @param {Object} props
+ * @param {{ period: string, zona: string, temporada: string }} props.filters
+ * @param {(status: string) => void} [props.onStatusChange]
+ */
 export function SectionTiendas({ filters, onStatusChange }) {
   const { period, zona, temporada } = filters;
 
@@ -59,6 +73,8 @@ export function SectionTiendas({ filters, onStatusChange }) {
     );
   }
 
+  // Transforma { labels[], norte[], sur[] } → [{ mes, Norte, Sur }]
+  // para el formato de objeto que espera Recharts BarChart.
   const ticketMapped = ticket.data
     ? ticket.data.labels.map((label, i) => ({
         mes: label,

@@ -11,10 +11,25 @@ import { VentasTrimestralChart } from "./charts/VentasTrimestralChart";
 import { FestivosVsNormalesGrid } from "./charts/FestivosVsNormalesGrid";
 import "./styles/SectionTendencias.css";
 
+// Etiquetas de meses para mapear los índices 0–11 que devuelve fetchYoY.
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
-// filters contiene los parámetros de los filtros
-// onStatusChange se usa para notificar a Ventas.jsx en caso de error global
+/**
+ * Sección "Tendencias Temporales" — 4 gráficas en 2 filas TwoCol.
+ *
+ * Fetches y filtros aplicados:
+ *   yoyData:        fetchYoY(zona, temporada)              — sin period (siempre 12 meses)
+ *   lineData:       fetchPerformance(period, zona, temporada)
+ *   trimestralData: fetchTrimestral(zona)                  — solo zona
+ *   festivosData:   fetchFestivos(period, zona, temporada)
+ *
+ * `render(fetchResult, children)` centraliza el manejo de loading/error/empty
+ * para que el JSX del return sea declarativo sin condicionales repetidos.
+ *
+ * @param {Object} props
+ * @param {{ period: string, zona: string, temporada: string }} props.filters
+ * @param {(status: string) => void} [props.onStatusChange]
+ */
 export function SectionTendencias({ filters, onStatusChange }) {
   const { period, zona, temporada } = filters;
 
@@ -64,6 +79,9 @@ export function SectionTendencias({ filters, onStatusChange }) {
           return <IngresosMensualesChart yoyData={mapped} />;
         })}
         {render(lineData, (data) => {
+          // '7d' usa etiquetas de día (Lun/Mar...) y '1y' usa meses (Ene/Feb...) — ya legibles.
+          // '30d' y '90d' devuelven números de semana que se prefijarean con 'S'.
+          // Las unidades se dividen entre 10 para que la escala del eje derecho sea comparable.
           const mapped = data.labels.map((label, i) => ({
             label: data.period === "7d" || data.period === "1y" ? label : `S${label}`,
             ingresos: data.revenue[i],

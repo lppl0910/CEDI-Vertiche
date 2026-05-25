@@ -6,6 +6,20 @@ import "../styles/DistribucionZonaTable.css";
 const HEADERS = ['ID', 'Sucursal', 'Zona', 'Ingresos', 'Ticket', 'Uds.'];
 const PAGE_SIZE = 10;
 
+/**
+ * Tabla de distribución de tiendas con búsqueda y paginación en cliente.
+ * Recibe el mismo array que RankingTiendasTable — la diferencia está en
+ * las columnas mostradas (esta tabla no incluye la columna de delta).
+ *
+ * El reseteo de página al buscar (setPage(1) en handleSearch) evita quedar
+ * en una página inexistente cuando el resultado filtrado tiene menos páginas.
+ *
+ * @param {Object} props
+ * @param {Array<{
+ *   id: string, nombre: string, zona: 'Norte'|'Sur',
+ *   ingresos: number, ticket: number, uds: number
+ * }>} props.tiendas
+ */
 export function DistribucionZonaTable({ tiendas }) {
   const [search, setSearch] = useState('');
   const [page, setPage]     = useState(1);
