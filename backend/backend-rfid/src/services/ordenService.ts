@@ -3,13 +3,14 @@
  * Incluye filtrado/ordenamiento optimizado en backend (#215 — Isaac Calderon Laflor).
  * Author: Adrian Proano Bernal
  */
-import { ordenesPrueba } from '../data/mockData';
+import { ordenesPrueba, ordenesEnMemoria} from '../data/generacionDatosEnMemoria';
+import { subirScaneo } from '../data/prePackData';
 import type { ProgresoOrden, Etapa, ProgresoEtapa } from '../types/rfid.types';
 
 const ALL_ETAPAS: Etapa[] = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
 
 export function getProgresoOrden(orderId: string): ProgresoOrden | null {
-    const prepacks = ordenesPrueba[orderId];
+    const prepacks = ordenesEnMemoria[orderId];
     if (!prepacks) return null;
 
     const contarPorEtapa = ALL_ETAPAS.reduce<Record<Etapa, number>>(
@@ -56,7 +57,7 @@ interface FiltroOrdenes {
 export function getOrdenesConFiltro(filtros: FiltroOrdenes): ProgresoOrden[] {
     const { sort, etapa, search, status } = filtros;
 
-    let ordenes = Object.keys(ordenesPrueba)
+    let ordenes = Object.keys(ordenesEnMemoria)
         .map(id => getProgresoOrden(id))
         .filter((o): o is ProgresoOrden => o !== null);
 
@@ -109,7 +110,7 @@ export function getOrdenesConFiltro(filtros: FiltroOrdenes): ProgresoOrden[] {
  * Isaac Calderon Laflor
  */
 export function registrarFallaPrepack(tagId: string, etapa: Etapa) {
-    for (const [orderId, prepacks] of Object.entries(ordenesPrueba)) {
+    for (const [orderId, prepacks] of Object.entries(ordenesEnMemoria)) {
         const prepack = prepacks.find(p => p.id === tagId);
         if (prepack) {
             prepack.hasFalla  = true;
@@ -125,16 +126,18 @@ export function registrarFallaPrepack(tagId: string, etapa: Etapa) {
  * Simula recibir un escaneo RFID y avanza un prepack de etapa.
  * Author: Adrian Proano Bernal
  */
-export function procesoEscaneoRFID(tagId: string, readerId: string, newEtapa: Etapa) {
-    for (const [orderId, prepacks] of Object.entries(ordenesPrueba)) {
+export async function procesoEscaneoRFID(tagId: string, readerId: string, newEtapa: Etapa) {
+    for (const [orderId, prepacks] of Object.entries(ordenesEnMemoria)) {
         const prepack = prepacks.find((p) => p.id === tagId);
         if (prepack) {
-            prepack.historial.push({
+            const evento = {
                 etapa: prepack.currentEtapa,
                 timestamp: new Date(),
                 readerId,
-            });
+            };
+            prepack.historial.push(evento);
             prepack.currentEtapa = newEtapa;
+            await subirScaneo(tagId, newEtapa, evento);
             console.log(`Prepack ${prepack.id} de orden ${orderId} avanzado a etapa ${newEtapa}`);
             return { prepack, orderId, progreso: getProgresoOrden(orderId) };
         }
