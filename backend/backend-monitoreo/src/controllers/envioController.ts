@@ -1,23 +1,34 @@
-const Orden = require('../models/ordenModel')
+import { Request, Response } from 'express'
+import Orden from '../models/ordenModel'
 
-const getKPIsEnvio = async (req, res) => {
+interface AggregateSum {
+  _id: null
+  total: number
+}
+
+interface AggregateAvg {
+  _id: null
+  promedio: number
+}
+
+export const getKPIsEnvio = async (req: Request, res: Response): Promise<void> => {
   try {
     const ahora = new Date()
     const inicioHoy = new Date(ahora)
     inicioHoy.setHours(0, 0, 0, 0)
-    const hace30min = new Date(ahora - 30 * 60 * 1000)
-    const hace40min = new Date(ahora - 40 * 60 * 1000)
+    const hace30min = new Date(ahora.getTime() - 30 * 60 * 1000)
+    const hace40min = new Date(ahora.getTime() - 40 * 60 * 1000)
 
     const [ordenesEnviadas, ordenesBacklog, alertasCriticas, transitoResult, tiempoResult] =
       await Promise.all([
         Orden.countDocuments({ estado: 'enviada', fecha_envio: { $gte: inicioHoy } }),
         Orden.countDocuments({ estado: 'en_proceso', fecha_creacion: { $lte: hace30min } }),
         Orden.countDocuments({ estado: 'en_proceso', fecha_creacion: { $lte: hace40min } }),
-        Orden.aggregate([
+        Orden.aggregate<AggregateSum>([
           { $match: { estado: { $in: ['en_proceso', 'completada'] } } },
           { $group: { _id: null, total: { $sum: { $size: '$prepacks' } } } },
         ]),
-        Orden.aggregate([
+        Orden.aggregate<AggregateAvg>([
           { $match: { estado: 'enviada', fecha_envio: { $gte: inicioHoy } } },
           {
             $project: {
@@ -32,7 +43,7 @@ const getKPIsEnvio = async (req, res) => {
       ordenes_enviadas: ordenesEnviadas,
       ordenes_backlog: ordenesBacklog,
       alertas_criticas: alertasCriticas,
-      prepacks_transito: transitoResult[0]?.total || 0,
+      prepacks_transito: transitoResult[0]?.total ?? 0,
       tiempo_promedio: tiempoResult[0]?.promedio
         ? Number(tiempoResult[0].promedio.toFixed(1))
         : 0,
@@ -43,7 +54,7 @@ const getKPIsEnvio = async (req, res) => {
   }
 }
 
-const getBacklogOrdenes = async (req, res) => {
+export const getBacklogOrdenes = async (req: Request, res: Response): Promise<void> => {
   try {
     const hace12h = new Date(Date.now() - 12 * 60 * 60 * 1000)
 
@@ -70,7 +81,7 @@ const getBacklogOrdenes = async (req, res) => {
   }
 }
 
-const getEnvioPorTurno = async (req, res) => {
+export const getEnvioPorTurno = async (req: Request, res: Response): Promise<void> => {
   try {
     const ahora = new Date()
     const inicioHoy = new Date(ahora)
@@ -114,7 +125,7 @@ const getEnvioPorTurno = async (req, res) => {
   }
 }
 
-const getOrdenesActivas = async (req, res) => {
+export const getOrdenesActivas = async (req: Request, res: Response): Promise<void> => {
   try {
     const ahora = new Date()
     const dayOfWeek = ahora.getDay() === 0 ? 7 : ahora.getDay()
@@ -173,5 +184,3 @@ const getOrdenesActivas = async (req, res) => {
     res.status(500).json({ error: 'Error al obtener órdenes activas' })
   }
 }
-
-module.exports = { getKPIsEnvio, getBacklogOrdenes, getEnvioPorTurno, getOrdenesActivas }
