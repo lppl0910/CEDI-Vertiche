@@ -1,9 +1,18 @@
-const express = require('express')
-const router = express.Router()
-const { getKPIsPreregistro, getOrdenesIncompletasPorProveedor, getTendenciaSemanalOrdenesIncompletas, getProveedoresEstrella, getHistorialProveedor, getRendimientoEquipos } = require('../controllers/preregistroController')
+import { Router } from 'express'
+import {
+  getKPIsPreregistro,
+  getOrdenesIncompletasPorProveedor,
+  getTendenciaSemanalOrdenesIncompletas,
+  getProveedoresEstrella,
+  getHistorialProveedor,
+  getRendimientoEquipos,
+} from '../controllers/preregistroController'
+import seedController from '../controllers/seedController'
+
+const router = Router()
 
 if (process.env.NODE_ENV !== 'production') {
-  router.post('/seed', require('../controllers/seedController'))
+  router.post('/seed', seedController)
 }
 
 router.get('/kpis', getKPIsPreregistro)
@@ -13,5 +22,4 @@ router.get('/proveedores-estrella', getProveedoresEstrella)
 router.get('/proveedores/:idProveedor/historial', getHistorialProveedor)
 router.get('/equipos/rendimiento', getRendimientoEquipos)
 
-
-module.exports = router
+export default router
