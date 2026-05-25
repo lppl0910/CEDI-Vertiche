@@ -66,7 +66,7 @@ export function getOrdenesConFiltro(filtros: FiltroOrdenes): ProgresoOrden[] {
         const q = search.toLowerCase();
         ordenes = ordenes.filter(o =>
             o.orderId.toLowerCase().includes(q) ||
-            o.prepacks.some(pp => pp.id.toLowerCase().includes(q))
+            o.prepacks.some(pp => pp.id.toString().toLowerCase().includes(q))
         );
     }
 
@@ -131,13 +131,13 @@ export async function procesoEscaneoRFID(tagId: string, readerId: string, newEta
         const prepack = prepacks.find((p) => p.id === tagId);
         if (prepack) {
             const evento = {
-                etapa: prepack.currentEtapa,
+                etapa: newEtapa,
                 timestamp: new Date(),
                 readerId,
             };
             prepack.historial.push(evento);
             prepack.currentEtapa = newEtapa;
-            await subirScaneo(tagId, newEtapa, evento);
+            await subirScaneo(tagId, orderId, newEtapa, evento);
             console.log(`Prepack ${prepack.id} de orden ${orderId} avanzado a etapa ${newEtapa}`);
             return { prepack, orderId, progreso: getProgresoOrden(orderId) };
         }

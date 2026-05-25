@@ -4,6 +4,7 @@ import type { Etapa, EventoEtapa } from "../types/rfid.types";
 
 export async function subirScaneo(
     tagId: string,
+    ordenId: string,
     newEtapa: Etapa,
     evento: EventoEtapa
 ): Promise<void> {
@@ -16,4 +17,11 @@ export async function subirScaneo(
         { 'prepacks.id_prepack': tagId },
         { $set: { 'prepacks.$.estado_actual': newEtapa } }
     );
+    
+    await RfidEventModel.create({
+        id_prepack: tagId,
+        id_orden: ordenId,
+        etapa: evento.etapa,
+        timestamp: evento.timestamp,
+    });
 }

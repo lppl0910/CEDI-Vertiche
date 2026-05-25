@@ -101,7 +101,7 @@ function adaptOrden(orden) {
 
     // Total efectivo: etapas tras QA descuentan los rechazados en QA
     const effectiveTotal = idx > QA_IDX ? Math.max(1, total - failedQACount) : total;
-    const done           = proc >= effectiveTotal;
+    const done           = proc >= effectiveTotal && !anyHereNow;
 
     const status = fallaCount > 0 ? 'falla'
       : done       ? 'done'

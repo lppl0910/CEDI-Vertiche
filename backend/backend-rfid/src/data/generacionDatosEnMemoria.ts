@@ -7,20 +7,13 @@
     Actualizado por: Isaac Calderon Laflor (#185 — simulación día completo)
 */
 
+import { RfidEventModel, OrdenModel } from '../models/PrepackModel';
 import type { Prepack, Etapa } from '../types/rfid.types';
 import mongoose from 'mongoose';
 
 /*
     Creacion de nuevo tipo para cargar las ordenes directamente desde la base de datos.
 */
-
-type OrdenesDoc = {
-    id_orden: string;
-    prepacks: Array<{
-        id_prepack: string;
-        estado_actual: string;
-    }>
-}
 
 //Funcion para normailizar las etapas leidas de la base de datos
 function normalizarEtapa(raw: string): Etapa {
@@ -85,14 +78,27 @@ export const ordenesPrueba: Record<string, Prepack[]> = {
 
 export async function cargarOrdenesDesdeDB(): Promise<Record<string, Prepack[]>> {
     // Aquí se implementaría la lógica para cargar las órdenes desde la base de datos MongoDB
-    const ordenes = await mongoose.connection.collection<OrdenesDoc>('ordenes').find({}).toArray();
+    const ordenes = await OrdenModel.find({}).lean();
     const mapaOrdenes: Record<string, Prepack[]> = {};
+    const allPrepackIds = ordenes.flatMap(o => o.prepacks.map(p => p.id_prepack));
+
+    const rfidEvents = await RfidEventModel
+        .find({ id_prepack: { $in: allPrepackIds } })
+        .sort({ timestamp: 1 })
+        .lean();
+    
+    const eventosPorPrepack = new Map<string, Array<{ etapa: Etapa; timestamp: Date; readerId: string }>>();
+    for (const event of rfidEvents) {
+        const arr = eventosPorPrepack.get(event.id_prepack) ?? [];
+        arr.push({ etapa: event.etapa as Etapa, timestamp: event.timestamp, readerId: '' });
+        eventosPorPrepack.set(event.id_prepack, arr);
+    }
     for (const orden of ordenes) {
         mapaOrdenes[orden.id_orden] = orden.prepacks.map(pp => ({
             id: pp.id_prepack,
             orderId: orden.id_orden,
             currentEtapa: normalizarEtapa(pp.estado_actual),
-            historial: [],
+            historial: eventosPorPrepack.get(pp.id_prepack) ?? [],
         }));
   }
   return mapaOrdenes;

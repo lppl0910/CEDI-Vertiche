@@ -8,13 +8,21 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import type { Prepack, Etapa } from '../types/rfid.types';
 
+export interface RfidEventDocument extends Document {
+  id_prepack: string;
+  id_orden: string;
+  etapa: string;
+  timestamp: Date;
+}
+
 // Schema para cada evento de scaneo RFID
 const rfidEventSchema = new Schema({
-    id_prepack: { type: String, required: true },
-    id_orden: { type: String, required: true },
-    etapa: { type: String, required: true },
-    timestamp: { type: Date, default: Date.now },
-}, { _id: false }); // No necesitamos un _id separado para cada evento
+  _id: { type: Schema.Types.ObjectId, auto: true },
+  id_prepack: { type: String, required: true },
+  id_orden: { type: String, required: true },
+  etapa: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now },
+});
 
 // Schema principal del Prepack
 export interface PrepackDocument extends Document {
@@ -71,8 +79,8 @@ export interface OrdenDocument extends Document {
 //Estos exports podrian cambiar en el futuro, especificamente PrepackModel, ya que no hay una coleccion en la base de datos de prepacks,
 // y podria terminar no usado
 //Author: Adrian Proano Bernal
-export const PrepackModel = mongoose.model<PrepackDocument>('Prepack', PrepackSchema);
+export const PrepackModel = mongoose.model<PrepackDocument>('prepacks', PrepackSchema);
 
-export const RfidEventModel = mongoose.model('RfidEvent', rfidEventSchema);
+export const RfidEventModel = mongoose.model<RfidEventDocument>('rfidEvent', rfidEventSchema);
 
-export const OrdenModel = mongoose.model<OrdenDocument>('Orden', ordenSchema);
+export const OrdenModel = mongoose.model<OrdenDocument>('ordenes', ordenSchema);
