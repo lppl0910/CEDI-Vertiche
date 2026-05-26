@@ -7,9 +7,14 @@ import alertasRouter from './routes/alertas';
 import { procesoEscaneoRFID, registrarFallaPrepack } from './services/ordenService';
 import { type Etapa } from './types/rfid.types';
 import { connectDB } from './config/database';
+import { cargarOrdenesDesdeDB, inicializarOrdenesDesdeDB } from './data/generacionDatosEnMemoria';
 
 // Intentar conectar a MongoDB (si MONGODB_URI está en .env)
-connectDB();
+await connectDB().then(() => console.log('Conexión a MongoDB establecida'))
+           .catch(err => console.error('Error conectando a MongoDB:', err));
+
+await inicializarOrdenesDesdeDB().then(() => console.log('Órdenes cargadas desde DB a memoria'))
+                                   .catch(err => console.error('Error cargando órdenes desde DB:', err));
 
 const app = express();
 const httpServer = createServer(app);
@@ -27,14 +32,14 @@ app.use('/api/ordenes', ordenesRouter);
 app.use('/api/alertas', alertasRouter);
 
 // Endpoint que recibira los escaneos de RFID
-app.post('/api/rfid/scan', (req, res) => {
+app.post('/api/rfid/scan', async (req, res) => {
     const { tagId, readerId, etapa } = req.body as{
         tagId: string;
         readerId: string;
         etapa: Etapa;
     };
 
-    const resultado = procesoEscaneoRFID(tagId, readerId, etapa);
+    const resultado = await procesoEscaneoRFID(tagId, readerId, etapa);
     if (!resultado) {
         return res.status(404).json({ error: 'Prepack no encontrado' });
     }

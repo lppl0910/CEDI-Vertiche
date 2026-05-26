@@ -16,8 +16,8 @@ export function useEnvioKPIs() {
   const fetchAll = async () => {
     try {
       const [kpisRes, turnoRes] = await Promise.all([
-        fetch('http://localhost:3001/api/envio/kpis'),
-        fetch('http://localhost:3001/api/envio/por-turno'),
+        fetch('http://localhost:3002/api/envio/kpis'),
+        fetch('http://localhost:3002/api/envio/por-turno'),
       ])
       const [kpisData, turnoData] = await Promise.all([
         kpisRes.json(),

@@ -1,11 +1,13 @@
+// SLA en minutos por etapa — sincronizado con SLA_MINS de sicatMockData.js
+// para que la detección de incidencias use los mismos umbrales que el badge visual.
 export const SLA_POR_ETAPA = {
-  Preregistro: 10,
-  QA: 15,
-  Registro: 10,
-  Sorter: 5,
-  Bahias: 20,
-  Auditoria: 12,
-  Envio: 8,
+  Preregistro: 20,
+  QA: 25,
+  Registro: 20,
+  Sorter: 35,
+  Bahias: 30,
+  Auditoria: 20,
+  Envio: 15,
 };
 
 // Returns 'success' | 'warning' | 'error'

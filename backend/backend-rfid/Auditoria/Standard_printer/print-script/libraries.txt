@@ -1,0 +1,26 @@
+bwip-js -----------------> es una librería que genera códigos de barras y QRs, buena opción
+                          para hacer el diseño inicial del QR.
+
+fs ----------------------> Usado para guardar archivos, importante para el formato de 
+                           impresión de más adelante.
+
+canvas ------------------> Una librería que encombinación de bwip, podemos generar el
+                           sticker completo con el texto para proveer info visual.
+
+@zxing/library canvas ---> Validación de que se pueda leer el barcode de manera 
+                           automática.
+
+----------------------------------------------------------------------------------------
+
+pdf-to-printer ----------> Usa impresoras instaladas en Windows y es sencillo de 
+                            integrar
+
+sharp -------------------> Conversor de png a pdf, para un mejor formato de impresión
+
+pdfkit ------------------> Genera documentos PDF de forma programática.
+
+-----------------------------------------------------------------------------------------
+
+printer -----------------> Genera texto raw más sencillo de entender para la impresoras
+
+pdf-to-printer ----------> pdf-to-printer

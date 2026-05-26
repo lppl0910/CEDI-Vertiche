@@ -1,4 +1,6 @@
-const BASE_URL = 'http://localhost:8080/ventas';
+const BASE_TENDENCIAS = 'http://localhost:8080/tendencias';
+const BASE_PRODUCTOS  = 'http://localhost:8080/analisis/productos';
+const BASE_TIENDAS    = 'http://localhost:8080/analisis/tiendas';
 
 /**
  * Helper interno de fetch para el API de ventas.
@@ -6,21 +8,25 @@ const BASE_URL = 'http://localhost:8080/ventas';
  * interpreta la ausencia de un parámetro como "sin filtro aplicado".
  * Lanza Error si el status HTTP no es 2xx.
  *
+ * @param {string} baseUrl - URL base a la que se llama
  * @param {string} endpoint - Nombre del recurso, e.g. 'performance', 'yoy'
  * @param {Object} [params={}] - Parámetros de query. Valores null/undefined/''/'all' se omiten.
  * @returns {Promise<any>} JSON parseado de la respuesta
  * @throws {Error} Si res.ok === false
  */
-async function get(endpoint, params = {}) {
-  const url = new URL(`${BASE_URL}/${endpoint}`);
+// ── Helper ───────────────────────────────────────────────────────────
+async function get(baseUrl, endpoint, params = {}) {
+  const url = new URL(`${baseUrl}/${endpoint}`);
   Object.entries(params)
     .filter(([, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
-    .forEach(([k, v]) => url.searchParams.append(k, v));
+    .forEach(([k, v]) => url.searchParams.append(k, String(v)));
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error(`Error ${res.status} en ${endpoint}`);
   return res.json();
 }
 
+// ── Tendencias ───────────────────────────────────────────────────────
+// GET /tendencias/performance
 /**
  * Obtiene los KPIs generales y la serie temporal del periodo activo.
  * Es el único endpoint que devuelve el array `kpis` para SectionPerformance.
@@ -36,9 +42,10 @@ async function get(endpoint, params = {}) {
  */
 export async function fetchPerformance(filters = {}) {
   const { period = '30d', zona, temporada } = filters;
-  return get('performance', { period, zona, temporada });
+  return get(BASE_TENDENCIAS, 'performance', { period, zona, temporada });
 }
 
+// GET /tendencias/yoy
 /**
  * Obtiene la comparación interanual de ingresos mensuales (12 meses, ene–dic).
  * No acepta `period` — el eje temporal es siempre el año completo.
@@ -49,9 +56,10 @@ export async function fetchPerformance(filters = {}) {
  */
 export async function fetchYoY(filters = {}) {
   const { zona, temporada } = filters;
-  return get('yoy', { zona, temporada });
+  return get(BASE_TENDENCIAS, 'yoy', { zona, temporada });
 }
 
+// GET /tendencias/trimestral
 /**
  * Obtiene ingresos agrupados por temporada de producto (Primavera/Verano/Otoño/Invierno).
  * Solo acepta `zona` — el agrupamiento es por temporada, no por ventana de tiempo.
@@ -61,9 +69,10 @@ export async function fetchYoY(filters = {}) {
  */
 export async function fetchTrimestral(filters = {}) {
   const { zona } = filters;
-  return get('trimestral', { zona });
+  return get(BASE_TENDENCIAS, 'trimestral', { zona });
 }
 
+// GET /tendencias/festivos
 /**
  * Obtiene comparación de métricas entre días festivos y días normales.
  * Devuelve exactamente 4 tarjetas KPI: ingreso festivo, ingreso normal, ratio, ticket festivo.
@@ -73,9 +82,12 @@ export async function fetchTrimestral(filters = {}) {
  */
 export async function fetchFestivos(filters = {}) {
   const { period = '30d', zona, temporada } = filters;
-  return get('festivos', { period, zona, temporada });
+  return get(BASE_TENDENCIAS, 'festivos', { period, zona, temporada });
 }
 
+// ── Análisis de Productos ────────────────────────────────────────────
+
+// GET /analisis/productos/tallas
 /**
  * Obtiene la distribución de unidades vendidas por talla.
  * El array incluye tallas letra (XCH/CH/M/G/XG/Unitalla) y tallas número (34–42)
@@ -86,9 +98,10 @@ export async function fetchFestivos(filters = {}) {
  */
 export async function fetchTallas(filters = {}) {
   const { period = '30d', zona, temporada } = filters;
-  return get('tallas', { period, zona, temporada });
+  return get(BASE_PRODUCTOS, 'tallas', { period, zona, temporada });
 }
 
+// GET /analisis/productos/temporadas-categoria
 /**
  * Obtiene ventas desagregadas por temporada × categoría de producto,
  * en el formato listo para BarChart apilado de Recharts.
@@ -102,10 +115,11 @@ export async function fetchTallas(filters = {}) {
  * }>}
  */
 export async function fetchTemporadasCategoria(filters = {}) {
-  const { period = '30d', zona, temporada } = filters;
-  return get('temporadas-categoria', { period, zona, temporada });
+  const { zona } = filters;
+  return get(BASE_PRODUCTOS, 'temporadas-categoria', { zona });
 }
 
+// GET /analisis/productos/top-productos
 /**
  * Obtiene los productos de mayor ingreso dentro del periodo y filtros dados.
  *
@@ -116,9 +130,12 @@ export async function fetchTemporadasCategoria(filters = {}) {
  */
 export async function fetchTopProductos(filters = {}, limit = 10) {
   const { period = '30d', zona, temporada } = filters;
-  return get('top-productos', { period, limit, zona, temporada });
+  return get(BASE_PRODUCTOS, 'top-productos', { period, limit, zona, temporada });
 }
 
+// ── Análisis de Tiendas ──────────────────────────────────────────────
+
+// GET /analisis/tiendas/ticket-zona
 /**
  * Obtiene el ticket promedio mensual desglosado por Zona Norte y Zona Sur.
  *
@@ -130,10 +147,11 @@ export async function fetchTopProductos(filters = {}, limit = 10) {
  * @returns {Promise<{ labels: string[], norte: number[], sur: number[] }>}
  */
 export async function fetchTicketZona(filters = {}) {
-  const { period = '30d', zona, temporada } = filters;
-  return get('ticket-zona', { period, zona, temporada });
+  const { period = '30d', temporada } = filters;
+  return get(BASE_TIENDAS, 'ticket-zona', { period, temporada });
 }
 
+// GET /analisis/tiendas/ranking-tiendas
 /**
  * Obtiene métricas por tienda ordenadas por ingreso descendente.
  * Usado tanto por DistribucionZonaTable como por RankingTiendasTable —
@@ -153,19 +171,10 @@ export async function fetchTicketZona(filters = {}) {
  */
 export async function fetchRankingTiendas(filters = {}) {
   const { period = '30d', zona, temporada } = filters;
-  return get('ranking-tiendas', { period, zona, temporada });
+  return get(BASE_TIENDAS, 'ranking-tiendas', { period, zona, temporada });
 }
 
-/**
- * Obtiene el catálogo de tiendas sin filtros analíticos.
- * Se usa cuando se necesita la lista de tiendas independientemente del periodo o temporada.
- *
- * @returns {Promise<Array<{ id: string, nombre: string, zona: 'Norte' | 'Sur', estado: string }>>}
- */
-export async function fetchTiendas() {
-  return get('tiendas');
-}
-
+// GET /analisis/tiendas/ventas-estado
 /**
  * Obtiene métricas de ventas agrupadas por estado para el mapa de calor D3.
  * Los estados sin tiendas activas (o sin datos en el filtro dado) no aparecen
@@ -185,5 +194,13 @@ export async function fetchTiendas() {
  */
 export async function fetchVentasEstado(filters = {}) {
   const { period = '30d', zona, temporada } = filters;
-  return get('ventas-estado', { period, zona, temporada });
+  return get(BASE_TIENDAS, 'ventas-estado', { period, zona, temporada });
+}
+
+// ── Sin filtros analíticos ───────────────────────────────────────────
+export async function fetchTiendas() {
+  const url = new URL('http://localhost:8080/tiendas');
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error(`Error ${res.status} en tiendas`);
+  return res.json();
 }

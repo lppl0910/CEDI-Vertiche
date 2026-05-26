@@ -7,7 +7,7 @@ export function useTendenciaSemanal(semanas = 8) {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetch(`http://localhost:3001/api/preregistro/tendencia-semanal?semanas=${semanas}`)
+      const res = await fetch(`http://localhost:3002/api/preregistro/tendencia-semanal?semanas=${semanas}`)
       if (!res.ok) throw new Error('Error en el servidor')
       const json = await res.json()
       setData(json)

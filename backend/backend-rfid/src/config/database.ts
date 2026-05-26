@@ -10,7 +10,7 @@ export async function connectDB(): Promise<void> {
     }
 
     try {
-        await mongoose.connect(uri, { dbName: 'vertiche-rfid' });
+        await mongoose.connect(uri, { dbName: 'sicat' });
         isConnected = true;
         console.log('[DB] Conectado a MongoDB correctamente.');
     } catch (err) {

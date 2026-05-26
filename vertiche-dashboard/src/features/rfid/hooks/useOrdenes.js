@@ -41,31 +41,37 @@ export function useOrdenes(filters = {}) {
   const etapaKey  = filters.etapa  ?? '';
 
   // ── Fetch inicial y re-fetch cuando cambian filtros ───────────────────
-  useEffect(() => {
-    let cancelled = false;
+  // Modificacion: Ahora sera una funcion y se utilizara en un useEffect, esto para lograr obtener ordenes sin necesidad de recargar la pagina, ademas de que se actualizara cada vez que se cambien los filtros.
+  const fetchOrdenes = () => {
+    const f = {...filtersRef.current};
     setLoading(true);
     setError(null);
 
-    fetch(`${BASE_URL}/api/ordenes${buildQuery({ sort: sortKey, search: searchKey, status: statusKey, etapa: etapaKey })}`)
+    return fetch(`${BASE_URL}/api/ordenes${buildQuery(f)}`)
       .then(res => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
       .then(data => {
-        if (!cancelled) {
-          setOrdenes(data);
-          setLoading(false);
-        }
+        setOrdenes(data);
+        setLoading(false);
       })
       .catch(err => {
-        if (!cancelled) {
-          setError(err.message);
-          setLoading(false);
-        }
+        setError(err.message);
+        setLoading(false);
       });
-
+  };
+  useEffect(() => {
+    let cancelled = false;
+    fetchOrdenes({
+      sort: filters.sort ?? '',
+      search: filters.search ?? '',
+      status: filters.status ?? '',
+      etapa: filters.etapa ?? '',
+    }).catch(err => {}); // El error ya se maneja internamente en fetchOrdenes
+    
     return () => { cancelled = true; };
-  }, [sortKey, searchKey, statusKey, etapaKey]);
+    }, [filters.sort, filters.search, filters.status, filters.etapa])
 
   // ── Socket.io — actualizaciones en tiempo real ────────────────────────
   // El socket se crea una sola vez. Cuando llega un evento RFID, se
@@ -77,6 +83,7 @@ export function useOrdenes(filters = {}) {
     socket.on('connect', () => {
       console.log('[WS] Conectado al servidor RFID en tiempo real');
       setConnected(true);
+      fetchOrdenes();
     });
 
     socket.on('disconnect', () => {
@@ -96,6 +103,7 @@ export function useOrdenes(filters = {}) {
         const idx = prev.findIndex(o => o.orderId === orderId);
         if (idx === -1) {
           // La orden no está visible con el filtro actual — no tocar nada.
+          fetchOrdenes(); // Pero sí re-fetch para actualizar la lista (pudo haber entrado o salido por filtros)
           return prev;
         }
         const next = [...prev];

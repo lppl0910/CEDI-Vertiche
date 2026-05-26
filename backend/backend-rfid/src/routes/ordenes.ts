@@ -5,7 +5,6 @@
  */
 import { Router, type Request, type Response } from 'express';
 import { getProgresoOrden, getOrdenesConFiltro } from '../services/ordenService.js';
-import { ordenesPrueba } from '../data/mockData.js';
 
 const router = Router();
 

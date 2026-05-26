@@ -6,7 +6,7 @@ export function useProveedoresEstrella() {
 
   const fetchData = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/preregistro/proveedores-estrella')
+      const res = await fetch('http://localhost:3002/api/preregistro/proveedores-estrella')
       if (!res.ok) throw new Error('Error en el servidor')
       const json = await res.json()
       setData(json)

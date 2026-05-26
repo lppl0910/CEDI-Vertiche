@@ -8,27 +8,79 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import type { Prepack, Etapa } from '../types/rfid.types';
 
-// Schema para cada evento del historial de un prepack
-const EventoEtapaSchema = new Schema({
-    etapa:     { type: String, required: true },
-    timestamp: { type: Date,   required: true },
-    readerId:  { type: String, required: true },
-}, { _id: false });
+export interface RfidEventDocument extends Document {
+  id_prepack: string;
+  id_orden: string;
+  etapa: string;
+  timestamp: Date;
+}
+
+// Schema para cada evento de scaneo RFID
+const rfidEventSchema = new Schema({
+  _id: { type: Schema.Types.ObjectId, auto: true },
+  id_prepack: { type: String, required: true },
+  id_orden: { type: String, required: true },
+  etapa: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now },
+});
 
 // Schema principal del Prepack
-export interface PrepackDocument extends Omit<Prepack, 'id'>, Document {}
+export interface PrepackDocument extends Document {
+  id_prepack: string;
+  modelo: string;
+  cantidad_total: number;
+  estado_actual: string;
+  bahia_asignada: number;
+  distribucion_color: Array<{ color: string; num_color: number }>;
+  distribucion_talla: { CH: number; M: number; G: number; XG: number };
+}
 
-// Schema sin generic explícito para evitar conflicto con el virtual `id` de Document.
 const PrepackSchema = new Schema({
-    id:           { type: String, required: true },
-    orderId:      { type: String, required: true, index: true },
-    currentEtapa: { type: String, required: true, index: true },
-    historial:    { type: [EventoEtapaSchema], default: [] },
-}, {
-    timestamps: true,
+    id_prepack: { type: String, required: true }, // ID único del prepack
+    modelo: { type: String, required: true }, //Modelo de la prenda que se asigna al prepack
+    cantidad_total: { type: Number, required: true }, //Cantidad total de prendas que se asigna al prepack
+    estado_actual: { type: String, required: true }, // Etapa actual del prepack
+    bahia_asignada: { type: Number, required: true }, //Bahía asignada al prepack, se asigna en etapa de empaque
+    distribucion_color: {type: Array<{color: string, num_color: number}>, required: true}, //Distribución de colores de las prendas asignadas al prepack, se asigna en etapa de empaque
+    distribucion_talla: {type: Array<{CH: number, M: number, G: number, XG: number}>, required: true}, //Distribución de tallas de las prendas asignadas al prepack, se asigna en etapa de empaque
 }) as unknown as mongoose.Schema<PrepackDocument>;
 
-// Índice compuesto para queries optimizadas por orden+etapa (#215)
-PrepackSchema.index({ orderId: 1, currentEtapa: 1 });
+const ordenSchema = new Schema(
+  {
+    id_orden: { type: String, required: true },
+    id_proveedor: { type: String, required: true },
+    nombre_proveedor: { type: String, required: true },
+    fecha_creacion: { type: Date, required: true },
+    estado: { type: String, required: true },
+    total_prepacks: { type: Number, required: true },
+    prepacks: { type: [PrepackSchema], required: true },
+  },
+  { collection: 'ordenes', timestamps: false }
+);
 
-export const PrepackModel = mongoose.model<PrepackDocument>('Prepack', PrepackSchema);
+export interface OrdenDocument extends Document {
+  id_orden: string;
+  id_proveedor: string;
+  nombre_proveedor: string;
+  fecha_creacion: Date;
+  estado: string;
+  total_prepacks: number;
+  prepacks: Array<{
+    id_prepack: string;
+    modelo: string;
+    cantidad_total: number;
+    estado_actual: string;
+    bahia_asignada: number;
+    distribucion_color: Array<{ color: string; num_color: number }>;
+    distribucion_talla: { CH: number; M: number; G: number; XG: number };
+  }>;
+}
+
+//Estos exports podrian cambiar en el futuro, especificamente PrepackModel, ya que no hay una coleccion en la base de datos de prepacks,
+// y podria terminar no usado
+//Author: Adrian Proano Bernal
+export const PrepackModel = mongoose.model<PrepackDocument>('prepacks', PrepackSchema);
+
+export const RfidEventModel = mongoose.model<RfidEventDocument>('rfidEvent', rfidEventSchema);
+
+export const OrdenModel = mongoose.model<OrdenDocument>('ordenes', ordenSchema);

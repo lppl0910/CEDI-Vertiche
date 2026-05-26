@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { UserCircle, ChevronDown, Monitor, SlidersHorizontal, ShieldCheck } from 'lucide-react';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 const monitoreoTabs = [
   { id: 'flujo',     label: 'Análisis de flujo' },
@@ -41,6 +42,7 @@ export default function TopNav({
   const [filterOpen, setFilterOpen] = useState(false);
   const comboRef  = useRef(null);
   const filterRef = useRef(null);
+  const { isTablet } = useBreakpoint();
 
   useEffect(() => {
     const handler = (e) => {
@@ -74,9 +76,9 @@ export default function TopNav({
       borderBottom: '1px solid #E7E2DC',
       display: 'flex',
       alignItems: 'center',
-      padding: '0 24px',
+      padding: isTablet ? '0 12px' : '0 24px',
       height: 56,
-      gap: 16,
+      gap: isTablet ? 8 : 16,
     }}>
       {/* Left: Logo */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 100 }}>
@@ -86,7 +88,7 @@ export default function TopNav({
       </div>
 
       {/* Center: Tabs */}
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, overflowX: 'auto', minWidth: 0 }}>
         {tabs.map(tab => {
           const isActive = activeTabId === tab.id;
           return (
@@ -141,7 +143,7 @@ export default function TopNav({
               onMouseLeave={e => e.currentTarget.style.background = filterOpen ? '#F0EDE8' : '#F8F6F3'}
             >
               <SlidersHorizontal size={13} />
-              Filtros
+              {!isTablet && 'Filtros'}
               {ventasFilters && (ventasFilters.zona !== 'all' || ventasFilters.temporada !== 'all') && (
                 <span style={{
                   width: 6, height: 6, borderRadius: '50%',

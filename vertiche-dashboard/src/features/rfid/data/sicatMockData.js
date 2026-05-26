@@ -36,9 +36,11 @@ export function stageColor(s) {
 
 export function stagePctStr(s) {
   if (!s || s.status === 'pending') return '—';
-  if (s.status === 'done')  return (s.total > 0 ? Math.round(s.proc / s.total * 100) : 100) + '%';
-  if (s.status === 'falla') return (s.total > 0 ? Math.round(s.proc / s.total * 100) : 0) + '%';
-  return s.total > 0 ? Math.round(s.proc / s.total * 100) + '%' : '—';
+  // effectiveTotal excluye rechazados de QA — permite llegar a 100% aun con total original ≠ proc
+  const denom = (s.effectiveTotal ?? s.total) || 1;
+  if (s.status === 'done')  return Math.round(s.proc / denom * 100) + '%';
+  if (s.status === 'falla') return Math.round(s.proc / denom * 100) + '%';
+  return denom > 0 ? Math.round(s.proc / denom * 100) + '%' : '—';
 }
 
 export function stageCountStr(s) {
