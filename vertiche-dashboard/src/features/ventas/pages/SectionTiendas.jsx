@@ -91,14 +91,10 @@ export function SectionTiendas({ filters, onStatusChange }) {
         {render(ticket, () => (
           <TicketPromedioZonaChart ticketData={ticketMapped} />
         ))}
-        {render(tiendas, (data) => (
-          <DistribucionZonaTable tiendas={data} />
+        {render(mapa, (data) => (
+          <MapaCalorMexico data={data} zona={zona} />
         ))}
       </TwoCol>
-
-      {render(mapa, (data) => (
-        <MapaCalorMexico data={data} zona={zona} />
-      ))}
 
       {render(tiendas, (data) => (
         <RankingTiendasTable tiendas={data} />
