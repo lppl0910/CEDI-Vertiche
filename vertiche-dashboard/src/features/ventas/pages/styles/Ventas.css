@@ -8,6 +8,18 @@
   gap: 16px;
 }
 
+.ventas__global-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.ventas__global-error .chart-status {
+  max-width: 480px;
+  padding: 40px 32px;
+}
+
 @media (max-width: 1024px) {
   .ventas { padding: 12px 16px 80px; }
 }

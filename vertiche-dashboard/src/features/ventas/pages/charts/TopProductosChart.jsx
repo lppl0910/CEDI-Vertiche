@@ -4,10 +4,14 @@ import { ChartTitle } from '../ChartTitle';
 import { grid, ax, C } from '../CONSTANTES';
 
 /**
- * TopProductosChart
- * Gráfica de barras horizontal con los 10 productos de mayor ingreso.
+ * Gráfica de barras horizontal con los productos de mayor ingreso.
+ * El ancho del eje Y y la altura del chart son dinámicos para adaptarse
+ * a la cantidad y longitud de nombres de productos recibidos.
  *
- * @param {{ name: string, rev: number, units: number }[]} products
+ * Colores por posición: top 3 (negro), posiciones 4-6 (taupe), resto (beige).
+ *
+ * @param {Array<{ name: string, rev: number, units: number }>} products
+ *   Ordenados de mayor a menor ingreso por el API o por buildParetoData.
  */
 export function TopProductosChart({ products }) {
   if (!products || products.length === 0) {

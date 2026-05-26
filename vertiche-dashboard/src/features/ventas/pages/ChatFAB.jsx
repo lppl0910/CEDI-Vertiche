@@ -3,7 +3,15 @@ import './styles/ChatFAB.css';
 
 const CHATBOT_URL = 'http://localhost:8090';
 
-// Convierte **texto** en <strong>texto</strong>
+/**
+ * Convierte marcado Markdown básico a JSX.
+ * Solo soporta **texto** → <strong>texto</strong>.
+ * El modelo fue instruido para usar únicamente negritas — otros formatos
+ * Markdown se mostrarían como texto plano sin causar errores.
+ *
+ * @param {string} text
+ * @returns {Array<string | JSX.Element>}
+ */
 function renderMarkdown(text) {
   const parts = text.split(/\*\*(.*?)\*\*/g);
   return parts.map((part, i) =>
@@ -13,6 +21,20 @@ function renderMarkdown(text) {
   );
 }
 
+/**
+ * Botón flotante de chatbot para consultas de ventas en lenguaje natural.
+ * Se conecta al backend de IA en http://localhost:8090/chat via POST.
+ *
+ * Estado interno:
+ *   open     — visibilidad del panel de chat
+ *   messages — historial de conversación (el índice 0 es la bienvenida estática)
+ *   input    — texto actual del textarea
+ *   loading  — bloquea el envío mientras espera respuesta del servidor
+ *
+ * El primer mensaje (bienvenida con sugerencias) se inicializa en el estado
+ * directamente — no proviene del API — y se excluye del historial enviado al
+ * backend en buildHistory() para no contaminar el contexto del modelo.
+ */
 export function ChatFAB() {
   const [open, setOpen]         = useState(false);
   const [messages, setMessages] = useState([
@@ -37,6 +59,16 @@ export function ChatFAB() {
     }
   }, [messages, open]);
 
+  /**
+   * Convierte el historial interno al formato que espera el endpoint /chat.
+   * Excluye el mensaje de bienvenida (índice 0) porque es texto estático del frontend,
+   * no una respuesta del modelo. Incluirlo contaminaría el contexto de la conversación.
+   *
+   * Formato interno: { role: 'bot'|'user', text: string, ... }
+   * Formato API:     { role: 'assistant'|'user', content: string }
+   *
+   * @returns {Array<{ role: 'assistant'|'user', content: string }>}
+   */
   const buildHistory = () =>
     messages
       .filter(m => m.role !== 'bot' || messages.indexOf(m) > 0)
@@ -166,6 +198,7 @@ export function ChatFAB() {
               className="chat-fab__textarea"
               value={input}
               onChange={e => setInput(e.target.value)}
+              // Enter envía el mensaje; Shift+Enter inserta salto de línea en el textarea.
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
               placeholder="Escribe una pregunta…"
               rows={1}

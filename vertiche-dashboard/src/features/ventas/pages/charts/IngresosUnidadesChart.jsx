@@ -5,10 +5,13 @@ import { LegendDot } from '../LegendDot';
 import { grid, ax, C } from '../CONSTANTES';
 
 /**
- * IngresosUnidadesChart
- * Doble eje: ingresos ($K) vs unidades vendidas, acumulados por período.
+ * Gráfica de doble eje: ingresos ($K) en eje izquierdo, unidades en eje derecho.
+ * Las unidades se dividen entre 10 en SectionTendencias para que la escala sea
+ * comparable visualmente con la de ingresos. El tooltip invierte la división
+ * para mostrar el valor real al usuario.
  *
- * @param {{ label: string, ingresos: number, unidades: number }[]} lineData
+ * @param {Array<{ label: string, ingresos: number, unidades: number }>} lineData
+ *   Acumulado por período. `unidades` ya viene dividido entre 10 del caller.
  */
 export function IngresosUnidadesChart({ lineData }) {
   return (

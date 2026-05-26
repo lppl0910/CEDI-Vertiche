@@ -5,10 +5,12 @@ import { LegendDot } from '../LegendDot';
 import { grid, ax, C } from '../CONSTANTES';
 
 /**
- * IngresosMensualesChart
- * Comparación año a año de ingresos mensuales.
+ * Gráfica de líneas para comparación interanual de ingresos mensuales.
+ * SectionTendencias transforma la respuesta del API { actual[], anterior[] }
+ * a objetos con claves de año (e.g. '2025', '2024') antes de pasarlos aquí.
  *
- * @param {{ mes: string, '2024': number, '2023': number }[]} yoyData
+ * @param {Array<{ mes: string, '2025': number, '2024': number }>} yoyData
+ *   12 puntos (uno por mes). Los valores son ingresos en $K.
  */
 export function IngresosMensualesChart({ yoyData }) {
   return (

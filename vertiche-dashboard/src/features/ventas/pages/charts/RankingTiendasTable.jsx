@@ -5,6 +5,18 @@ import { ChartTitle } from '../ChartTitle';
 const HEADERS = ['ID', 'Sucursal', 'Zona', 'Ingresos ($K)', 'Ticket / Folio', 'Unidades', 'Δ vs ant.'];
 const PAGE_SIZE = 10;
 
+/**
+ * Tabla de ranking de tiendas con búsqueda, paginación y columna de delta.
+ * Misma fuente de datos que DistribucionZonaTable (fetchRankingTiendas),
+ * pero incluye la variación vs periodo anterior.
+ *
+ * @param {Object} props
+ * @param {Array<{
+ *   id: string, nombre: string, zona: 'Norte'|'Sur',
+ *   ingresos: number, ticket: number, uds: number,
+ *   delta: string, deltaPos: boolean
+ * }>} props.tiendas
+ */
 export function RankingTiendasTable({ tiendas }) {
   const [search, setSearch] = useState('');
   const [page, setPage]     = useState(1);

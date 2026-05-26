@@ -8,6 +8,20 @@ const TALLA_COLORS = ['#D8C3A5', '#A48F7A', '#D9B8B0', '#6E8B6B', '#8E9AAF', '#C
 const TALLAS_LETRA  = ['XCH', 'CH', 'M', 'G', 'XG', 'Unitalla'];
 const TALLAS_NUMERO = ['34', '36', '38', '40', '42'];
 
+/**
+ * Renderiza etiquetas fuera del pie con nombre y porcentaje.
+ * La posición se calcula trigonométricamente a partir del ángulo medio (midAngle)
+ * del segmento para que las etiquetas orbiten alrededor del pie sin superponerse.
+ *
+ * @param {Object} props - Props inyectadas automáticamente por Recharts Pie
+ * @param {string} props.name
+ * @param {number} props.value
+ * @param {number} props.total       - Total de unidades del filtro activo (calculado en el padre)
+ * @param {number} props.cx          - Centro X del pie en px
+ * @param {number} props.cy          - Centro Y del pie en px
+ * @param {number} props.midAngle    - Ángulo medio del segmento en grados
+ * @param {number} props.outerRadius - Radio exterior del pie en px
+ */
 const renderLabel = ({ name, value, total, cx, cy, midAngle, outerRadius }) => {
   const RADIAN = Math.PI / 180;
   const radius = outerRadius + 18;
@@ -21,9 +35,23 @@ const renderLabel = ({ name, value, total, cx, cy, midAngle, outerRadius }) => {
   );
 };
 
+/**
+ * Gráfica de pie para distribución de unidades vendidas por talla.
+ * Permite alternar entre dos sistemas de tallas mediante un toggle en UI:
+ *   letra:  XCH / CH / M / G / XG / Unitalla (tallas estándar MX)
+ *   número: 34 / 36 / 38 / 40 / 42 (tallas numéricas, típicas en pantalón)
+ *
+ * El backend devuelve todos los tipos mezclados en un solo array.
+ * El filtrado se hace en cliente — no genera un fetch adicional por toggle.
+ *
+ * @param {Object} props
+ * @param {Array<{ name: string, value: number }>} props.tallas
+ *   Array con todos los registros de talla (letra + número mezclados).
+ */
 export function UnidadesTallaChart({ tallas }) {
   const [filtro, setFiltro] = useState('letra');
 
+  // Filtra en cliente según el sistema de tallas seleccionado por el usuario.
   const tallasFiltradas = tallas.filter(t =>
     filtro === 'letra'
       ? TALLAS_LETRA.includes(t.name)

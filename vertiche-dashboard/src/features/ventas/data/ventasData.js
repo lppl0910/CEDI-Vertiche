@@ -1,4 +1,15 @@
-// Period-based KPI and chart data
+/**
+ * Datos mock organizados por periodo para SectionPerformance y gráficas de línea.
+ * En producción queda inactivo — el hook useVentasFetch siempre intenta el fetch real primero.
+ * Se mantiene como fallback de desarrollo y para pruebas sin backend.
+ *
+ * @type {Object.<'7d'|'30d'|'90d'|'1y', {
+ *   labels:  string[],
+ *   revenue: number[],
+ *   units:   number[],
+ *   kpis:    Array<{ label: string, value: string, sub?: string, delta: string, pos: boolean, cl: string }>
+ * }>}
+ */
 export const DATA = {
   '7d': {
     labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
@@ -48,9 +59,28 @@ export const DATA = {
   },
 };
 
+/**
+ * Serie de ingresos mensuales del año anterior para IngresosMensualesChart (mock YoY).
+ * 12 valores en $K, alineados con los meses Ene–Dic.
+ * @type {number[]}
+ */
 export const yoy23 = [180, 210, 270, 250, 320, 360, 340, 390, 440, 410, 490, 580];
+
+/**
+ * Serie de ingresos mensuales del año en curso para IngresosMensualesChart (mock YoY).
+ * 12 valores en $K, alineados con los meses Ene–Dic.
+ * @type {number[]}
+ */
 export const yoy24 = [210, 245, 310, 290, 380, 420, 390, 450, 510, 480, 560, 640];
 
+/**
+ * Mock de top 10 productos por ingreso para TopProductosChart y ParetoSKUChart.
+ * SectionProductos reutiliza este mismo array para ambos charts: uno lo usa directo
+ * y el otro lo pasa por buildParetoData para calcular el porcentaje acumulado.
+ *
+ * @type {Array<{ name: string, rev: number, units: number, dcto: number }>}
+ *   rev en $K, dcto en porcentaje de descuento promedio aplicado.
+ */
 export const TOP_PRODS = [
   { name: 'Vestido midi sin mangas', rev: 142, units: 2340, dcto: 8 },
   { name: 'Jean recto con jareta', rev: 128, units: 1870, dcto: 12 },
@@ -64,6 +94,16 @@ export const TOP_PRODS = [
   { name: 'Playera bordada perlas', rev: 48, units: 1560, dcto: 6 },
 ];
 
+/**
+ * Mock de tiendas activas para DistribucionZonaTable y RankingTiendasTable.
+ * Ambas tablas reciben este mismo array — la diferencia está en las columnas que muestran.
+ *
+ * @type {Array<{
+ *   id: string, nombre: string, zona: 'Norte'|'Sur',
+ *   ingresos: number, ticket: number, uds: number,
+ *   delta: string, deltaPos: boolean
+ * }>}
+ */
 export const TIENDAS = [
   { id: 'V038', nombre: 'Toluca', zona: 'Norte', ingresos: 65, ticket: 1380, uds: 1240, delta: '+7K', deltaPos: true },
   { id: 'V012', nombre: 'CDMX Norte', zona: 'Norte', ingresos: 58, ticket: 1290, uds: 1105, delta: '+4K', deltaPos: true },
@@ -74,6 +114,13 @@ export const TIENDAS = [
   { id: 'V019', nombre: 'Querétaro', zona: 'Norte', ingresos: 35, ticket: 1120, uds: 720, delta: '+3K', deltaPos: true },
 ];
 
+/**
+ * Mock de alertas de stock crítico por SKU y tienda.
+ * NOTA: No está conectado a ningún componente activo en la build actual.
+ * Si se elimina la funcionalidad de alertas de stock, este export puede borrarse.
+ *
+ * @type {Array<{ modelo: string, talla: string, zona: string, tienda: string, stock: number, dias: number, nivel: 'err'|'warn' }>}
+ */
 export const STOCK_ALERTS = [
   { modelo: 'Vestido midi sin mangas', talla: 'M', zona: 'Norte', tienda: 'V038 Toluca', stock: 45, dias: 4, nivel: 'err' },
   { modelo: 'Jean recto con jareta', talla: 'G', zona: 'Sur', tienda: 'V068 Villahermosa', stock: 28, dias: 5, nivel: 'err' },
@@ -84,6 +131,13 @@ export const STOCK_ALERTS = [
   { modelo: 'Conjunto top falda', talla: 'CH', zona: 'Norte', tienda: 'V038 Toluca', stock: 130, dias: 22, nivel: 'warn' },
 ];
 
+/**
+ * Mock de correlación descuento vs unidades por categoría (para scatterplot).
+ * NOTA: No está conectado a ningún componente activo en la build actual.
+ * Si se elimina el análisis de descuento, este export puede borrarse.
+ *
+ * @type {Array<{ cat: string, dcto: number, uds: number }>}
+ */
 export const SCATTER_DCTO = [
   { cat: 'Playera', dcto: 6, uds: 4680 },
   { cat: 'Pantalón', dcto: 9, uds: 3190 },
@@ -94,12 +148,27 @@ export const SCATTER_DCTO = [
   { cat: 'Conjunto', dcto: 10, uds: 1100 },
 ];
 
+/**
+ * Mock de ticket promedio mensual por zona para TicketPromedioZonaChart.
+ * SectionTiendas transforma este objeto al formato `[{ mes, Norte, Sur }]`
+ * que espera Recharts antes de pasarlo al chart.
+ *
+ * @type {{ labels: string[], norte: number[], sur: number[] }}
+ */
 export const TICKET_ZONA = {
   labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
   norte: [1180, 1220, 1290, 1240, 1310, 1380, 1350, 1420, 1460, 1390, 1510, 1580],
   sur:   [920,  950,  980,  970, 1010, 1050, 1020, 1080, 1100, 1070, 1140, 1190],
 };
 
+/**
+ * Mock de ventas por temporada × categoría para VentasTemporadaChart.
+ * `data` es una matriz rows×cols donde rows = [Primavera, Verano, Otoño, Invierno]
+ * y cols = cats. SectionProductos la transforma a `stackedData` si el API falla.
+ * El API devuelve directamente `{ stackedData, cats, colors }` pre-procesado.
+ *
+ * @type {{ cats: string[], colors: string[], data: number[][], stackedData?: Object[] }}
+ */
 export const SEASON_DATA = {
   cats: ['Playera', 'Pantalón', 'Sudadera', 'Vestido', 'Chamarra', 'Conjunto'],
   colors: ['#111111', '#A48F7A', '#D8C3A5', '#D9B8B0', '#8E9AAF', '#6E8B6B'],
@@ -107,6 +176,12 @@ export const SEASON_DATA = {
   data: [[95, 60, 20, 70, 30, 45], [120, 55, 10, 90, 15, 60], [70, 80, 85, 40, 55, 35], [50, 75, 110, 30, 95, 25]],
 };
 
+/**
+ * Mock de distribución de unidades vendidas por talla para UnidadesTallaChart.
+ * Solo incluye tallas letra — el backend devuelve ambos sistemas mezclados.
+ *
+ * @type {Array<{ name: string, value: number }>}
+ */
 export const TALLAS = [
   { name: 'CH', value: 2840 },
   { name: 'M', value: 5120 },
@@ -115,6 +190,12 @@ export const TALLAS = [
   { name: 'Unitalla', value: 840 },
 ];
 
+/**
+ * Mock de rotación de inventario por categoría.
+ * NOTA: No está conectado a ningún componente activo en la build actual.
+ *
+ * @type {Array<{ cat: string, rot: number }>}
+ */
 export const INVENTORY_ROTATION = [
   { cat: 'Playera', rot: 8.4 },
   { cat: 'Pantalón', rot: 6.2 },
@@ -125,6 +206,12 @@ export const INVENTORY_ROTATION = [
   { cat: 'Conjunto', rot: 5.5 },
 ];
 
+/**
+ * Mock de comparación recibido vs vendido por categoría.
+ * NOTA: No está conectado a ningún componente activo en la build actual.
+ *
+ * @type {Array<{ cat: string, recibido: number, vendido: number }>}
+ */
 export const RECIBIDO_VENDIDO = [
   { cat: 'Playera',  recibido: 4200, vendido: 3520 },
   { cat: 'Pantalón', recibido: 2800, vendido: 1740 },
@@ -135,6 +222,12 @@ export const RECIBIDO_VENDIDO = [
   { cat: 'Conjunto', recibido: 1600, vendido: 1100 },
 ];
 
+/**
+ * Mock de descuento promedio por categoría.
+ * NOTA: No está conectado a ningún componente activo en la build actual.
+ *
+ * @type {Array<{ cat: string, dcto: number }>}
+ */
 export const DCTO_CAT = [
   { cat: 'Chamarra', dcto: 22 },
   { cat: 'Sudadera', dcto: 18 },
@@ -145,6 +238,10 @@ export const DCTO_CAT = [
   { cat: 'Playera',  dcto: 6 },
 ];
 
+/**
+ * Mock de ingresos por temporada de producto para VentasTrimestralChart.
+ * @type {Array<{ season: string, value: number }>}
+ */
 export const QUARTERLY_REVENUE = [
   { season: 'Primavera', value: 300 },
   { season: 'Verano',    value: 150 },
@@ -152,6 +249,13 @@ export const QUARTERLY_REVENUE = [
   { season: 'Invierno',  value: 310 },
 ];
 
+/**
+ * Mock de comparación festivos vs días normales para FestivosVsNormalesGrid.
+ * El array contiene exactamente 4 tarjetas KPI en el orden que espera el componente:
+ * ingreso festivo, ingreso normal, ratio, ticket promedio festivo.
+ *
+ * @type {Array<{ label: string, val: string, color: string, sub: string }>}
+ */
 export const FESTIVOS_DATA = [
   { label: 'Ingreso prom. festivo', val: '$4,820', color: '#C9963B', sub: 'por día' },
   { label: 'Ingreso prom. normal',  val: '$1,640', color: '#111',    sub: 'por día' },
@@ -159,6 +263,12 @@ export const FESTIVOS_DATA = [
   { label: 'Ticket prom. festivo',  val: '$1,390',  color: '#A48F7A', sub: 'vs $1,240 días normales' },
 ];
 
+/**
+ * Mock de KPIs de cobertura de inventario.
+ * NOTA: No está conectado a ningún componente activo en la build actual.
+ *
+ * @type {Array<{ label: string, val: string, color: string }>}
+ */
 export const COVERAGE_KPIS = [
   { label: 'Días prom. cobertura', val: '38 días',   color: '#111' },
   { label: 'SKUs críticos (<7d)',  val: '7 SKUs',     color: '#B65E4A' },

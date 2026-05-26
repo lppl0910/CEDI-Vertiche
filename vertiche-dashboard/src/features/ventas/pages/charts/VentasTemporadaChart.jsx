@@ -6,12 +6,15 @@ import { LegendDot } from '../LegendDot';
 import { grid, ax } from '../CONSTANTES';
 
 /**
- * VentasTemporadaChart
- * Barras apiladas de ventas por temporada (Primavera/Verano/Otoño/Invierno),
- * desagregadas por categoría de producto.
+ * Gráfica de barras apiladas: ingresos por temporada de producto × categoría.
+ * Las categorías y colores vienen del API (fetchTemporadasCategoria) pre-procesados.
+ * Solo la última barra del stack recibe border-radius superior para que el "techo"
+ * del grupo sea visualmente redondeado sin afectar las barras internas.
  *
- * @param {{ season: string, [cat: string]: number }[]} stackedData
- *   Cada objeto tiene la temporada como key y las categorías como keys dinámicas.
+ * @param {Array<{ season: string, [cat: string]: number }>} stackedData
+ *   Cada objeto tiene 'season' más una clave por categoría con el ingreso ($K).
+ * @param {string[]} cats   - Nombres de categorías en el mismo orden que `colors`
+ * @param {string[]} colors - Hex por categoría, alineados con `cats[]`
  */
 export function VentasTemporadaChart({ stackedData, cats, colors }) {
   return (
