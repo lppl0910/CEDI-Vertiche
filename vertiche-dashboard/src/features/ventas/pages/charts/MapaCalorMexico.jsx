@@ -160,7 +160,7 @@ export function MapaCalorMexico({ data = [], zona = 'all' }) {
             position:      'absolute',
             left:          tooltip.x + 12,
             top:           tooltip.y - 10,
-            background:    'var(--card)',
+            background:    '#fff',
             border:        '1px solid var(--border)',
             borderRadius:  6,
             padding:       '6px 10px',
