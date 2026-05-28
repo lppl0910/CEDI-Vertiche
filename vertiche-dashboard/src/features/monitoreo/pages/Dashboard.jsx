@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -119,7 +119,7 @@ function StatusDot({ status }) {
   );
 }
 
-function StageTabs({ activeStage, onStageChange }) {
+function StageTabs({ activeStage, onStageChange, alertCounts = {} }) {
   return (
     <div
       style={{
@@ -131,11 +131,13 @@ function StageTabs({ activeStage, onStageChange }) {
     >
       {stageRoutes.map((stage) => {
         const isActive = activeStage === stage.id;
+        const count = alertCounts[stage.id] || 0;
         return (
           <button
             key={stage.id}
             onClick={() => onStageChange(stage)}
             style={{
+              position: "relative",
               border: "1px solid #E7E2DC",
               background: isActive ? "#111111" : "#FFFFFF",
               color: isActive ? "#FFFFFF" : "#6B6B6B",
@@ -149,6 +151,30 @@ function StageTabs({ activeStage, onStageChange }) {
             }}
           >
             {stage.label}
+            {count > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: -7,
+                  right: -7,
+                  background: "#B65E4A",
+                  color: "#FFFFFF",
+                  borderRadius: "50%",
+                  minWidth: 18,
+                  height: 18,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0 4px",
+                  lineHeight: 1,
+                  boxSizing: "border-box",
+                }}
+              >
+                {count > 99 ? "99+" : count}
+              </span>
+            )}
           </button>
         );
       })}
@@ -243,6 +269,241 @@ function KpiStrip({ primaryKpi, secondaryKpis }) {
           description={item.description}
         />
       ))}
+    </div>
+  );
+}
+
+function AlertaBannerPreregistro({ ordenesIncompletas }) {
+  const alertas = useMemo(() => {
+    if (!ordenesIncompletas) return [];
+    return ordenesIncompletas
+      .filter((item) => item.banda === "rojo" || item.banda === "naranja")
+      .map((item) => ({
+        proveedor: item.proveedor,
+        incompletas: item.incompletas,
+        tipo: item.banda === "rojo" ? "error" : "warning",
+      }));
+  }, [ordenesIncompletas]);
+
+  if (alertas.length === 0) return null;
+
+  const criticas = alertas.filter((a) => a.tipo === "error").length;
+  const atencion = alertas.filter((a) => a.tipo === "warning").length;
+
+  return (
+    <div
+      style={{
+        background: "#FFF9F7",
+        border: "1px solid #F0D9D4",
+        borderRadius: 10,
+        padding: "12px 16px",
+        marginBottom: 18,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 10,
+          flexWrap: "wrap",
+        }}
+      >
+        <span style={{ fontSize: 14, fontWeight: 600, color: "#1F1F1F" }}>
+          Alertas
+        </span>
+        <span
+          style={{
+            background: "#B65E4A",
+            color: "#FFFFFF",
+            borderRadius: 999,
+            fontSize: 11,
+            fontWeight: 700,
+            padding: "2px 8px",
+          }}
+        >
+          {alertas.length}
+        </span>
+        {criticas > 0 && (
+          <span
+            style={{
+              background: STATUS_BG.error,
+              color: STATUS_COLOR.error,
+              borderRadius: 999,
+              fontSize: 11,
+              fontWeight: 600,
+              padding: "2px 8px",
+            }}
+          >
+            {criticas} crítica{criticas !== 1 ? "s" : ""}
+          </span>
+        )}
+        {atencion > 0 && (
+          <span
+            style={{
+              background: STATUS_BG.warning,
+              color: STATUS_COLOR.warning,
+              borderRadius: 999,
+              fontSize: 11,
+              fontWeight: 600,
+              padding: "2px 8px",
+            }}
+          >
+            {atencion} en atención
+          </span>
+        )}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {alertas.map((alerta, idx) => (
+          <div
+            key={alerta.proveedor}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 13,
+              color: "#333333",
+              padding: "5px 0",
+              borderTop: idx === 0 ? "none" : "1px solid #F0EDE9",
+            }}
+          >
+            <StatusDot status={alerta.tipo} />
+            <span style={{ fontWeight: 600, flex: 1 }}>{alerta.proveedor}</span>
+            <span
+              style={{
+                color: STATUS_COLOR[alerta.tipo],
+                fontWeight: 600,
+                fontSize: 12,
+              }}
+            >
+              {alerta.incompletas} incompleta{alerta.incompletas !== 1 ? "s" : ""}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AlertaBannerEnvio({ data }) {
+  const [, setTick] = useState(0);
+
+  // Re-render cada 60 s para actualizar elapsed sin llamar al servidor
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 60000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (!data || data.length === 0) return null;
+
+  const alertas = data
+    .map((item) => ({ ...item, elapsed: elapsedMinutes(item.fecha_creacion) }))
+    .filter((item) => item.elapsed >= BACKLOG_WARNING_MIN)
+    .sort((a, b) => b.elapsed - a.elapsed)
+    .map((item) => ({
+      ...item,
+      tipo: item.elapsed >= BACKLOG_CRITICAL_MIN ? "error" : "warning",
+    }));
+
+  if (alertas.length === 0) return null;
+
+  const criticas = alertas.filter((a) => a.tipo === "error").length;
+  const atencion = alertas.filter((a) => a.tipo === "warning").length;
+
+  return (
+    <div
+      style={{
+        background: "#FFF9F7",
+        border: "1px solid #F0D9D4",
+        borderRadius: 10,
+        padding: "12px 16px",
+        marginBottom: 18,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 10,
+          flexWrap: "wrap",
+        }}
+      >
+        <span style={{ fontSize: 14, fontWeight: 600, color: "#1F1F1F" }}>
+          🔔 Alertas activas
+        </span>
+        <span
+          style={{
+            background: "#B65E4A",
+            color: "#FFFFFF",
+            borderRadius: 999,
+            fontSize: 11,
+            fontWeight: 700,
+            padding: "2px 8px",
+          }}
+        >
+          {alertas.length}
+        </span>
+        {criticas > 0 && (
+          <span
+            style={{
+              background: STATUS_BG.error,
+              color: STATUS_COLOR.error,
+              borderRadius: 999,
+              fontSize: 11,
+              fontWeight: 600,
+              padding: "2px 8px",
+            }}
+          >
+            {criticas} crítica{criticas !== 1 ? "s" : ""}
+          </span>
+        )}
+        {atencion > 0 && (
+          <span
+            style={{
+              background: STATUS_BG.warning,
+              color: STATUS_COLOR.warning,
+              borderRadius: 999,
+              fontSize: 11,
+              fontWeight: 600,
+              padding: "2px 8px",
+            }}
+          >
+            {atencion} en atención
+          </span>
+        )}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {alertas.map((alerta, idx) => (
+          <div
+            key={alerta.id_orden}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 13,
+              color: "#333333",
+              padding: "5px 0",
+              borderTop: idx === 0 ? "none" : "1px solid #F0EDE9",
+            }}
+          >
+            <StatusDot status={alerta.tipo} />
+            <span style={{ fontWeight: 600, flex: 1 }}>
+              {alerta.nombre_proveedor}
+            </span>
+            <span
+              style={{
+                color: STATUS_COLOR[alerta.tipo],
+                fontWeight: 600,
+                fontSize: 12,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {alerta.elapsed} min en espera
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -707,6 +968,105 @@ function TendenciaSemanalChart() {
   );
 }
 
+const SEMANAS_OPTIONS = [0, 4, 8, 12]; // 0 = todos los datos
+
+function ParetoProveedorTable() {
+  const [semanas, setSemanas] = useState(0);
+  const { data, loading } = useOrdenesIncompletas(semanas);
+
+  const paretoData = (data || []).map((item) => ({
+    proveedor: item.proveedor,
+    incompletas: item.incompletas,
+    pctAcum: item.pct_acumulado,
+    banda:
+      item.banda === "rojo"
+        ? "error"
+        : item.banda === "naranja"
+          ? "warning"
+          : "success",
+  }));
+
+  const tableStyle = { width: "100%", borderCollapse: "collapse", fontSize: 13, fontFamily: "Inter" };
+  const thStyle = {
+    textAlign: "left",
+    padding: "8px 10px",
+    fontSize: 11,
+    fontWeight: 600,
+    color: "#6B6B6B",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    borderBottom: "1px solid #E7E2DC",
+    background: "#FAFAF8",
+  };
+  const tdStyle = { padding: "9px 10px", borderBottom: "1px solid #F0EDE8", color: "#1F1F1F", verticalAlign: "middle" };
+
+  const btnStyle = (active) => ({
+    border: "1px solid #E7E2DC",
+    background: active ? "#111111" : "#FFFFFF",
+    color: active ? "#FFFFFF" : "#6B6B6B",
+    borderRadius: 6,
+    padding: "2px 8px",
+    fontSize: 11,
+    fontWeight: 600,
+    fontFamily: "var(--font)",
+    cursor: "pointer",
+  });
+
+  return (
+    <ChartCard
+      title="Órdenes incompletas por proveedor (Pareto)"
+      footer={
+        <div style={{ display: "flex", gap: 4 }}>
+          {SEMANAS_OPTIONS.map((n) => (
+            <button
+              key={n}
+              onClick={() => setSemanas(n)}
+              style={btnStyle(semanas === n)}
+            >
+              {n === 0 ? "Todo" : `${n}S`}
+            </button>
+          ))}
+        </div>
+      }
+    >
+      {loading ? (
+        <div style={{ height: 160, display: "flex", alignItems: "center", justifyContent: "center", color: "#6B6B6B", fontSize: 13 }}>
+          Cargando...
+        </div>
+      ) : paretoData.length === 0 ? (
+        <div style={{ height: 160, display: "flex", alignItems: "center", justifyContent: "center", color: "#6B6B6B", fontSize: 13 }}>
+          Sin órdenes incompletas
+        </div>
+      ) : (
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Proveedor</th>
+              <th style={{ ...thStyle, textAlign: "right" }}>Incompletas</th>
+              <th style={{ ...thStyle, textAlign: "right" }}>% Acum</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paretoData.map((item) => (
+              <tr key={item.proveedor} style={{ background: STATUS_BG[item.banda] }}>
+                <td style={{ ...tdStyle, fontWeight: 600, color: STATUS_COLOR[item.banda] }}>
+                  {item.proveedor}
+                </td>
+                <td style={{ ...tdStyle, textAlign: "right", fontWeight: 600 }}>
+                  {item.incompletas}
+                </td>
+                <td style={{ ...tdStyle, textAlign: "right", fontWeight: 700, color: STATUS_COLOR[item.banda] }}>
+                  {item.pctAcum}%
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </ChartCard>
+  );
+}
+
 const ESTRELLA_COLOR = {
   estrella: "#C9A227",
   bueno: "#6E8B6B",
@@ -726,7 +1086,8 @@ const ESTRELLA_LABEL = {
 };
 
 function ProveedoresEstrellaTable() {
-  const { data, loading } = useProveedoresEstrella();
+  const [semanas, setSemanas] = useState(0);
+  const { data, loading } = useProveedoresEstrella(semanas);
   const [expanded, setExpanded] = useState(null);
   const [historial, setHistorial] = useState([]);
   const [loadingHistorial, setLoadingHistorial] = useState(false);
@@ -776,8 +1137,35 @@ function ProveedoresEstrellaTable() {
     }
   };
 
+  const btnStyle = (active) => ({
+    border: "1px solid #E7E2DC",
+    background: active ? "#111111" : "#FFFFFF",
+    color: active ? "#FFFFFF" : "#6B6B6B",
+    borderRadius: 6,
+    padding: "2px 8px",
+    fontSize: 11,
+    fontWeight: 600,
+    fontFamily: "var(--font)",
+    cursor: "pointer",
+  });
+
   return (
-    <ChartCard title="Ranking de proveedores">
+    <ChartCard
+      title="Ranking de proveedores"
+      footer={
+        <div style={{ display: "flex", gap: 4 }}>
+          {[0, 4, 8, 12].map((n) => (
+            <button
+              key={n}
+              onClick={() => { setSemanas(n); setExpanded(null); }}
+              style={btnStyle(semanas === n)}
+            >
+              {n === 0 ? "Todo" : `${n}S`}
+            </button>
+          ))}
+        </div>
+      }
+    >
       {loading ? (
         <div
           style={{
@@ -1196,8 +1584,7 @@ function elapsedMinutes(fechaCreacion) {
   return Math.floor((Date.now() - new Date(fechaCreacion)) / 60000);
 }
 
-function BacklogEnvioTable() {
-  const { data, loading } = useBacklogEnvio();
+function BacklogEnvioTable({ data, loading }) {
   const [, setTick] = useState(0);
 
   // Re-render every 60 s so elapsed times update without a server call
@@ -1648,7 +2035,7 @@ function OrdenesActivasTable() {
   );
 }
 
-function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPorTurno) {
+function buildStageData(preregistroKPIs, envioKPIs, envioPorTurno, backlogData, backlogLoading) {
   // shared table styles
   const tableStyle = {
     width: "100%",
@@ -1686,17 +2073,6 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
   const tasaCompletas = preregistroKPIs.tasa_completas;
   const provConIncidencias = preregistroKPIs.proveedores_con_incidencias;
   const semanaEnCurso = preregistroKPIs.semana_en_curso;
-  const paretoPreregistro = (ordenesIncompletas || []).map((item) => ({
-    proveedor: item.proveedor,
-    incompletas: item.incompletas,
-    pctAcum: item.pct_acumulado,
-    banda:
-      item.banda === "rojo"
-        ? "error"
-        : item.banda === "naranja"
-          ? "warning"
-          : "success",
-  }));
   // ---- QA ----
   const totalPrepacks = 1640;
   const totalErroresQA = erroresPPPorProveedor.reduce(
@@ -1818,54 +2194,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
         { label: "Semana", value: semanaEnCurso, delta: null, unit: "" },
       ],
       charts: [
-        <ChartCard
-          key="prereg-pareto"
-          title="Órdenes incompletas por proveedor (Pareto)"
-        >
-          <div className="table-scroll"><table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Proveedor</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Incompletas</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>% Acum</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paretoPreregistro.map((item) => (
-                <tr
-                  key={item.proveedor}
-                  style={{ background: STATUS_BG[item.banda] }}
-                >
-                  <td
-                    style={{
-                      ...tdStyle,
-                      textAlign: "right",
-                      fontWeight: 700,
-                      color: STATUS_COLOR[item.banda],
-                    }}
-                  >
-                    {item.pctAcum}%
-                  </td>
-                  <td
-                    style={{ ...tdStyle, textAlign: "right", fontWeight: 600 }}
-                  >
-                    {item.incompletas}
-                  </td>
-                  <td
-                    style={{
-                      ...tdStyle,
-                      textAlign: "right",
-                      fontWeight: 700,
-                      color: STATUS_COLOR[item.banda],
-                    }}
-                  >
-                    {item.pctAcum}%
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table></div>
-        </ChartCard>,
+        <ParetoProveedorTable key="prereg-pareto" />,
         <TendenciaSemanalChart key="prereg-trend" />,
         <ProveedoresEstrellaTable key="prereg-stars" />,
       ],
@@ -2625,7 +2954,7 @@ function buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPor
         },
       ],
       charts: [
-        <BacklogEnvioTable key="envio-backlog" />,
+        <BacklogEnvioTable key="envio-backlog" data={backlogData} loading={backlogLoading} />,
         <div key="envio-ordenes-activas" style={{ gridColumn: "span 2" }}>
           <OrdenesActivasTable />
         </div>,
@@ -2656,10 +2985,11 @@ export default function Dashboard() {
   const { kpis: preregistroKPIs } = usePreregistroKPIs();
   const { data: ordenesIncompletas } = useOrdenesIncompletas();
   const { kpis: envioKPIs, porTurno: envioPorTurno } = useEnvioKPIs();
+  const { data: backlogData, loading: backlogLoading } = useBacklogEnvio();
   const [activeStage, setActiveStage] = useState(getCurrentStageId);
   const stageData = useMemo(
-    () => buildStageData(preregistroKPIs, ordenesIncompletas, envioKPIs, envioPorTurno),
-    [preregistroKPIs, ordenesIncompletas, envioKPIs, envioPorTurno],
+    () => buildStageData(preregistroKPIs, envioKPIs, envioPorTurno, backlogData, backlogLoading),
+    [preregistroKPIs, envioKPIs, envioPorTurno, backlogData, backlogLoading],
   );
   const currentStage = stageData[activeStage] || stageData.preregistro;
 
@@ -2675,6 +3005,14 @@ export default function Dashboard() {
     return () => window.removeEventListener("popstate", syncStage);
   }, []);
 
+  const alertCounts = useMemo(
+    () => ({
+      preregistro: preregistroKPIs.proveedores_con_incidencias || 0,
+      envio: envioKPIs?.alertas_criticas ?? 0,
+    }),
+    [preregistroKPIs.proveedores_con_incidencias, envioKPIs],
+  );
+
   const onStageChange = (stage) => {
     setActiveStage(stage.id);
     goToPath(stage.path);
@@ -2689,13 +3027,22 @@ export default function Dashboard() {
       }}
     >
       <div style={{ display: "grid", gap: 18, marginBottom: 24 }}>
-        <StageTabs activeStage={activeStage} onStageChange={onStageChange} />
+        <StageTabs
+          activeStage={activeStage}
+          onStageChange={onStageChange}
+          alertCounts={alertCounts}
+        />
         <SectionHeader
           title={currentStage.title}
           summary={currentStage.summary}
           status={currentStage.status}
         />
       </div>
+
+      {activeStage === "preregistro" && (
+        <AlertaBannerPreregistro ordenesIncompletas={ordenesIncompletas} />
+      )}
+      {activeStage === "envio" && <AlertaBannerEnvio data={backlogData} />}
 
       <KpiStrip
         primaryKpi={currentStage.primaryKpi}
