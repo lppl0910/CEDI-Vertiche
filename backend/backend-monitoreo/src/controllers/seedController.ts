@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+﻿import { Request, Response } from 'express'
 import Orden from '../models/ordenModel'
 
 const PROVEEDORES = [
@@ -31,15 +31,16 @@ function dateInWeek(weeksAgo: number): Date {
   return d
 }
 
-function ppId(id_orden: string, num: number): string {
-  return `PP-${id_orden}-${String(num).padStart(3, '0')}`
+function ppId(orderNum: number, prepNum: number): string {
+  return `PP-ORD-${orderNum}-${prepNum}`
 }
 
 const seedController = async (_req: Request, res: Response): Promise<void> => {
   try {
-    await Orden.deleteMany({ id_orden: { $regex: /^(ORD-W\d{2}-|ORD-HOY-)/ } })
+    await Orden.deleteMany({})
 
     const docs: any[] = []
+    let orderCounter = 0
 
     for (let w = 12; w >= 0; w--) {
       const baseIncompletas = randomInt(3, 8) + Math.max(0, 6 - w)
@@ -49,6 +50,8 @@ const seedController = async (_req: Request, res: Response): Promise<void> => {
         const total_prepacks = randomInt(5, 10)
         const prov = PROVEEDORES[randomInt(0, PROVEEDORES.length - 1)]
         const id_orden = `ORD-W${String(12 - w).padStart(2, '0')}-INC-${i + 1}`
+        orderCounter++
+        const currentOrder = orderCounter
         const doc: any = {
           id_orden,
           id_proveedor: prov.id,
@@ -57,7 +60,7 @@ const seedController = async (_req: Request, res: Response): Promise<void> => {
           estado: 'en_proceso',
           total_prepacks,
           prepacks: Array.from({ length: randomInt(1, total_prepacks - 1) }, (_, idx) => ({
-            id_prepack: ppId(id_orden, idx + 1),
+            id_prepack: ppId(currentOrder, idx + 1),
             modelo: `MOD-${randomInt(100, 999)}`,
             cantidad_total: randomInt(10, 50),
             estado_actual: 'preregistro',
@@ -79,6 +82,8 @@ const seedController = async (_req: Request, res: Response): Promise<void> => {
         const total_prepacks = randomInt(4, 8)
         const prov = PROVEEDORES[randomInt(0, PROVEEDORES.length - 1)]
         const id_orden = `ORD-W${String(12 - w).padStart(2, '0')}-COM-${i + 1}`
+        orderCounter++
+        const currentOrder = orderCounter
         docs.push({
           id_orden,
           id_proveedor: prov.id,
@@ -87,7 +92,7 @@ const seedController = async (_req: Request, res: Response): Promise<void> => {
           estado: 'completada',
           total_prepacks,
           prepacks: Array.from({ length: total_prepacks }, (_, idx) => ({
-            id_prepack: ppId(id_orden, idx + 1),
+            id_prepack: ppId(currentOrder, idx + 1),
             modelo: `MOD-${randomInt(100, 999)}`,
             cantidad_total: randomInt(10, 50),
             estado_actual: 'envio',
@@ -110,6 +115,8 @@ const seedController = async (_req: Request, res: Response): Promise<void> => {
       const prov = PROVEEDORES[i % PROVEEDORES.length]
       const received = randomInt(1, tbo.total - 1)
       const id_orden = `ORD-HOY-BKL-${i + 1}`
+      orderCounter++
+      const currentOrder = orderCounter
       docs.push({
         id_orden,
         id_proveedor: prov.id,
@@ -118,7 +125,7 @@ const seedController = async (_req: Request, res: Response): Promise<void> => {
         estado: 'en_proceso',
         total_prepacks: tbo.total,
         prepacks: Array.from({ length: received }, (_, idx) => ({
-          id_prepack: ppId(id_orden, idx + 1),
+          id_prepack: ppId(currentOrder, idx + 1),
           modelo: `MOD-${randomInt(100, 999)}`,
           cantidad_total: randomInt(10, 50),
           estado_actual: 'preregistro',
@@ -143,6 +150,8 @@ const seedController = async (_req: Request, res: Response): Promise<void> => {
       const total_prepacks = randomInt(4, 8)
       const prov = PROVEEDORES[randomInt(0, PROVEEDORES.length - 1)]
       const id_orden = `ORD-HOY-ENV-${i + 1}`
+      orderCounter++
+      const currentOrder = orderCounter
       docs.push({
         id_orden,
         id_proveedor: prov.id,
@@ -152,7 +161,7 @@ const seedController = async (_req: Request, res: Response): Promise<void> => {
         estado: 'enviada',
         total_prepacks,
         prepacks: Array.from({ length: total_prepacks }, (_, idx) => ({
-          id_prepack: ppId(id_orden, idx + 1),
+          id_prepack: ppId(currentOrder, idx + 1),
           modelo: `MOD-${randomInt(100, 999)}`,
           cantidad_total: randomInt(10, 50),
           estado_actual: 'envio',

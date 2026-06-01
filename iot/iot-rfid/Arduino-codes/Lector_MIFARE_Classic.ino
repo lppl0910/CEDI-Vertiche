@@ -18,6 +18,14 @@ String tagData = "";
 String stationName = "Preregistro"; //<----------------------- E S T A C I Ó N
 //POR AHORA LA URL APUNTA A UN SERVIDOR LOCAL, SE DEBE CAMBIAR POR LA URL PUBLICA CUANDO SE SUBA EL PROYECTO A PRODUCCION
 //TAMBIEN SE DEBERA CONFIGURAR LOS PERMISOS DE CORS EN EL BACKEND PARA PERMITIR PETICIONES DESDE EL ESP32 Y SOLO DESDE EL ESP32, PARA EVITAR USO INDEBIDO DE LA API
+//LAS ETAPAS DEBEN ESTAR ESCRITAS EXACTAMENTE DE LA SIGUIENTE FORMA PARA QUE SEA IGUAL AL BACKEND:
+//'Preregistro'
+//'QA'
+//'Registro'
+//'Sorter'
+//'Bahias'
+//'Auditoria'
+//'Envio'
 
 const char* WIFI_SSID     = "YOUR_WIFI_SSID";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
@@ -64,6 +72,7 @@ void enviarEscaneo(String tagId) {
   HTTPClient http;
   http.begin(SERVER_URL);
   http.addHeader("Content-Type", "application/json");
+  http.addHeader("x-api-key", "TU_API_KEY"); // Aqui se pone la API KEY. AVISO, CONFIGURAR SOLO EN CADA ESP32, ESTE CODIGO NO DEBE SUBIRSE A GITHUB CON LA API KEY.
 
   StaticJsonDocument<128> doc;
   doc["tagId"]    = tagId;

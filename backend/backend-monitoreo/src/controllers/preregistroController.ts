@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import { PipelineStage } from 'mongoose'
 import Orden from '../models/ordenModel'
 import { DistribucionColor, DistribucionTalla } from '../types/orden.types'
 
@@ -92,12 +93,20 @@ export const getKPIsPreregistro = async (req: Request, res: Response): Promise<v
 
 export const getOrdenesIncompletasPorProveedor = async (req: Request, res: Response): Promise<void> => {
   try {
+    const semanas = parseInt(req.query.semanas as string)
+
+    const matchStage: Record<string, unknown> = {
+      $expr: { $lt: [{ $size: '$prepacks' }, '$total_prepacks'] },
+    }
+
+    if (!isNaN(semanas) && semanas > 0) {
+      const desde = new Date()
+      desde.setDate(desde.getDate() - semanas * 7)
+      matchStage.fecha_creacion = { $gte: desde }
+    }
+
     const resultado = await Orden.aggregate<ProveedorAggregate>([
-      {
-        $match: {
-          $expr: { $lt: [{ $size: '$prepacks' }, '$total_prepacks'] },
-        },
-      },
+      { $match: matchStage },
       {
         $group: {
           _id: '$id_proveedor',
@@ -136,7 +145,22 @@ export const getOrdenesIncompletasPorProveedor = async (req: Request, res: Respo
 
 export const getProveedoresEstrella = async (req: Request, res: Response): Promise<void> => {
   try {
+    const semanas = parseInt(req.query.semanas as string)
+
+    const matchStage: Record<string, unknown> = {}
+    if (!isNaN(semanas) && semanas > 0) {
+      const desde = new Date()
+      desde.setDate(desde.getDate() - semanas * 7)
+      matchStage.fecha_creacion = { $gte: desde }
+    }
+
+    const pipeline: PipelineStage[] = []
+    if (Object.keys(matchStage).length > 0) {
+      pipeline.push({ $match: matchStage })
+    }
+
     const resultado = await Orden.aggregate<ProveedorEstrella>([
+      ...pipeline,
       {
         $group: {
           _id: '$id_proveedor',
