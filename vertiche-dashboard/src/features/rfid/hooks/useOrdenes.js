@@ -47,7 +47,9 @@ export function useOrdenes(filters = {}) {
     setLoading(true);
     setError(null);
 
-    return fetch(`${BASE_URL}/api/ordenes${buildQuery(f)}`)
+    return fetch(`${BASE_URL}/api/ordenes${buildQuery(f)}`, {
+      headers: { 'x-api-key': import.meta.env.VITE_API_KEY },
+    })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();

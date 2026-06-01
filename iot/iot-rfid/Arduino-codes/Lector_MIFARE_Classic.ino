@@ -72,6 +72,7 @@ void enviarEscaneo(String tagId) {
   HTTPClient http;
   http.begin(SERVER_URL);
   http.addHeader("Content-Type", "application/json");
+  http.addHeader("x-api-key", "TU_API_KEY"); // Aqui se pone la API KEY. AVISO, CONFIGURAR SOLO EN CADA ESP32, ESTE CODIGO NO DEBE SUBIRSE A GITHUB CON LA API KEY.
 
   StaticJsonDocument<128> doc;
   doc["tagId"]    = tagId;

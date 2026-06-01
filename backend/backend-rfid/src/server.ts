@@ -7,7 +7,26 @@ import alertasRouter from './routes/alertas';
 import { procesoEscaneoRFID, registrarFallaPrepack } from './services/ordenService';
 import { type Etapa } from './types/rfid.types';
 import { connectDB } from './config/database';
-import { cargarOrdenesDesdeDB, inicializarOrdenesDesdeDB } from './data/generacionDatosEnMemoria';
+import { inicializarOrdenesDesdeDB } from './data/generacionDatosEnMemoria';
+import { apiKeyMiddleware } from './middleware/apiKey';
+import { rateLimit } from 'express-rate-limit';
+import helmet from 'helmet';
+import { z } from 'zod';
+
+
+//Por ahora, esta validacion de escaneos no es tan restrictiva
+//TODO: Revisar si es necesario agregar mas campos o validaciones (ej: formato de tagId, readerId, etc.)
+const scanRFIDSchema = z.object({
+    tagId: z.string(),
+    readerId: z.string(),
+    etapa: z.enum(['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio']),
+});
+
+const limiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minuto
+    max: 100,            // máximo 100 requests por minuto por IP
+    message: { error: 'Demasiadas peticiones, intenta más tarde' }
+});
 
 // Intentar conectar a MongoDB (si MONGODB_URI está en .env)
 await connectDB().then(() => console.log('Conexión a MongoDB establecida'))
@@ -21,23 +40,31 @@ const httpServer = createServer(app);
 
 // Middleware de WebSockets
 export const io = new Server(httpServer, {
-    cors: { origin: '*' },
+    cors: { origin: process.env.FRONTEND_URL ?? 'http://localhost:5173' },
 });
 
-app.use(cors());
+app.use(helmet());
+app.use(cors(
+    { origin: process.env.FRONTEND_URL ?? 'http://localhost:5173' }
+));
 app.use(express.json());
+app.use(limiter); // Aplicar limitador de velocidad a todas las rutas
 
 // Definir rutas
-app.use('/api/ordenes', ordenesRouter);
-app.use('/api/alertas', alertasRouter);
+app.use('/api/ordenes', apiKeyMiddleware, ordenesRouter);
+app.use('/api/alertas', apiKeyMiddleware, alertasRouter);
+app.use('/api/rfid/scan', apiKeyMiddleware);
+app.use('/api/rfid/falla', apiKeyMiddleware);
 
 // Endpoint que recibira los escaneos de RFID
 app.post('/api/rfid/scan', async (req, res) => {
-    const { tagId, readerId, etapa } = req.body as{
-        tagId: string;
-        readerId: string;
-        etapa: Etapa;
-    };
+
+    const validacion = scanRFIDSchema.safeParse(req.body);
+    if (!validacion.success) {
+        return res.status(400).json({ error: 'Datos de escaneo inválidos', details: validacion.error.issues });
+    }
+
+    const { tagId, readerId, etapa } = validacion.data;
 
     const resultado = await procesoEscaneoRFID(tagId, readerId, etapa);
     if (!resultado) {

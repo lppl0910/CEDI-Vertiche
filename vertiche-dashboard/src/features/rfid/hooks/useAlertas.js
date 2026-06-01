@@ -9,7 +9,9 @@ export function useAlertas() {
 
   const fetchAlertas = useCallback(async () => {
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(API_URL, {
+        headers: { 'x-api-key': import.meta.env.VITE_API_KEY },
+      });
       if (!response.ok) throw new Error('Error al obtener historial de alertas');
       const data = await response.json();
       setAlertasBD(data);
@@ -30,7 +32,7 @@ export function useAlertas() {
     try {
       await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': import.meta.env.VITE_API_KEY },
         body: JSON.stringify(nuevasAlertas),
       });
       // Recargar las alertas después de enviarlas
