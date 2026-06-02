@@ -1,4 +1,5 @@
-import { createContext, useState } from "react";
+import { useState } from "react";
+import { ContextoFiltros } from "./Contexto";
 import { SectionPerformance } from "./SectionPerformance";
 import { SectionTendencias } from "./SectionTendencias";
 import { SectionProductos } from "./SectionProductos";
@@ -38,7 +39,6 @@ export default function Ventas({
   section  = "tendencias",
   filters  = { period: "30d", zona: "all", temporada: "all" },
 }) {
-  const ContextoFiltros = createContext();
   const [perfStatus,    setPerfStatus]    = useState("loading");
   const [sectionStatus, setSectionStatus] = useState("loading");
 
@@ -47,9 +47,9 @@ export default function Ventas({
   const globalError = perfStatus === "error" && sectionStatus === "error";
 
   return (
-    <ContextoFiltros.Provider value={filters.period, filters.zona, filters.temporada} >
+    <ContextoFiltros.Provider value={filters}>
       <div className="ventas">
-        <ComponenteEsquina periodoParametro={filters.period} />
+        <ComponenteEsquina />
 
         {globalError ? (
           <div className="ventas__global-error">
@@ -60,14 +60,8 @@ export default function Ventas({
           </div>
         ) : (
           <>
-            <SectionPerformance
-              filters={filters}
-              onStatusChange={setPerfStatus}
-            />
-            <ActiveSection
-              filters={filters}
-              onStatusChange={setSectionStatus}
-            />
+            <SectionPerformance onStatusChange={setPerfStatus} />
+            <ActiveSection     onStatusChange={setSectionStatus} />
           </>
         )}
 

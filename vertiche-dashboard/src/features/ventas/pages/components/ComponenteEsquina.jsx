@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { ContextoFiltros } from "../Contexto";
 import "../styles/ComponenteEsquina.css";
 import { FlechaIzquierda } from "./FlechaIzquierda.jsx";
 
@@ -12,7 +13,8 @@ import { FlechaIzquierda } from "./FlechaIzquierda.jsx";
  * @param {Object} props
  * @param {'7d'|'30d'|'90d'|'1y'} props.periodoParametro - Periodo seleccionado en el filtro global
  */
-const ComponenteEsquina = ({ periodoParametro }) => {
+const ComponenteEsquina = () => {
+  const { period: periodoParametro } = useContext(ContextoFiltros);
   const [estadoVisible, setEstadoVisible] = useState(true);
 
   const cambiarEstadoComponenteEsq = () => {

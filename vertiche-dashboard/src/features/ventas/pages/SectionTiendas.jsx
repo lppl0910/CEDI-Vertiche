@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
+import { ContextoFiltros } from "./Contexto";
 import {
   fetchTicketZona,
   fetchRankingTiendas,
@@ -31,8 +32,8 @@ import "./styles/SectionTiendas.css";
  * @param {{ period: string, zona: string, temporada: string }} props.filters
  * @param {(status: string) => void} [props.onStatusChange]
  */
-export function SectionTiendas({ filters, onStatusChange }) {
-  const { period, zona, temporada } = filters;
+export function SectionTiendas({ onStatusChange }) {
+  const { period, zona, temporada } = useContext(ContextoFiltros);
 
   const ticket = useVentasFetch(
     () => fetchTicketZona({ period, temporada }),

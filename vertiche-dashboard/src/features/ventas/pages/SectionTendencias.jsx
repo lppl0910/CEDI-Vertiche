@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
+import { ContextoFiltros } from "./Contexto";
 import { fetchYoY, fetchPerformance, fetchTemporadas, fetchFestivos } from "../data/ventasApi";
 import { useVentasFetch } from "./useVentasFetch";
 import { useSectionStatus } from "../hooks/useSectionStatus.js";
@@ -30,8 +31,8 @@ const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "O
  * @param {{ period: string, zona: string, temporada: string }} props.filters
  * @param {(status: string) => void} [props.onStatusChange]
  */
-export function SectionTendencias({ filters, onStatusChange }) {
-  const { period, zona, temporada } = filters;
+export function SectionTendencias({ onStatusChange }) {
+  const { period, zona, temporada } = useContext(ContextoFiltros);
 
   const yoyData        = useVentasFetch(() => fetchYoY({ zona, temporada }),                 [zona, temporada]);
   const lineData       = useVentasFetch(() => fetchPerformance({ period, zona, temporada }), [period, zona, temporada]);
