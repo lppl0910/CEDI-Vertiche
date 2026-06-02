@@ -3,7 +3,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recha
 import { Card } from '../Card';
 import { ChartTitle } from '../ChartTitle';
 
-const TALLA_COLORS = ['#D8C3A5', '#A48F7A', '#D9B8B0', '#6E8B6B', '#8E9AAF', '#C9963B', '#B65E4A'];
+const TALLA_COLORS = ['#93703E', '#86705B', '#AD6252', '#627C5F', '#6A7495', '#946D29', '#B65E4A'];
 
 const TALLAS_LETRA  = ['XCH', 'CH', 'M', 'G', 'XG', 'Unitalla'];
 const TALLAS_NUMERO = ['34', '36', '38', '40', '42'];

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { fetchYoY, fetchPerformance, fetchTrimestral, fetchFestivos } from "../data/ventasApi";
+import { fetchYoY, fetchPerformance, fetchTemporadas, fetchFestivos } from "../data/ventasApi";
 import { useVentasFetch } from "./useVentasFetch";
 import { useSectionStatus } from "../hooks/useSectionStatus.js";
 import { ChartStatus } from "./components/ChartStatus";
@@ -7,7 +7,7 @@ import { SectionSep } from "./SectionSep";
 import { TwoCol } from "./TwoCol";
 import { IngresosMensualesChart } from "./charts/IngresosMensualesChart";
 import { IngresosUnidadesChart } from "./charts/IngresosUnidadesChart";
-import { VentasTrimestralChart } from "./charts/VentasTrimestralChart";
+import { VentasTemporadaChart } from "./charts/VentasTemporadaChart";
 import { FestivosVsNormalesGrid } from "./charts/FestivosVsNormalesGrid";
 import "./styles/SectionTendencias.css";
 
@@ -35,10 +35,10 @@ export function SectionTendencias({ filters, onStatusChange }) {
 
   const yoyData        = useVentasFetch(() => fetchYoY({ zona, temporada }),                 [zona, temporada]);
   const lineData       = useVentasFetch(() => fetchPerformance({ period, zona, temporada }), [period, zona, temporada]);
-  const trimestralData = useVentasFetch(() => fetchTrimestral({ zona }),                     [zona]);
+  const temporadasData = useVentasFetch(() => fetchTemporadas({ zona }),                     [zona]);
   const festivosData   = useVentasFetch(() => fetchFestivos({ period, zona, temporada }),    [period, zona, temporada]);
 
-  const { sectionStatus } = useSectionStatus(yoyData, lineData, trimestralData, festivosData);
+  const { sectionStatus } = useSectionStatus(yoyData, lineData, temporadasData, festivosData);
 
   useEffect(() => {
     onStatusChange?.(sectionStatus);
@@ -92,8 +92,8 @@ export function SectionTendencias({ filters, onStatusChange }) {
       </TwoCol>
 
       <TwoCol>
-        {render(trimestralData, (data) => (
-          <VentasTrimestralChart data={data} />
+        {render(temporadasData, (data) => (
+          <VentasTemporadaChart data={data} />
         ))}
         {render(festivosData, (data) => (
           <FestivosVsNormalesGrid data={data} />

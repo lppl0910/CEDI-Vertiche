@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { createContext, useState } from "react";
 import { SectionPerformance } from "./SectionPerformance";
 import { SectionTendencias } from "./SectionTendencias";
 import { SectionProductos } from "./SectionProductos";
@@ -38,6 +38,7 @@ export default function Ventas({
   section  = "tendencias",
   filters  = { period: "30d", zona: "all", temporada: "all" },
 }) {
+  const ContextoFiltros = createContext();
   const [perfStatus,    setPerfStatus]    = useState("loading");
   const [sectionStatus, setSectionStatus] = useState("loading");
 
@@ -46,30 +47,32 @@ export default function Ventas({
   const globalError = perfStatus === "error" && sectionStatus === "error";
 
   return (
-    <div className="ventas">
-      <ComponenteEsquina periodoParametro={filters.period} />
+    <ContextoFiltros.Provider value={filters.period, filters.zona, filters.temporada} >
+      <div className="ventas">
+        <ComponenteEsquina periodoParametro={filters.period} />
 
-      {globalError ? (
-        <div className="ventas__global-error">
-          <ChartStatus
-            type="error"
-            message="No se pudo conectar con el servidor. Por favor, refresque la página."
-          />
-        </div>
-      ) : (
-        <>
-          <SectionPerformance
-            filters={filters}
-            onStatusChange={setPerfStatus}
-          />
-          <ActiveSection
-            filters={filters}
-            onStatusChange={setSectionStatus}
-          />
-        </>
-      )}
+        {globalError ? (
+          <div className="ventas__global-error">
+            <ChartStatus
+              type="error"
+              message="No se pudo conectar con el servidor. Por favor, refresque la página."
+            />
+          </div>
+        ) : (
+          <>
+            <SectionPerformance
+              filters={filters}
+              onStatusChange={setPerfStatus}
+            />
+            <ActiveSection
+              filters={filters}
+              onStatusChange={setSectionStatus}
+            />
+          </>
+        )}
 
-      <ChatFAB />
-    </div>
+        <ChatFAB />
+      </div>
+    </ContextoFiltros.Provider>
   );
 }

@@ -7,7 +7,7 @@ import { SectionSep } from "./SectionSep";
 import { TwoCol } from "./TwoCol";
 import { TopProductosChart } from "./charts/TopProductosChart";
 import { ParetoSKUChart } from "./charts/ParetoSKUChart";
-import { VentasTemporadaChart } from "./charts/VentasTemporadaChart";
+import { VentasTemporadaCategoriaChart } from "./charts/VentasTemporadaCategoriaChart";
 import { UnidadesTallaChart } from "./charts/UnidadesTallaChart";
 import "./styles/SectionProductos.css";
 
@@ -107,7 +107,7 @@ export function SectionProductos({ filters, onStatusChange }) {
 
       <TwoCol>
         {render(seasonData, (data) => (
-          <VentasTemporadaChart
+          <VentasTemporadaCategoriaChart
             stackedData={data.stackedData}
             cats={data.cats}
             colors={data.colors}

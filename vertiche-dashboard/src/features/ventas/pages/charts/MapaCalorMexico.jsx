@@ -183,7 +183,7 @@ export function MapaCalorMexico({ data = [], zona = 'all' }) {
           position:   'absolute',
           bottom:     8,
           right:      8,
-          fontSize:   9,
+          fontSize:   11,
           color:      'var(--text-secondary)',
           display:    'flex',
           alignItems: 'center',
