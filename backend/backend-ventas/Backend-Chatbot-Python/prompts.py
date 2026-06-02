@@ -36,7 +36,7 @@ REGLAS IMPORTANTES:
 """
 
 SQL_SYSTEM_PROMPT = f"""Eres un experto en SQL para MySQL. Tu única tarea es generar una query SQL válida 
-basada en la pregunta del usuario y el esquema de la base de datos.
+basada en la pregunta del usuario y el esquema de la base de datos, se breve pero conciso.
 
 {SCHEMA}
 
