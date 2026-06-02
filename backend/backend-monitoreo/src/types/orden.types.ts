@@ -1,5 +1,3 @@
-import mongoose from 'mongoose'
-
 export interface DistribucionColor {
   color: string
   num_color: number
@@ -12,7 +10,7 @@ export interface DistribucionTalla {
   XG: number
 }
 
-export type EstadoPrepack = 'preregistro' | 'qa' | 'registro' | 'sorter' | 'bahias' | 'auditoria' | 'envio'
+export type EstadoPrepack = '' | 'preregistro' | 'qa' | 'registro' | 'sorter' | 'bahias' | 'auditoria' | 'envio'
 export type EstadoOrden = 'en_proceso' | 'completada' | 'enviada'
 
 export interface IPrepack {
@@ -27,9 +25,7 @@ export interface IPrepack {
 
 export interface IOrden {
   id_orden: string
-  id_tienda?: mongoose.Types.ObjectId
-  id_proveedor: string
-  nombre_proveedor: string
+  id_tienda?: string
   equipo?: string
   fecha_creacion: Date
   fecha_envio?: Date
