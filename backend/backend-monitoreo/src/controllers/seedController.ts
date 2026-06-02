@@ -1,12 +1,28 @@
-﻿import { Request, Response } from 'express'
+import { Request, Response } from 'express'
 import Orden from '../models/ordenModel'
+import Tienda from '../models/tiendaModel'
 
-const PROVEEDORES = [
-  { id: 'PROV-001', nombre: 'Textiles Norte' },
-  { id: 'PROV-002', nombre: 'Confecciones Sur' },
-  { id: 'PROV-003', nombre: 'Moda Express' },
-  { id: 'PROV-004', nombre: 'Distribuidora Central' },
-  { id: 'PROV-005', nombre: 'Manufactura Veloz' },
+const TIENDAS_DATA = [
+  {
+    id_tienda: 'SUC-Monterrey-001', nombre: 'Sucursal Monterrey', region: 'Norte',
+    direccion: { calle: 'Av. Constitución', numero: '450', codigo_postal: '64000', municipio: 'Monterrey' },
+  },
+  {
+    id_tienda: 'SUC-Guadalajara-002', nombre: 'Sucursal Guadalajara', region: 'Sur',
+    direccion: { calle: 'Av. Vallarta', numero: '1230', codigo_postal: '44100', municipio: 'Guadalajara' },
+  },
+  {
+    id_tienda: 'SUC-CDMX-003', nombre: 'Sucursal CDMX', region: 'Centro',
+    direccion: { calle: 'Insurgentes Sur', numero: '3720', codigo_postal: '14000', municipio: 'Tlalpan' },
+  },
+  {
+    id_tienda: 'SUC-Leon-004', nombre: 'Sucursal León', region: 'Oeste',
+    direccion: { calle: 'Blvd. López Mateos', numero: '812', codigo_postal: '37000', municipio: 'León' },
+  },
+  {
+    id_tienda: 'SUC-Puebla-005', nombre: 'Sucursal Puebla', region: 'Este',
+    direccion: { calle: 'Av. Juárez', numero: '2100', codigo_postal: '72000', municipio: 'Puebla' },
+  },
 ]
 
 const EQUIPOS = ['Alpha', 'Beta', 'Delta']
@@ -37,6 +53,10 @@ function ppId(orderNum: number, prepNum: number): string {
 
 const seedController = async (_req: Request, res: Response): Promise<void> => {
   try {
+    await Tienda.deleteMany({})
+    await Tienda.insertMany(TIENDAS_DATA)
+    const tiendaIds = TIENDAS_DATA.map((t) => t.id_tienda)
+
     await Orden.deleteMany({})
 
     const docs: any[] = []
@@ -48,14 +68,13 @@ const seedController = async (_req: Request, res: Response): Promise<void> => {
 
       for (let i = 0; i < baseIncompletas; i++) {
         const total_prepacks = randomInt(5, 10)
-        const prov = PROVEEDORES[randomInt(0, PROVEEDORES.length - 1)]
+        const id_tienda = tiendaIds[randomInt(0, tiendaIds.length - 1)]
         const id_orden = `ORD-W${String(12 - w).padStart(2, '0')}-INC-${i + 1}`
         orderCounter++
         const currentOrder = orderCounter
         const doc: any = {
           id_orden,
-          id_proveedor: prov.id,
-          nombre_proveedor: prov.nombre,
+          id_tienda,
           fecha_creacion: dateInWeek(w),
           estado: 'en_proceso',
           total_prepacks,
@@ -80,14 +99,13 @@ const seedController = async (_req: Request, res: Response): Promise<void> => {
 
       for (let i = 0; i < completas; i++) {
         const total_prepacks = randomInt(4, 8)
-        const prov = PROVEEDORES[randomInt(0, PROVEEDORES.length - 1)]
+        const id_tienda = tiendaIds[randomInt(0, tiendaIds.length - 1)]
         const id_orden = `ORD-W${String(12 - w).padStart(2, '0')}-COM-${i + 1}`
         orderCounter++
         const currentOrder = orderCounter
         docs.push({
           id_orden,
-          id_proveedor: prov.id,
-          nombre_proveedor: prov.nombre,
+          id_tienda,
           fecha_creacion: dateInWeek(w),
           estado: 'completada',
           total_prepacks,
@@ -112,15 +130,14 @@ const seedController = async (_req: Request, res: Response): Promise<void> => {
       { minAtras: 18, total: 7 },
     ]
     HOY_BACKLOG.forEach((tbo, i) => {
-      const prov = PROVEEDORES[i % PROVEEDORES.length]
+      const id_tienda = tiendaIds[i % tiendaIds.length]
       const received = randomInt(1, tbo.total - 1)
       const id_orden = `ORD-HOY-BKL-${i + 1}`
       orderCounter++
       const currentOrder = orderCounter
       docs.push({
         id_orden,
-        id_proveedor: prov.id,
-        nombre_proveedor: prov.nombre,
+        id_tienda,
         fecha_creacion: dateNMinutesAgo(tbo.minAtras),
         estado: 'en_proceso',
         total_prepacks: tbo.total,
@@ -148,14 +165,13 @@ const seedController = async (_req: Request, res: Response): Promise<void> => {
       const fechaCreacion = new Date(Date.now() - (horasAtras * 60 + minutosProcess) * 60 * 1000)
       const fechaEnvio = new Date(fechaCreacion.getTime() + minutosProcess * 60 * 1000)
       const total_prepacks = randomInt(4, 8)
-      const prov = PROVEEDORES[randomInt(0, PROVEEDORES.length - 1)]
+      const id_tienda = tiendaIds[randomInt(0, tiendaIds.length - 1)]
       const id_orden = `ORD-HOY-ENV-${i + 1}`
       orderCounter++
       const currentOrder = orderCounter
       docs.push({
         id_orden,
-        id_proveedor: prov.id,
-        nombre_proveedor: prov.nombre,
+        id_tienda,
         fecha_creacion: fechaCreacion,
         fecha_envio: fechaEnvio,
         estado: 'enviada',
@@ -179,7 +195,7 @@ const seedController = async (_req: Request, res: Response): Promise<void> => {
 
     await Orden.insertMany(docs)
     const incompletos = docs.filter((d) => d.prepacks.length < d.total_prepacks).length
-    res.json({ ok: true, total: docs.length, incompletos })
+    res.json({ ok: true, total: docs.length, incompletos, tiendas: tiendaIds.length })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Error al sembrar datos' })
