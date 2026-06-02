@@ -22,7 +22,7 @@ start "Backend RFID" cmd /k "npm run all"
 echo Backend RFID corriendo en http://localhost:3001
 
 :: Frontend
-cd ..\..\vertiche-dashboard
+cd ..\..\..\vertiche-dashboard
 start "Frontend" cmd /k "npm run dev"
 echo Frontend corriendo en http://localhost:5173
 
