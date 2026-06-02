@@ -5,9 +5,7 @@ export type OrdenDocument = IOrden & Document
 
 const ordenSchema = new Schema<OrdenDocument>({
   id_orden: String,
-  id_tienda: Schema.Types.ObjectId,
-  id_proveedor: String,
-  nombre_proveedor: String,
+  id_tienda: String,
   equipo: String,
   fecha_creacion: Date,
   fecha_envio: Date,
@@ -23,7 +21,6 @@ const ordenSchema = new Schema<OrdenDocument>({
       cantidad_total: Number,
       estado_actual: {
         type: String,
-        enum: ['preregistro', 'qa', 'registro', 'sorter', 'bahias', 'auditoria', 'envio'],
       },
       bahia_asignada: Number,
       distribucion_color: [{ color: String, num_color: Number }],
