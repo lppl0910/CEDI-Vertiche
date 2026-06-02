@@ -21,7 +21,7 @@ def call_llm(system_prompt: str, user_message: str, history: list[dict] = None, 
         "model": MODEL_NAME,
         "messages": messages,
         "temperature": temperature,
-        "max_tokens": 1024,
+        "max_tokens": 8192,
         "stream": False,
     }
 

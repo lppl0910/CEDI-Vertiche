@@ -1,15 +1,7 @@
 import { Request, Response } from "express";
 import AbstractController from "./AbstractController";
 import db from "../models";
-const { fn, col, literal } = require("sequelize");
-
-const diasMap: Record<string, number> = {
-  "7d": 7,
-  "30d": 30,
-  "90d": 90,
-  "1y": 365,
-};
-const fechaBase = "2025-12-31";
+const { fn, col } = require("sequelize");
 
 export default class ProductosAnalisisController extends AbstractController {
   private static _instance: ProductosAnalisisController;
@@ -24,29 +16,14 @@ export default class ProductosAnalisisController extends AbstractController {
     this.router.get("/top-productos",        this.getTopProductos.bind(this));
   }
 
-  // ── Helper ───────────────────────────────────────────────────────────
-  private buildWhere(req: Request) {
-    const zona      = req.query.zona      as string;
-    const temporada = req.query.temporada as string;
-
-    const tiendaWhere   = zona      && zona      !== "all" ? { region: zona } : undefined;
-    const productoWhere = temporada && temporada !== "all" ? { temporada }    : undefined;
-    const tiempoWhere   = (dias: number) =>
-      literal(`Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY)`);
-
-    return { tiendaWhere, productoWhere, tiempoWhere };
-  }
-
   // ── GET /analisis/productos/tallas ───────────────────────────────────
   private async getTallas(req: Request, res: Response) {
     try {
-      const period = (req.query.period as string) || "30d";
-      const dias   = diasMap[period] ?? 30;
-      const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
+      const { tiendaWhere, productoWhere, tiempoWhere, dias } = this.buildWhere(req);
 
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
-          [col("Dim_Producto.talla"), "name"],
+          [col("Dim_Producto.talla"),             "name"],
           [fn("SUM", col("Fact_Ventas.cantidad")), "value"],
         ],
         include: [
@@ -65,8 +42,7 @@ export default class ProductosAnalisisController extends AbstractController {
         rows.map((r: any) => ({ name: String(r.name), value: parseInt(r.value) }))
       );
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
+      this.handleError(res, err, "Error al obtener datos de tallas");
     }
   }
 
@@ -112,24 +88,21 @@ export default class ProductosAnalisisController extends AbstractController {
 
       res.status(200).json({ cats, colors, stackedData });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
+      this.handleError(res, err, "Error al obtener temporadas por categoría");
     }
   }
 
   // ── GET /analisis/productos/top-productos ────────────────────────────
   private async getTopProductos(req: Request, res: Response) {
     try {
-      const period = (req.query.period as string) || "30d";
-      const dias   = diasMap[period] ?? 30;
-      const limit  = parseInt(req.query.limit as string) || 10;
-      const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
+      const { tiendaWhere, productoWhere, tiempoWhere, dias } = this.buildWhere(req);
+      const limit = parseInt(req.query.limit as string) || 10;
 
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
-          [col("Dim_Producto.descripcion"), "name"],
+          [col("Dim_Producto.descripcion"),            "name"],
           [fn("SUM", col("Fact_Ventas.precio_final")), "rev"],
-          [fn("SUM", col("Fact_Ventas.cantidad")), "units"],
+          [fn("SUM", col("Fact_Ventas.cantidad")),     "units"],
         ],
         include: [
           { model: db.Dim_Producto, attributes: [], where: productoWhere },
@@ -152,8 +125,7 @@ export default class ProductosAnalisisController extends AbstractController {
         }))
       );
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
+      this.handleError(res, err, "Error al obtener top productos");
     }
   }
 }

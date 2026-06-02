@@ -16,20 +16,31 @@ export default class InventarioController extends AbstractController {
     this.router.put("/:id",     this.update.bind(this));
   }
 
-  // ── GET /inventario ──────────────────────────────────────────────────
+  // ── GET /inventario?page=1&limit=50 ─────────────────────────────────
   private async getAll(req: Request, res: Response) {
     try {
-      const inventario = await db.Fact_Inventario_Tienda.findAll({
+      const page  = parseInt(req.query.page  as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+
+      const { count, rows } = await db.Fact_Inventario_Tienda.findAndCountAll({
+        limit,
+        offset: (page - 1) * limit,
         include: [
           { model: db.Dim_Producto },
           { model: db.Dim_Tienda },
           { model: db.Dim_Tiempo },
         ],
       });
-      res.status(200).json(inventario);
+
+      res.status(200).json({
+        total:   count,
+        pagina:  page,
+        limite:  limit,
+        paginas: Math.ceil(count / limit),
+        data:    rows,
+      });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: "Error al obtener inventario", error: err });
+      this.handleError(res, err, "Error al obtener inventario");
     }
   }
 
@@ -48,8 +59,7 @@ export default class InventarioController extends AbstractController {
       }
       res.status(200).json(registro);
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: "Error al obtener registro de inventario", error: err });
+      this.handleError(res, err, "Error al obtener registro de inventario");
     }
   }
 
@@ -59,8 +69,7 @@ export default class InventarioController extends AbstractController {
       const registro = await db.Fact_Inventario_Tienda.create(req.body);
       res.status(201).json({ mensaje: "Registro de inventario creado exitosamente", data: registro });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: "Error al crear registro de inventario", error: err });
+      this.handleError(res, err, "Error al crear registro de inventario");
     }
   }
 
@@ -74,8 +83,7 @@ export default class InventarioController extends AbstractController {
       await registro.update(req.body);
       res.status(200).json({ mensaje: "Inventario actualizado exitosamente", data: registro });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: "Error al actualizar inventario", error: err });
+      this.handleError(res, err, "Error al actualizar inventario");
     }
   }
 }
