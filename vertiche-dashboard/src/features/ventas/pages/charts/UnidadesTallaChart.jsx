@@ -87,7 +87,7 @@ export function UnidadesTallaChart({ tallas }) {
           34 · 36 · 38 · 40 · 42
         </button>
       </div>
-      <ResponsiveContainer width="100%" height={180}>
+      <ResponsiveContainer width="100%" height={180} role="img" aria-label="Gráfica de pie: distribución de unidades vendidas por talla">
         <PieChart>
           <Pie
             data={tallasFiltradas}

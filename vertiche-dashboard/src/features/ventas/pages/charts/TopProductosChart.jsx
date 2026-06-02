@@ -33,7 +33,7 @@ export function TopProductosChart({ products }) {
   return (
     <Card>
       <ChartTitle title="Top 10 Productos por Ingreso" />
-      <ResponsiveContainer width="100%" height={chartHeight}>
+      <ResponsiveContainer width="100%" height={chartHeight} role="img" aria-label="Gráfica de barras horizontal: top 10 productos por ingreso en miles de pesos">
         <BarChart
           data={products}
           layout="vertical"

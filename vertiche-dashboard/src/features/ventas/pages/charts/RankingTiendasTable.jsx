@@ -77,8 +77,11 @@ export function RankingTiendasTable({ tiendas }) {
                     <td className="section-tiendas__td--ranking">${t.ticket.toLocaleString()}</td>
                     <td className="section-tiendas__td--ranking section-tiendas__td--units">{t.uds.toLocaleString()}</td>
                     <td className="section-tiendas__td--ranking">
-                      <span className={`section-tiendas__delta ${t.deltaPos ? 'section-tiendas__delta--positive' : 'section-tiendas__delta--negative'}`}>
-                        {t.deltaPos ? '▲' : '▼'} {t.delta}
+                      <span
+                        className={`section-tiendas__delta ${t.deltaPos ? 'section-tiendas__delta--positive' : 'section-tiendas__delta--negative'}`}
+                        aria-label={`${t.deltaPos ? 'Aumento' : 'Disminución'}: ${t.delta}`}
+                      >
+                        <span aria-hidden="true">{t.deltaPos ? '▲' : '▼'}</span> {t.delta}
                       </span>
                     </td>
                   </tr>

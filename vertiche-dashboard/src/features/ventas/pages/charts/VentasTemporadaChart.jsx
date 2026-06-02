@@ -16,7 +16,7 @@ export function VentasTemporadaChart({ data = [] }) {
   return (
     <Card>
       <ChartTitle title="Ventas por Temporada" sub="Ingreso total" />
-      <ResponsiveContainer width="100%" height={130}>
+      <ResponsiveContainer width="100%" height={130} role="img" aria-label="Gráfica de barras: ingreso total por temporada de producto (Primavera, Verano, Otoño, Invierno)">
         <BarChart data={data} margin={{ top: 2, right: 8, bottom: 0, left: -10 }}>
           <CartesianGrid strokeDasharray="3 3" {...grid} />
           <XAxis dataKey="season" tick={ax} axisLine={false} tickLine={false} />

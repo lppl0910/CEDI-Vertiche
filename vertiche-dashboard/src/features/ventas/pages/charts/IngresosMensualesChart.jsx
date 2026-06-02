@@ -14,14 +14,14 @@ import { grid, ax, C } from '../CONSTANTES';
  */
 export function IngresosMensualesChart({ yoyData }) {
   return (
-    <Card>
+    <Card alt="Pizza">
       <ChartTitle title="Ingresos Mensuales — Comparación Anual" sub="2025 vs 2024" />
       <div className="section-tendencias__legend">
         <LegendDot color={C.black} />2025 &nbsp;
         <LegendDot color={C.taupe} />2024
       </div>
-      <ResponsiveContainer width="100%" height={130}>
-        <LineChart data={yoyData} margin={{ top: 2, right: 8, bottom: 0, left: -10 }}>
+      <ResponsiveContainer width="100%" height={130} role="img" aria-label="Gráfica de líneas: comparación de ingresos mensuales 2025 vs 2024, valores en miles de pesos">
+        <LineChart data={yoyData} margin={{ top: 2, right: 8, bottom: 0, left: -10 }} >
           <CartesianGrid strokeDasharray="3 3" {...grid} />
           <XAxis dataKey="mes" tick={ax} axisLine={false} tickLine={false} />
           <YAxis tick={ax} axisLine={false} tickLine={false} tickFormatter={v => `$${v}K`} />

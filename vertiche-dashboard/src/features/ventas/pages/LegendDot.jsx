@@ -12,6 +12,7 @@ export function LegendDot({ color }) {
     <span
       className="legend-dot"
       style={{ background: color }}
+      aria-hidden="true"
     />
   );
 }

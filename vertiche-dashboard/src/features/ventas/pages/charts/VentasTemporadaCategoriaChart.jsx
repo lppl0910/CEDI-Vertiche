@@ -27,7 +27,7 @@ export function VentasTemporadaCategoriaChart({ stackedData, cats, colors }) {
           </span>
         ))}
       </div>
-      <ResponsiveContainer width="100%" height={140}>
+      <ResponsiveContainer width="100%" height={140} role="img" aria-label="Gráfica de barras apiladas: ingresos por temporada desglosados por categoría de producto">
         <BarChart data={stackedData} margin={{ top: 2, right: 8, bottom: 0, left: -10 }}>
           <CartesianGrid strokeDasharray="3 3" {...grid} />
           <XAxis dataKey="season" tick={ax} axisLine={false} tickLine={false} />

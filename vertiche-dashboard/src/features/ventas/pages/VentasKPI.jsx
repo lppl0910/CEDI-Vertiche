@@ -21,12 +21,16 @@ export function VentasKPI({ kpi }) {
       <div
         className="ventas-kpi__color-bar"
         style={{ background: KPI_COLORS[kpi.cl] || 'var(--c-black)' }}
+        aria-hidden="true"
       />
       <div className="ventas-kpi__label">{kpi.label}</div>
       <div className="ventas-kpi__value">{kpi.value}</div>
       {kpi.sub && <div className="ventas-kpi__sub">{kpi.sub}</div>}
-      <div className={`ventas-kpi__delta ${kpi.pos ? 'ventas-kpi__delta--positive' : 'ventas-kpi__delta--negative'}`}>
-        {kpi.pos ? '▲' : '▼'} {kpi.delta}
+      <div
+        className={`ventas-kpi__delta ${kpi.pos ? 'ventas-kpi__delta--positive' : 'ventas-kpi__delta--negative'}`}
+        aria-label={`${kpi.pos ? 'Aumento' : 'Disminución'}: ${kpi.delta}`}
+      >
+        <span aria-hidden="true">{kpi.pos ? '▲' : '▼'}</span> {kpi.delta}
       </div>
     </div>
   );

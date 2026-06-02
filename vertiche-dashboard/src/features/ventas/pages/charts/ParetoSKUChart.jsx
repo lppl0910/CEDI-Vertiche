@@ -38,7 +38,7 @@ export function ParetoSKUChart({ paretoData }) {
         <LegendDot color={C.taupe} />B — 15% &nbsp;
         <LegendDot color={C.beige} />C — 5%
       </div>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={300} role="img" aria-label="Gráfica de Pareto: concentración de ingresos por SKU — segmento A hasta el 80%, B hasta el 95%, C el resto">
         <ComposedChart data={paretoData} margin={{ top: 2, right: 5, bottom: 0, left: -10 }}>
           <CartesianGrid strokeDasharray="3 3" {...grid} />
           <XAxis
