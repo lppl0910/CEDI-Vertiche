@@ -263,6 +263,18 @@ export function ChatFAB() {
                 )}
               </div>
             ))}
+
+            {/* Indicador de carga */}
+            {loading && (
+              <div className="chat-fab__message chat-fab__message--bot">
+                <div className="chat-fab__message-author">Asistente</div>
+                <div className="chat-fab__bubble chat-fab__bubble--bot chat-fab__bubble--loading" role="status" aria-label="Cargando respuesta">
+                  <span aria-hidden="true" />
+                  <span aria-hidden="true" />
+                  <span aria-hidden="true" />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Input */}
