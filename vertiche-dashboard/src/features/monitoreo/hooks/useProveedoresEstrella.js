@@ -1,3 +1,4 @@
+import { API_URLS } from '../../../config/api.js';
 import { useState, useEffect, useCallback, useRef } from 'react'
 
 /**
@@ -17,7 +18,7 @@ export function useProveedoresEstrella(semanas = 0) {
     try {
       const params = semanas > 0 ? `?semanas=${semanas}` : ''
       const res = await fetch(
-        `http://localhost:3002/api/preregistro/proveedores-estrella${params}`
+        `${API_URLS.monitoreo}/api/preregistro/proveedores-estrella${params}`
       )
       if (!res.ok) throw new Error('Error en el servidor')
       const json = await res.json()

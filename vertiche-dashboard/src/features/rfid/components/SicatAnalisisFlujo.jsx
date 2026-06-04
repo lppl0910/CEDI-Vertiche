@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { API_URLS } from '../../../config/api.js';
 import BahiasPopup from './BahiasPopup';
 import PrepPackModal from './PrepPackModal';
 import {
@@ -160,7 +161,7 @@ export default function AnalisisFlujo({ orders, onFiltersChange }) {
     setDetailLoading(true);
 
     try{
-      const res = await fetch(`http://localhost:3001/api/ordenes/${orderId}/prepacks/${ppId}`, {
+      const res = await fetch(`${API_URLS.rfid}/api/ordenes/${orderId}/prepacks/${ppId}`, {
         headers: { 'x-api-key': import.meta.env.VITE_API_KEY },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

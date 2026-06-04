@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-const BASE_URL = 'http://localhost:3001';
+import { API_URLS } from '../../../config/api.js';
+
+const BASE_URL = API_URLS.rfid;
 
 /**
  * Construye el query string a partir de un objeto de filtros.

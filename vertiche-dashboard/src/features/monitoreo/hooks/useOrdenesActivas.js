@@ -1,3 +1,4 @@
+import { API_URLS } from '../../../config/api.js';
 import { useState, useEffect, useCallback, useRef } from 'react'
 
 /**
@@ -14,7 +15,7 @@ export function useOrdenesActivas() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:3002/api/envio/ordenes-activas')
+      const res = await fetch(`${API_URLS.monitoreo}/api/envio/ordenes-activas`)
       if (!res.ok) throw new Error('Error en el servidor')
       setData(await res.json())
     } catch (err) {

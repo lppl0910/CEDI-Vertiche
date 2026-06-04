@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
+import { API_URLS } from '../../../config/api.js';
 
-const BASE_TENDENCIAS = 'http://localhost:8080/tendencias';
-const BASE_PRODUCTOS  = 'http://localhost:8080/analisis/productos';
-const BASE_TIENDAS    = 'http://localhost:8080/analisis/tiendas';
+const BASE_TENDENCIAS = `${API_URLS.ventas}/tendencias`;
+const BASE_PRODUCTOS  = `${API_URLS.ventas}/analisis/productos`;
+const BASE_TIENDAS    = `${API_URLS.ventas}/analisis/tiendas`;
 
 // Cliente Supabase para obtener el token de sesión activa
 const supabase = createClient(
@@ -221,10 +222,15 @@ export async function fetchVentasEstado(filters = {}) {
 
 // ── Sin filtros analíticos ───────────────────────────────────────────
 export async function fetchTiendas() {
+<<<<<<< HEAD
   const url = new URL('http://localhost:8080/tiendas');
   const token = await getToken();
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
   const res = await fetch(url.toString(), { headers });
+=======
+  const url = new URL(`${API_URLS.ventas}/tiendas`);
+  const res = await fetch(url.toString());
+>>>>>>> e09a913 (feat(deploy): containerize frontend for EC2 deployment)
   if (!res.ok) throw new Error(`Error ${res.status} en tiendas`);
   return res.json();
 }

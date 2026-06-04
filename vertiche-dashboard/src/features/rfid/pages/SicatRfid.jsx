@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { API_URLS } from '../../../config/api.js';
 import SicatHeader from '../components/SicatHeader';
 import AnalisisFlujo from '../components/SicatAnalisisFlujo';
 import Historial from '../components/Historial';
@@ -234,7 +235,7 @@ export default function SicatRfid({ onInterfaceChange, onProfileOpen, onAdminOpe
     if (!inc) return;
     setIncOverrides(prev => ({ ...prev, [inc.ppId]: { ...(prev[inc.ppId] || {}), ...changes } }));
     // Persistir cambio al backend (best-effort — no bloquea UI si falla)
-    fetch('http://localhost:3001/api/alertas', {
+    fetch(`${API_URLS.rfid}/api/alertas`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ ...inc, ...changes }),
