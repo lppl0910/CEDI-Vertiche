@@ -14,7 +14,6 @@ import ProductosAnalisisController from './controllers/ProductosAnalisisControll
 import TiendasAnalisisController from './controllers/TiendasAnalisisController';
 
 async function bootstrap() {
-  // Inicializar fechaBase desde el MAX(fecha) de Dim_Tiempo
   await AbstractController.initFechaBase();
 
   const server: Server = new Server({
@@ -41,3 +40,14 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+// Extender el tipo Request de Express para incluir user y token
+// igual que el profe con Cognito, adaptado para Supabase
+declare global {
+  namespace Express {
+    interface Request {
+      user: any;    // objeto User de Supabase
+      token: string;
+    }
+  }
+}

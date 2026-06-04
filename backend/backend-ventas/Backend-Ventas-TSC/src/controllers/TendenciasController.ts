@@ -11,13 +11,24 @@ export default class TendenciasController extends AbstractController {
   }
 
   protected initRoutes(): void {
-    this.router.get("/yoy",         this.getYoY.bind(this));
-    this.router.get("/performance", this.getPerformance.bind(this));
-    this.router.get("/trimestral",  this.getTrimestral.bind(this));
-    this.router.get("/festivos",    this.getFestivos.bind(this));
+    this.router.get("/yoy",
+      this.authMiddleware.verifyToken.bind(this.authMiddleware),
+      this.getYoY.bind(this)
+    );
+    this.router.get("/performance",
+      this.authMiddleware.verifyToken.bind(this.authMiddleware),
+      this.getPerformance.bind(this)
+    );
+    this.router.get("/trimestral",
+      this.authMiddleware.verifyToken.bind(this.authMiddleware),
+      this.getTrimestral.bind(this)
+    );
+    this.router.get("/festivos",
+      this.authMiddleware.verifyToken.bind(this.authMiddleware),
+      this.getFestivos.bind(this)
+    );
   }
 
-  // ── GET /tendencias/yoy ──────────────────────────────────────────────
   private async getYoY(req: Request, res: Response) {
     try {
       const anioActual   = parseInt(AbstractController.fechaBase.slice(0, 4));
@@ -55,8 +66,7 @@ export default class TendenciasController extends AbstractController {
       const [actual, anterior] = await Promise.all([query(anioActual), query(anioAnterior)]);
 
       res.status(200).json({
-        anioActual,
-        anioAnterior,
+        anioActual, anioAnterior,
         actual:   toArray(actual),
         anterior: toArray(anterior),
       });
@@ -65,7 +75,6 @@ export default class TendenciasController extends AbstractController {
     }
   }
 
-  // ── GET /tendencias/performance ──────────────────────────────────────
   private async getPerformance(req: Request, res: Response) {
     try {
       const { tiendaWhere, productoWhere, tiempoWhere, dias, period } = this.buildWhere(req);
@@ -103,9 +112,9 @@ export default class TendenciasController extends AbstractController {
 
       const ventasKpi = await db.Fact_Ventas.findAll({
         attributes: [
-          [fn("SUM", col("precio_final")),                          "ingresos_totales"],
-          [fn("COUNT", fn("DISTINCT", col("id_nota"))),             "num_folios"],
-          [fn("SUM", col("cantidad")),                              "unidades_vendidas"],
+          [fn("SUM", col("precio_final")),                      "ingresos_totales"],
+          [fn("COUNT", fn("DISTINCT", col("id_nota"))),         "num_folios"],
+          [fn("SUM", col("cantidad")),                          "unidades_vendidas"],
         ],
         include: [
           { model: db.Dim_Tiempo,   attributes: [], where: tiempoWhere(dias), required: true },
@@ -136,7 +145,6 @@ export default class TendenciasController extends AbstractController {
     }
   }
 
-  // ── GET /tendencias/trimestral ───────────────────────────────────────
   private async getTrimestral(req: Request, res: Response) {
     try {
       const { tiendaWhere } = this.buildWhere(req);
@@ -164,17 +172,16 @@ export default class TendenciasController extends AbstractController {
     }
   }
 
-  // ── GET /tendencias/festivos ─────────────────────────────────────────
   private async getFestivos(req: Request, res: Response) {
     try {
       const { tiendaWhere, productoWhere, tiempoWhere, dias } = this.buildWhere(req);
 
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
-          [col("Dim_Tiempo.es_festivo"),                            "es_festivo"],
-          [fn("SUM", col("Fact_Ventas.precio_final")),              "ingresos_total"],
-          [fn("AVG", col("Fact_Ventas.precio_final")),              "ticket_prom"],
-          [fn("COUNT", fn("DISTINCT", col("Dim_Tiempo.id_tiempo"))),"num_dias"],
+          [col("Dim_Tiempo.es_festivo"),                             "es_festivo"],
+          [fn("SUM", col("Fact_Ventas.precio_final")),               "ingresos_total"],
+          [fn("AVG", col("Fact_Ventas.precio_final")),               "ticket_prom"],
+          [fn("COUNT", fn("DISTINCT", col("Dim_Tiempo.id_tiempo"))), "num_dias"],
         ],
         include: [
           { model: db.Dim_Tiempo,   attributes: [], where: tiempoWhere(dias) },

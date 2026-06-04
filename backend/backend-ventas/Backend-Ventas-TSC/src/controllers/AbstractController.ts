@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import db from "../models";
+import AuthMiddleware from "../middlewares/authorization";
 const { fn, col } = require("sequelize");
 
 const diasMap: Record<string, number> = {
@@ -12,12 +13,14 @@ const diasMap: Record<string, number> = {
 export default abstract class AbstractController {
 
   // ── Fecha base compartida por todos los controllers ──────────────────
-  // Se inicializa con el fallback y se sobreescribe en initFechaBase()
   protected static fechaBase: string = "2025-12-31";
 
   // ── Atributos de instancia ───────────────────────────────────────────
   private _router: Router;
   private _prefix: string;
+
+  // Declarada aquí pero asignada en el constructor ANTES de initRoutes
+  protected authMiddleware!: AuthMiddleware;
 
   // ── Getters ──────────────────────────────────────────────────────────
   public get router(): Router {
@@ -32,13 +35,15 @@ export default abstract class AbstractController {
   protected constructor(_prefix: string) {
     this._router = Router();
     this._prefix = _prefix;
+    // authMiddleware debe asignarse ANTES de initRoutes
+    // porque initRoutes registra this.authMiddleware.verifyToken
+    this.authMiddleware = AuthMiddleware.instance;
     this.initRoutes();
   }
 
   protected abstract initRoutes(): void;
 
   // ── Inicializar fechaBase desde el último registro de Dim_Tiempo ─────
-  // Llamar una vez al arrancar el servidor, antes de registrar rutas.
   public static async initFechaBase(): Promise<void> {
     try {
       const result = await db.Dim_Tiempo.findOne({
@@ -47,7 +52,7 @@ export default abstract class AbstractController {
       });
       const max = (result as any)?.maxFecha;
       if (max) {
-       AbstractController.fechaBase = new Date(max).toISOString().split("T")[0]!;
+        AbstractController.fechaBase = new Date(max).toISOString().split("T")[0]!;
         console.log(`📅 fechaBase inicializada: ${AbstractController.fechaBase}`);
       }
     } catch (err) {
@@ -56,7 +61,6 @@ export default abstract class AbstractController {
   }
 
   // ── Actualizar fechaBase si se inserta una fecha más reciente ─────────
-  // Llamar desde TiempoController.create después de insertar.
   public static actualizarFechaBase(nuevaFecha: string): void {
     if (nuevaFecha && nuevaFecha > AbstractController.fechaBase) {
       AbstractController.fechaBase = nuevaFecha;
@@ -65,9 +69,6 @@ export default abstract class AbstractController {
   }
 
   // ── buildWhere compartido ─────────────────────────────────────────────
-  // Centraliza la lógica de filtros zona/temporada/periodo que antes
-  // estaba duplicada en TendenciasController, TiendasAnalisisController
-  // y ProductosAnalisisController.
   protected buildWhere(req: Request) {
     const zona      = req.query.zona      as string | undefined;
     const temporada = req.query.temporada as string | undefined;
@@ -85,7 +86,6 @@ export default abstract class AbstractController {
   }
 
   // ── handleError centralizado ──────────────────────────────────────────
-  // Evita repetir el mismo bloque catch en cada controller.
   protected handleError(res: Response, err: unknown, mensaje: string): void {
     console.error(err);
     res.status(500).json({ mensaje, error: err });

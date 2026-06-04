@@ -1,11 +1,29 @@
+import { createClient } from '@supabase/supabase-js';
+
 const BASE_TENDENCIAS = 'http://localhost:8080/tendencias';
 const BASE_PRODUCTOS  = 'http://localhost:8080/analisis/productos';
 const BASE_TIENDAS    = 'http://localhost:8080/analisis/tiendas';
+
+// Cliente Supabase para obtener el token de sesión activa
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
+/**
+ * Obtiene el token JWT de la sesión activa de Supabase.
+ * Si no hay sesión activa, retorna null.
+ */
+async function getToken() {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+}
 
 /**
  * Helper interno de fetch para el API de ventas.
  * Omite parámetros con valor undefined, null, '' o 'all' — el backend
  * interpreta la ausencia de un parámetro como "sin filtro aplicado".
+ * Incluye automáticamente el token de Supabase en el header Authorization.
  * Lanza Error si el status HTTP no es 2xx.
  *
  * @param {string} baseUrl - URL base a la que se llama
@@ -20,7 +38,11 @@ async function get(baseUrl, endpoint, params = {}) {
   Object.entries(params)
     .filter(([, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
     .forEach(([k, v]) => url.searchParams.append(k, String(v)));
-  const res = await fetch(url.toString());
+
+  const token = await getToken();
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+  const res = await fetch(url.toString(), { headers });
   if (!res.ok) throw new Error(`Error ${res.status} en ${endpoint}`);
   return res.json();
 }
@@ -200,7 +222,9 @@ export async function fetchVentasEstado(filters = {}) {
 // ── Sin filtros analíticos ───────────────────────────────────────────
 export async function fetchTiendas() {
   const url = new URL('http://localhost:8080/tiendas');
-  const res = await fetch(url.toString());
+  const token = await getToken();
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const res = await fetch(url.toString(), { headers });
   if (!res.ok) throw new Error(`Error ${res.status} en tiendas`);
   return res.json();
 }

@@ -11,12 +11,20 @@ export default class TiendasAnalisisController extends AbstractController {
   }
 
   protected initRoutes(): void {
-    this.router.get("/ticket-zona",     this.getTicketZona.bind(this));
-    this.router.get("/ranking-tiendas", this.getRankingTiendas.bind(this));
-    this.router.get("/ventas-estado",   this.getVentasEstado.bind(this));
+    this.router.get("/ticket-zona",
+      this.authMiddleware.verifyToken.bind(this.authMiddleware),
+      this.getTicketZona.bind(this)
+    );
+    this.router.get("/ranking-tiendas",
+      this.authMiddleware.verifyToken.bind(this.authMiddleware),
+      this.getRankingTiendas.bind(this)
+    );
+    this.router.get("/ventas-estado",
+      this.authMiddleware.verifyToken.bind(this.authMiddleware),
+      this.getVentasEstado.bind(this)
+    );
   }
 
-  // ── GET /analisis/tiendas/ticket-zona ───────────────────────────────
   private async getTicketZona(req: Request, res: Response) {
     try {
       const { productoWhere, tiempoWhere, dias, period } = this.buildWhere(req);
@@ -33,9 +41,9 @@ export default class TiendasAnalisisController extends AbstractController {
 
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
-          [col(`Dim_Tiempo.${groupBy}`),          "label"],
-          [col("Dim_Tienda.region"),               "zona"],
-          [fn("AVG", col("Fact_Ventas.precio_final")), "ticket"],
+          [col(`Dim_Tiempo.${groupBy}`),               "label"],
+          [col("Dim_Tienda.region"),                    "zona"],
+          [fn("AVG", col("Fact_Ventas.precio_final")),  "ticket"],
         ],
         include: [
           { model: db.Dim_Tiempo,   attributes: [], where: tiempoWhere(dias), required: true },
@@ -79,12 +87,9 @@ export default class TiendasAnalisisController extends AbstractController {
     }
   }
 
-  // ── GET /analisis/tiendas/ranking-tiendas ────────────────────────────
   private async getRankingTiendas(req: Request, res: Response) {
     try {
       const { tiendaWhere, productoWhere, tiempoWhere, dias } = this.buildWhere(req);
-
-      // Año actual derivado de fechaBase (no hardcodeado)
       const anioActual   = parseInt(AbstractController.fechaBase.slice(0, 4));
       const anioAnterior = anioActual - 1;
 
@@ -122,9 +127,7 @@ export default class TiendasAnalisisController extends AbstractController {
           const ingAnterior = anteriorMap[r.id] ?? ingActual;
           const diff        = ingActual - ingAnterior;
           return {
-            id:       r.id,
-            nombre:   r.nombre,
-            zona:     r.zona,
+            id: r.id, nombre: r.nombre, zona: r.zona,
             ingresos: ingActual,
             ticket:   Math.round(parseFloat(r.ticket)),
             uds:      parseInt(r.uds),
@@ -140,18 +143,17 @@ export default class TiendasAnalisisController extends AbstractController {
     }
   }
 
-  // ── GET /analisis/tiendas/ventas-estado ─────────────────────────────
   private async getVentasEstado(req: Request, res: Response) {
     try {
       const { tiendaWhere, productoWhere, tiempoWhere, dias } = this.buildWhere(req);
 
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
-          [col("Dim_Tienda.estado"),                               "estado"],
-          [col("Dim_Tienda.region"),                               "region"],
-          [fn("SUM", col("Fact_Ventas.precio_final")),             "ingresos"],
-          [fn("AVG", col("Fact_Ventas.precio_final")),             "ticket"],
-          [fn("SUM", col("Fact_Ventas.cantidad")),                 "unidades"],
+          [col("Dim_Tienda.estado"),                   "estado"],
+          [col("Dim_Tienda.region"),                   "region"],
+          [fn("SUM", col("Fact_Ventas.precio_final")), "ingresos"],
+          [fn("AVG", col("Fact_Ventas.precio_final")), "ticket"],
+          [fn("SUM", col("Fact_Ventas.cantidad")),     "unidades"],
         ],
         include: [
           { model: db.Dim_Tienda,   attributes: [], where: tiendaWhere,       required: true },

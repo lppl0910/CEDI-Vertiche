@@ -11,19 +11,27 @@ export default class ProductosAnalisisController extends AbstractController {
   }
 
   protected initRoutes(): void {
-    this.router.get("/tallas",               this.getTallas.bind(this));
-    this.router.get("/temporadas-categoria", this.getTemporadasCategoria.bind(this));
-    this.router.get("/top-productos",        this.getTopProductos.bind(this));
+    this.router.get("/tallas",
+      this.authMiddleware.verifyToken.bind(this.authMiddleware),
+      this.getTallas.bind(this)
+    );
+    this.router.get("/temporadas-categoria",
+      this.authMiddleware.verifyToken.bind(this.authMiddleware),
+      this.getTemporadasCategoria.bind(this)
+    );
+    this.router.get("/top-productos",
+      this.authMiddleware.verifyToken.bind(this.authMiddleware),
+      this.getTopProductos.bind(this)
+    );
   }
 
-  // ── GET /analisis/productos/tallas ───────────────────────────────────
   private async getTallas(req: Request, res: Response) {
     try {
       const { tiendaWhere, productoWhere, tiempoWhere, dias } = this.buildWhere(req);
 
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
-          [col("Dim_Producto.talla"),             "name"],
+          [col("Dim_Producto.talla"),              "name"],
           [fn("SUM", col("Fact_Ventas.cantidad")), "value"],
         ],
         include: [
@@ -46,7 +54,6 @@ export default class ProductosAnalisisController extends AbstractController {
     }
   }
 
-  // ── GET /analisis/productos/temporadas-categoria ─────────────────────
   private async getTemporadasCategoria(req: Request, res: Response) {
     try {
       const { tiendaWhere } = this.buildWhere(req);
@@ -92,7 +99,6 @@ export default class ProductosAnalisisController extends AbstractController {
     }
   }
 
-  // ── GET /analisis/productos/top-productos ────────────────────────────
   private async getTopProductos(req: Request, res: Response) {
     try {
       const { tiendaWhere, productoWhere, tiempoWhere, dias } = this.buildWhere(req);
