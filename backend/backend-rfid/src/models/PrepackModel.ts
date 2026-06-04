@@ -6,7 +6,7 @@
  * permite persistir los prepacks y su historial entre reinicios del servidor.
  */
 import mongoose, { Schema, Document } from 'mongoose';
-import type { Prepack, Etapa } from '../types/rfid.types';
+import type { Prepack, Etapa } from '../types/rfid.types.js';
 
 export interface RfidEventDocument extends Document {
   id_prepack: string;

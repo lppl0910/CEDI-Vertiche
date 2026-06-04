@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { agregarOActualizarAlerta, obtenerHistorialAlertas } from '../data/alertasData.js';
-import type { Alerta } from '../types/alertas.types';
+import type { Alerta } from '../types/alertas.types.js';
 
 const router = Router();
 

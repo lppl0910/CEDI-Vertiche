@@ -3,10 +3,10 @@
  * Incluye filtrado/ordenamiento optimizado en backend (#215 — Isaac Calderon Laflor).
  * Author: Adrian Proano Bernal
  */
-import { ordenesPrueba, ordenesEnMemoria, normalizarEtapa} from '../data/generacionDatosEnMemoria';
-import { subirScaneo } from '../data/prePackData';
-import { OrdenModel, RfidEventModel } from '../models/PrepackModel';
-import type { ProgresoOrden, Etapa, ProgresoEtapa } from '../types/rfid.types';
+import { ordenesPrueba, ordenesEnMemoria, normalizarEtapa} from '../data/generacionDatosEnMemoria.js';
+import { subirScaneo } from '../data/prePackData.js';
+import { OrdenModel, RfidEventModel } from '../models/PrepackModel.js';
+import type { ProgresoOrden, Etapa, ProgresoEtapa } from '../types/rfid.types.js';
 
 const ALL_ETAPAS: Etapa[] = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
 
