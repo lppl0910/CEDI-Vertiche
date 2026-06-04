@@ -1,0 +1,65 @@
+.app-container {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-tabs-container {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--surface);
+}
+
+.main-tab {
+  background: transparent;
+  border: none;
+  border-top: 2px solid transparent;
+  color: var(--text-dim);
+  padding: 16px 24px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  transition: all 0.2s ease;
+}
+
+.main-tab.active {
+  background: #F0EDE8;
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Dynamic border tops */
+.main-tab.active.sorter { border-top-color: var(--green); }
+.main-tab.active.bay1 { border-top-color: var(--bay-1); }
+.main-tab.active.bay2 { border-top-color: var(--bay-2); }
+.main-tab.active.bay3 { border-top-color: var(--bay-3); }
+
+.sub-tabs-container {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.sub-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  padding: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* We will keep the dynamic color on the sub-tab inline since it depends on the active bay color */
+
+.screens-container {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
