@@ -1,3 +1,4 @@
+import { API_URLS } from '../../../config/api.js';
 import { useState, useEffect } from 'react';
 
 export function usePreregistroKPIs() {
@@ -13,7 +14,7 @@ export function usePreregistroKPIs() {
 
   const fetchKPIs = async () => {
     try {
-      const res = await fetch('http://localhost:3002/api/preregistro/kpis');
+      const res = await fetch(`${API_URLS.monitoreo}/api/preregistro/kpis`);
       if (!res.ok) throw new Error('Error en el servidor');
       const data = await res.json();
       setKpis(data);

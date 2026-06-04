@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import './styles/ChatFAB.css';
 
-const CHATBOT_URL = 'http://localhost:8090';
+import { API_URLS } from '../../../config/api.js';
+
+const CHATBOT_URL = API_URLS.chatbot;
 
 function renderMarkdown(text) {
   const parts = text.split(/\*\*(.*?)\*\*/g);

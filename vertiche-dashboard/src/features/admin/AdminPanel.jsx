@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Plus, Trash2, AlertCircle, UserCheck, Loader } from 'lucide-react';
 import { supabase } from '../auth/supabase';
 
-const AUTH_API = import.meta.env.VITE_AUTH_API_URL ?? 'http://localhost:3003';
+import { API_URLS } from '../../config/api.js';
+
+const AUTH_API = API_URLS.auth;
 
 const ROLES_CONFIG = {
   superadmin: { label: 'Super Admin',  panels: ['monitoreo', 'rfid', 'ventas'] },

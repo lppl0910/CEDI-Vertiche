@@ -1,3 +1,4 @@
+import { API_URLS } from '../../../config/api.js';
 import { useState, useEffect } from 'react'
 
 const DEFAULT_KPIS = {
@@ -16,8 +17,8 @@ export function useEnvioKPIs() {
   const fetchAll = async () => {
     try {
       const [kpisRes, turnoRes] = await Promise.all([
-        fetch('http://localhost:3002/api/envio/kpis'),
-        fetch('http://localhost:3002/api/envio/por-turno'),
+        fetch(`${API_URLS.monitoreo}/api/envio/kpis`),
+        fetch(`${API_URLS.monitoreo}/api/envio/por-turno`),
       ])
       const [kpisData, turnoData] = await Promise.all([
         kpisRes.json(),

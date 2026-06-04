@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { API_URLS } from '../../../config/api.js';
 
-const API_URL = 'http://localhost:3001/api/alertas';
+const API_URL = `${API_URLS.rfid}/api/alertas`;
 
 export function useAlertas() {
   const [alertasBD, setAlertasBD] = useState([]);

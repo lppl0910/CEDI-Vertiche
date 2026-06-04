@@ -1,0 +1,55 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'vertiche-dashboard/**'
+      - '.github/workflows/deploy-frontend.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./vertiche-dashboard
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USER }}/vertiche-dashboard:latest
+            ${{ secrets.DOCKER_HUB_USER }}/vertiche-dashboard:${{ github.sha }}
+          build-args: |
+            VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+            VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
+            VITE_AUTH_API_URL=${{ secrets.VITE_AUTH_API_URL }}
+            VITE_MONITOREO_API_URL=${{ secrets.VITE_MONITOREO_API_URL }}
+            VITE_RFID_API_URL=${{ secrets.VITE_RFID_API_URL }}
+            VITE_VENTAS_API_URL=${{ secrets.VITE_VENTAS_API_URL }}
+            VITE_CHATBOT_API_URL=${{ secrets.VITE_CHATBOT_API_URL }}
+            VITE_API_KEY=${{ secrets.VITE_API_KEY }}
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKER_HUB_USER }}/vertiche-dashboard:latest
+            docker stop vertiche-frontend || true
+            docker rm   vertiche-frontend || true
+            docker run -d \
+              --name vertiche-frontend \
+              --restart unless-stopped \
+              -p 80:80 \
+              ${{ secrets.DOCKER_HUB_USER }}/vertiche-dashboard:latest

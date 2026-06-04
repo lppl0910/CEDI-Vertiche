@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useMemo, useState } from "react";
+import { API_URLS } from '../../../config/api.js';
 import {
   ResponsiveContainer,
   LineChart,
@@ -1126,7 +1127,7 @@ function ProveedoresEstrellaTable() {
     setLoadingHistorial(true);
     try {
       const res = await fetch(
-        `http://localhost:3002/api/preregistro/proveedores/${encodeURIComponent(item.id_proveedor)}/historial`,
+        `${API_URLS.monitoreo}/api/preregistro/proveedores/${encodeURIComponent(item.id_proveedor)}/historial`,
       );
       if (!res.ok) throw new Error("Error en el servidor");
       setHistorial(await res.json());

@@ -1,3 +1,4 @@
+import { API_URLS } from '../../../config/api.js';
 import { useState, useEffect, useCallback } from 'react'
 
 export function useTendenciaSemanal(semanas = 8) {
@@ -7,7 +8,7 @@ export function useTendenciaSemanal(semanas = 8) {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetch(`http://localhost:3002/api/preregistro/tendencia-semanal?semanas=${semanas}`)
+      const res = await fetch(`${API_URLS.monitoreo}/api/preregistro/tendencia-semanal?semanas=${semanas}`)
       if (!res.ok) throw new Error('Error en el servidor')
       const json = await res.json()
       setData(json)
