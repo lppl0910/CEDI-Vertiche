@@ -67,6 +67,14 @@ export interface Prepack {
     fallaEtapa?: Etapa;   // en qué etapa ocurrió la falla
 }
 
+export interface PrepackDetalle extends Prepack {
+    modelo?: string; // Se asigna en etapa de empaque
+    cantidad_total?: number; // Se asigna en etapa de empaque
+    bahia_asignada?: number; // Se asigna en etapa de empaque
+    distribucion_color: Array<{ color: string; num_color: number }>; // Se asigna en etapa de empaque
+    distribucion_talla: { CH: number; M: number; G: number; XG: number }; // Se asigna en etapa de empaque
+}
+
 /*
     Definición de la interfaz ProgresoEtapa, que representa el progreso de una etapa específica en el proceso de manejo de prepacks.
     Esta interfaz tiene las siguientes propiedades:
@@ -106,4 +114,8 @@ export interface ProgresoOrden {
     totalPrepacks: number;
     progresoEtapa: ProgresoEtapa[];
     prepacks: Prepack[];
+}
+
+export interface ProgresoOrdenDetalle extends ProgresoOrden {
+    prepacks: PrepackDetalle[];
 }

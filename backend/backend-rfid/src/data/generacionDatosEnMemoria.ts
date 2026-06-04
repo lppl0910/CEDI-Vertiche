@@ -16,7 +16,7 @@ import mongoose from 'mongoose';
 */
 
 //Funcion para normailizar las etapas leidas de la base de datos
-function normalizarEtapa(raw: string): Etapa {
+export function normalizarEtapa(raw: string): Etapa {
     const map: Record<string, Etapa> = {
         preregistro: 'Preregistro',
         qa: 'QA',

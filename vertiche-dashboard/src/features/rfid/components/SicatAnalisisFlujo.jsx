@@ -135,6 +135,9 @@ export default function AnalisisFlujo({ orders, onFiltersChange }) {
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [bahiaPopup,  setBahiaPopup]  = useState(null); // { order, rect }
   const [modal,       setModal]       = useState(null); // { orderId, ppId }
+  const [detail, setDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
 
   const toggleExpand = (orderId) => {
     setExpandedIds(prev => {
@@ -150,8 +153,26 @@ export default function AnalisisFlujo({ orders, onFiltersChange }) {
     setBahiaPopup({ order, rect });
   };
 
-  const handleOpenModal = (orderId, ppId) => {
+  const handleOpenModal = async (orderId, ppId) => {
     setModal({ orderId, ppId });
+    setDetail(null);
+    setDetailError(null);
+    setDetailLoading(true);
+
+    try{
+      const res = await fetch(`http://localhost:3001/api/ordenes/${orderId}/prepacks/${ppId}`, {
+        headers: { 'x-api-key': import.meta.env.VITE_API_KEY },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setDetail(data);
+    } 
+    catch (err) {
+      setDetailError(err.message);
+    } 
+    finally {
+      setDetailLoading(false);
+    }
   };
 
   const getFiltered = () => {
@@ -178,6 +199,21 @@ export default function AnalisisFlujo({ orders, onFiltersChange }) {
 
   const modalOrder   = modal ? orders.find(o => o.id === modal.orderId) : null;
   const modalPrepack = modalOrder ? modalOrder.prepacks.find(p => p.id === modal.ppId) : null;
+
+  const detailPrepack = detail?.prepack;
+  const mergedPrepack = modalPrepack && detailPrepack ? {
+    ...modalPrepack,
+    color: detailPrepack.distribucion_color?.map(d => d.color).join(', ') ?? modalPrepack.color,
+    size:  Object.keys(detailPrepack.distribucion_talla ?? {}).join(', ') ?? modalPrepack.size,
+    store: detail?.id_tienda ?? modalPrepack.store,
+    bahiaIdx: (detailPrepack.bahia_asignada ?? 1) - 1,
+    cantidad_total: detailPrepack.cantidad_total,
+  } : modalPrepack;
+
+  const mergedOrder = modalOrder && detailPrepack ? {
+    ...modalOrder,
+    product: detailPrepack.modelo ?? modalOrder.product,
+  } : modalOrder;
 
   return (
     <div>
@@ -291,8 +327,10 @@ export default function AnalisisFlujo({ orders, onFiltersChange }) {
       {/* Prepack modal */}
       {modal && modalOrder && modalPrepack && (
         <PrepPackModal
-          order={modalOrder}
-          prepack={modalPrepack}
+          order={mergedOrder}
+          prepack={mergedPrepack}
+          loading={detailLoading}
+          error={detailError}
           onClose={() => setModal(null)}
         />
       )}

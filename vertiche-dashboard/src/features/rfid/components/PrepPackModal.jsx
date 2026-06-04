@@ -3,13 +3,13 @@ import { STAGE_KEYS, STAGE_LABELS, fmtTs, fmtMin } from '../data/sicatMockData';
 const CK_ICON  = { ok:'✓', fail:'✗', act:'⟳', pend:'—' };
 const CK_COLOR = { ok:'#6E8B6B', fail:'#B65E4A', act:'#C9963B', pend:'#7C8A96' };
 
-export default function PrepPackModal({ order, prepack, onClose }) {
+export default function PrepPackModal({ order, prepack, loading, error, onClose }) {
   if (!order || !prepack) return null;
 
   const seed   = prepack.id.charCodeAt(3) + prepack.id.charCodeAt(4);
-  const pzas   = 6 + (seed % 7);
-  const colChips = order.colors.map((c, ci) => `${c}: ${3 + ((ci + seed) % 5)} pzas`);
-  const szChips  = order.sizes.map(s => `T-${s}: ${4 + (seed % 4)} pzas`);
+  const pzas   = prepack.cantidad_total ?? (6 + (seed % 7));
+  const colChips = (prepack.distribucion_color ?? []).map(d => `${d.color}: ${d.num_color} pzas`);
+  const szChips = prepack.distribucion_talla ? Object.entries(prepack.distribucion_talla).map(([k, v]) => `T-${k}: ${v} pzas`): [];
 
   const tlRows = STAGE_KEYS.map((k, si) => {
     const s   = order[k];
@@ -47,7 +47,24 @@ export default function PrepPackModal({ order, prepack, onClose }) {
           </div>
           <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #E7E2DC', background: 'transparent', cursor: 'pointer', fontSize: 14, color: '#6B6B6B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}>✕</button>
         </div>
+        {/* Loader */}
+        {loading && (
+          <div style={{ padding: '12px 18px', display: 'flex', gap: 8, alignItems: 'center' }}>
+            <span style={{
+              width: 14, height: 14, borderRadius: '50%',
+              border: '2px solid #E7E2DC', borderTopColor: '#6E8B6B',
+              display: 'inline-block', animation: 'spin 1s linear infinite',
+            }} />
+            <span style={{ fontSize: 11, color: '#6B6B6B' }}>Cargando detalle…</span>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          </div>
+        )}
 
+        {error && (
+          <div style={{ padding: '0 18px 12px', fontSize: 11, color: '#B65E4A' }}>
+            {error}
+          </div>
+        )}
         {/* Body */}
         <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
 

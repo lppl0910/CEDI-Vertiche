@@ -41,8 +41,14 @@ const PrepackSchema = new Schema({
     cantidad_total: { type: Number, required: true }, //Cantidad total de prendas que se asigna al prepack
     estado_actual: { type: String, required: true }, // Etapa actual del prepack
     bahia_asignada: { type: Number, required: true }, //Bahía asignada al prepack, se asigna en etapa de empaque
-    distribucion_color: {type: Array<{color: string, num_color: number}>, required: true}, //Distribución de colores de las prendas asignadas al prepack, se asigna en etapa de empaque
-    distribucion_talla: {type: Array<{CH: number, M: number, G: number, XG: number}>, required: true}, //Distribución de tallas de las prendas asignadas al prepack, se asigna en etapa de empaque
+    distribucion_color: [{
+      color: { type: String, required: true },
+      num_color: { type: Number, required: true },
+    }], //Distribución de colores de las prendas asignadas al prepack, se asigna en etapa de empaque
+    distribucion_talla: {CH: { type: Number, required: true }, 
+      M: { type: Number, required: true }, 
+      G: { type: Number, required: true }, 
+      XG: { type: Number, required: true }} //Distribución de tallas de las prendas asignadas al prepack, se asigna en etapa de empaque
 }) as unknown as mongoose.Schema<PrepackDocument>;
 
 const ordenSchema = new Schema(
@@ -60,7 +66,7 @@ const ordenSchema = new Schema(
 
 export interface OrdenDocument extends Document {
   id_orden: string;
-  id_proveedor: string;
+  id_tienda: string;
   nombre_proveedor: string;
   fecha_creacion: Date;
   estado: string;

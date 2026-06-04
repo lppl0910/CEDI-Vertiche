@@ -4,7 +4,7 @@
  * Author: Adrian Proano Bernal + filtros: Isaac Calderon Laflor
  */
 import { Router, type Request, type Response } from 'express';
-import { getProgresoOrden, getOrdenesConFiltro } from '../services/ordenService.js';
+import { getProgresoOrden, getOrdenesConFiltro, getDetallePrepack } from '../services/ordenService.js';
 
 const router = Router();
 
@@ -42,6 +42,20 @@ router.get('/:orderId/progreso', (req: Request<{ orderId: string }>, res: Respon
         return res.status(404).json({ error: 'Orden no encontrada' });
     }
     res.json(progreso);
+});
+
+router.get('/:orderId/prepacks/:prepackId', async (req: Request<{ orderId: string; prepackId: string }>, res: Response) => {
+    try {
+        const { orderId, prepackId } = req.params;
+        const detalle = await getDetallePrepack(orderId, prepackId);
+        if (!detalle) {
+            return res.status(404).json({ error: 'Prepack no encontrado' });
+        }
+        res.json(detalle);
+    } 
+    catch (error) {
+        res.status(500).json({ error: 'Error al obtener el detalle del prepack' });
+    }
 });
 
 export default router;

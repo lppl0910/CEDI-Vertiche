@@ -3,8 +3,9 @@
  * Incluye filtrado/ordenamiento optimizado en backend (#215 — Isaac Calderon Laflor).
  * Author: Adrian Proano Bernal
  */
-import { ordenesPrueba, ordenesEnMemoria} from '../data/generacionDatosEnMemoria';
+import { ordenesPrueba, ordenesEnMemoria, normalizarEtapa} from '../data/generacionDatosEnMemoria';
 import { subirScaneo } from '../data/prePackData';
+import { OrdenModel, RfidEventModel } from '../models/PrepackModel';
 import type { ProgresoOrden, Etapa, ProgresoEtapa } from '../types/rfid.types';
 
 const ALL_ETAPAS: Etapa[] = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
@@ -143,4 +144,46 @@ export async function procesoEscaneoRFID(tagId: string, readerId: string, newEta
         }
     }
     return null;
+}
+
+export async function getDetallePrepack(orderId: string, prepackId: string) {
+      const orden = await OrdenModel.findOne(
+    { id_orden: orderId, 'prepacks.id_prepack': prepackId },
+    {
+      id_orden: 1,
+      id_tienda: 1,
+      prepacks: { $elemMatch: { id_prepack: prepackId } },
+    }
+  ).lean();
+
+  if (!orden || !orden.prepacks || orden.prepacks.length === 0) {
+    return null;
+  }
+
+  const prepack = orden?.prepacks?.[0];
+  if (!prepack) {
+    return null;
+  }
+
+  const eventos = await RfidEventModel.find({ id_prepack: prepackId }).sort({ timestamp: 1 }).lean();
+
+  return {
+    orderId: orden.id_orden,
+    id_tienda: orden.id_tienda,
+    prepack: {
+      id: prepack.id_prepack,
+      orderId: orden.id_orden,
+      modelo: prepack.modelo,
+      cantidad_total: prepack.cantidad_total,
+      bahia_asignada: prepack.bahia_asignada,
+      distribucion_color: prepack.distribucion_color,
+      distribucion_talla: prepack.distribucion_talla,
+      currentEtapa: normalizarEtapa(prepack.estado_actual),
+      historial: eventos.map(e => ({
+        etapa: e.etapa,
+        timestamp: e.timestamp,
+        readerId: '',
+      })),
+    },
+  }
 }
