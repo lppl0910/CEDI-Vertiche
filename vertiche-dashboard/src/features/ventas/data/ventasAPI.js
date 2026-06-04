@@ -222,15 +222,10 @@ export async function fetchVentasEstado(filters = {}) {
 
 // ── Sin filtros analíticos ───────────────────────────────────────────
 export async function fetchTiendas() {
-<<<<<<< HEAD
-  const url = new URL('http://localhost:8080/tiendas');
+  const url = new URL(`${API_URLS.ventas}/tiendas`);
   const token = await getToken();
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
   const res = await fetch(url.toString(), { headers });
-=======
-  const url = new URL(`${API_URLS.ventas}/tiendas`);
-  const res = await fetch(url.toString());
->>>>>>> e09a913 (feat(deploy): containerize frontend for EC2 deployment)
   if (!res.ok) throw new Error(`Error ${res.status} en tiendas`);
   return res.json();
 }
