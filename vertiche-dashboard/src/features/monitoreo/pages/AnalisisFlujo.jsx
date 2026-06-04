@@ -1,8 +1,11 @@
 import FlowTable from '../components/FlowTable';
 import PerformanceChart from '../components/PerformanceChart';
-import { equipos, performanceData } from '../data/mockData';
+import { equipos as mockEquipos, performanceData as mockPerformance } from '../data/mockData';
+import { useFlujoPPMin } from '../hooks/useFlujoPPMin';
 
 export default function AnalisisFlujo() {
+  const { flowData, performanceData, loading } = useFlujoPPMin(5);
+
   return (
     <main style={{ flex: 1, padding: 24, background: '#F8F6F3', minHeight: 'calc(100vh - 56px)', overflowX: 'auto' }}>
       <div style={{ marginBottom: 20 }}>
@@ -15,10 +18,10 @@ export default function AnalisisFlujo() {
       </div>
 
       <div className="card" style={{ padding: 0, marginBottom: 20 }}>
-        <FlowTable data={equipos} />
+        <FlowTable data={loading ? mockEquipos : flowData} />
       </div>
 
-      <PerformanceChart data={performanceData} />
+      <PerformanceChart data={loading || performanceData.length === 0 ? mockPerformance : performanceData} />
     </main>
   );
 }
