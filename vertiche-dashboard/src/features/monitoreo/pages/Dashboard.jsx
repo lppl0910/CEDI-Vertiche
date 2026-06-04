@@ -44,6 +44,11 @@ import { useRendimientoEquipos } from "../hooks/useRendimientoEquipos";
 import { useEnvioKPIs } from "../hooks/useEnvioKPIs";
 import { useBacklogEnvio } from "../hooks/useBacklogEnvio";
 import { useOrdenesActivas } from "../hooks/useOrdenesActivas";
+import { useQAKPIs } from "../hooks/useQAKPIs";
+import { useRegistroKPIs } from "../hooks/useRegistroKPIs";
+import { useSorterKPIs } from "../hooks/useSorterKPIs";
+import { useBahiasKPIs } from "../hooks/useBahiasKPIs";
+import { useAuditoriaKPIs } from "../hooks/useAuditoriaKPIs";
 
 const STATUS_COLOR = {
   success: "#6E8B6B",
@@ -273,6 +278,7 @@ function KpiStrip({ primaryKpi, secondaryKpis }) {
     </div>
   );
 }
+
 
 function AlertaBannerPreregistro({ ordenesIncompletas }) {
   const alertas = useMemo(() => {
@@ -2036,7 +2042,14 @@ function OrdenesActivasTable() {
   );
 }
 
-function buildStageData(preregistroKPIs, envioKPIs, envioPorTurno, backlogData, backlogLoading) {
+function buildStageData(
+  preregistroKPIs, envioKPIs, envioPorTurno, backlogData, backlogLoading,
+  qaKPIs, erroresPPData, prepacksQA,
+  registroKPIs, registroEquipos, registroBacklog,
+  sorterKPIs, sorterPorBahia,
+  bahiasKPIs, bahiasOcupacionData, bahiasTendencia,
+  auditoriaKPIs,
+) {
   // shared table styles
   const tableStyle = {
     width: "100%",
@@ -2075,61 +2088,82 @@ function buildStageData(preregistroKPIs, envioKPIs, envioPorTurno, backlogData, 
   const provConIncidencias = preregistroKPIs.proveedores_con_incidencias;
   const semanaEnCurso = preregistroKPIs.semana_en_curso;
   // ---- QA ----
-  const totalPrepacks = 1640;
-  const totalErroresQA = erroresPPPorProveedor.reduce(
-    (s, d) => s + d.errores,
-    0,
-  );
+  const erroresParaQA = erroresPPData.length > 0 ? erroresPPData : erroresPPPorProveedor;
+  const totalPrepacks = qaKPIs.total_prepacks ?? 1640;
+  const totalErroresQA = erroresParaQA.reduce((s, d) => s + d.errores, 0);
   const tasaAceptacionQA = formatNumber(
-    ((totalPrepacks - totalErroresQA) / totalPrepacks) * 100,
+    qaKPIs.tasa_aceptacion ?? ((totalPrepacks - totalErroresQA) / totalPrepacks) * 100,
     1,
   );
-  const totalRetornados = prepacksRetornadosQA.length;
-  const proveedoresConRechazo = erroresPPPorProveedor.filter(
-    (d) => d.errores >= 20,
-  ).length;
+  const totalRetornados = qaKPIs.total_retornados ?? prepacksRetornadosQA.length;
+  const proveedoresConRechazo =
+    qaKPIs.proveedores_con_rechazo ??
+    erroresPPPorProveedor.filter((d) => d.errores >= 20).length;
   const motivoPrincipal = motivosRechazoQA.reduce((mx, d) =>
     d.cantidad > mx.cantidad ? d : mx,
   ).motivo;
-  const paretoQA = calcularPareto(erroresPPPorProveedor, "errores");
+  const paretoQA = calcularPareto(erroresParaQA, "errores");
 
   // ---- REGISTRO ----
-  const prepsCrossDock = distribucionAlmacen.find(
-    (d) => d.almacen === "Cross-dock",
-  ).prepacks;
-  const tiempoPromedioReg = formatNumber(
-    average(tendenciaTiemposRegistro.map((d) => d.tiempoPromedio)),
-    1,
-  );
-  const ppEnBacklog = backlogPPs.filter((d) => d.minutosEnSistema > 10).length;
-  const mejorEquipo = rankingEquiposRegistro.reduce((best, e) =>
-    parseInt(e.tiempoPromedio) < parseInt(best.tiempoPromedio) ? e : best,
-  );
+  const rankingParaRegistro = registroEquipos.length > 0 ? registroEquipos : rankingEquiposRegistro;
+  const backlogParaRegistro = registroBacklog.length > 0 ? registroBacklog : backlogPPs;
+  const prepsCrossDock =
+    registroKPIs.prepacks_en_registro ??
+    distribucionAlmacen.find((d) => d.almacen === "Cross-dock").prepacks;
+  const tiempoPromedioReg =
+    registroKPIs.tiempo_promedio ??
+    formatNumber(average(tendenciaTiemposRegistro.map((d) => d.tiempoPromedio)), 1);
+  const ppEnBacklog = registroKPIs.backlog_count ?? backlogPPs.filter((d) => d.minutosEnSistema > 10).length;
+  const mejorEquipo =
+    rankingParaRegistro.length > 0
+      ? rankingParaRegistro[rankingParaRegistro.length - 1]
+      : rankingEquiposRegistro[0];
 
   // ---- SORTER ----
-  const totalPaquetesSorter = paquetesPorBahia.reduce(
-    (s, d) => s + d.paquetes,
-    0,
-  );
+  const paquetesPorBahiaData = sorterPorBahia.length > 0 ? sorterPorBahia : paquetesPorBahia;
+  const totalPaquetesSorter =
+    sorterKPIs.total_clasificados ??
+    paquetesPorBahiaData.reduce((s, d) => s + d.paquetes, 0);
   const totalIncorrectos = paquetesIncorrectos.length;
   const tiempoActualSorter =
+    sorterKPIs.tiempo_promedio_seg ??
     tiempoSorterTendencia[tiempoSorterTendencia.length - 1].segundos;
-  const bahiaMasCargadaSorter = paquetesPorBahia.reduce((mx, d) =>
-    d.paquetes > mx.paquetes ? d : mx,
-  );
+  const bahiaMasCargadaSorter = sorterKPIs.bahia_mas_cargada
+    ? { bahia: sorterKPIs.bahia_mas_cargada, paquetes: sorterKPIs.bahia_mas_cargada_paquetes }
+    : paquetesPorBahiaData.reduce((mx, d) => (d.paquetes > mx.paquetes ? d : mx));
 
   // ---- BAHÍAS ----
-  const ocupaciones = capacidadBahias.map(
-    (d) => (d.procesando / d.capacidad) * 100,
+  const capacidadBahiasData = bahiasOcupacionData.length > 0 ? bahiasOcupacionData : capacidadBahias;
+  const ocupaciones = capacidadBahiasData.map((d) => (d.procesando / d.capacidad) * 100);
+  const ocupacionPromedio = formatNumber(
+    bahiasKPIs.ocupacion_promedio ?? average(ocupaciones),
+    1,
   );
-  const ocupacionPromedio = formatNumber(average(ocupaciones), 1);
-  const bahiasSaturadas = capacidadBahias.filter(
-    (d) => (d.procesando / d.capacidad) * 100 > 90,
-  ).length;
-  const capacidadTotal = capacidadBahias.reduce((s, d) => s + d.capacidad, 0);
-  const bahiaMasDescargada = capacidadBahias.reduce((mn, d) =>
-    d.procesando / d.capacidad < mn.procesando / mn.capacidad ? d : mn,
-  );
+  const bahiasSaturadas =
+    bahiasKPIs.bahias_saturadas ??
+    capacidadBahiasData.filter((d) => (d.procesando / d.capacidad) * 100 > 90).length;
+  const capacidadTotal =
+    bahiasKPIs.capacidad_total ??
+    capacidadBahiasData.reduce((s, d) => s + d.capacidad, 0);
+  const bahiaMasDescargada = bahiasKPIs.bahia_mas_descargada
+    ? { bahia: bahiasKPIs.bahia_mas_descargada, procesando: bahiasKPIs.bahia_mas_descargada_procesando }
+    : capacidadBahiasData.reduce((mn, d) =>
+        d.procesando / d.capacidad < mn.procesando / mn.capacidad ? d : mn,
+      );
+  const tendenciaParaBahias = bahiasTendencia.length > 0 ? bahiasTendencia : tendenciaOcupacionBahias;
+  const bahiasParaGrid =
+    bahiasOcupacionData.length > 0
+      ? bahiasOcupacionData.map((d) => ({
+          id: d.bahia,
+          porcentaje: Math.round((d.procesando / d.capacidad) * 100),
+          status:
+            d.procesando / d.capacidad > 0.9
+              ? "error"
+              : d.procesando / d.capacidad > 0.75
+              ? "warning"
+              : "success",
+        }))
+      : bahiasGeneral.bahias;
   const bahiaLineKeys = ["B01", "B02", "B03", "B04", "B05"];
   const bahiaLineColors = {
     B01: "#6E8B6B",
@@ -2140,17 +2174,17 @@ function buildStageData(preregistroKPIs, envioKPIs, envioPorTurno, backlogData, 
   };
 
   // ---- AUDITORÍA ----
+  const cajasAuditadasHoy =
+    auditoriaKPIs.cajas_auditadas_hoy ??
+    distribucionTiemposAuditoria.reduce((s, d) => s + d.cajas, 0);
+  const cajasConError = auditoriaKPIs.cajas_con_error ?? cajasIncorrectas.length;
   const tiempoPromedioAudit = formatNumber(
-    average(cajasIncorrectas.map((d) => d.minutosAuditoria)),
+    auditoriaKPIs.tiempo_promedio ?? average(cajasIncorrectas.map((d) => d.minutosAuditoria)),
     1,
   );
-  const cajasConError = cajasIncorrectas.length;
-  const cajasAuditadasHoy = distribucionTiemposAuditoria.reduce(
-    (s, d) => s + d.cajas,
-    0,
-  );
   const tasaExitoAudit = formatNumber(
-    ((cajasAuditadasHoy - cajasConError) / cajasAuditadasHoy) * 100,
+    auditoriaKPIs.tasa_exito ??
+      ((cajasAuditadasHoy - cajasConError) / cajasAuditadasHoy) * 100,
     1,
   );
 
@@ -2287,11 +2321,11 @@ function buildStageData(preregistroKPIs, envioKPIs, envioPorTurno, backlogData, 
               </tr>
             </thead>
             <tbody>
-              {prepacksRetornadosQA.map((item) => (
+              {(prepacksQA.length > 0 ? prepacksQA : prepacksRetornadosQA).map((item) => (
                 <tr key={item.pp}>
                   <td style={{ ...tdStyle, fontWeight: 600 }}>{item.pp}</td>
                   <td style={tdStyle}>{item.proveedor}</td>
-                  <td style={tdStyle}>{item.motivo}</td>
+                  <td style={tdStyle}>{item.motivo ?? "—"}</td>
                   <td style={tdStyle}>{item.equipo}</td>
                   <td
                     style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}
@@ -2420,41 +2454,42 @@ function buildStageData(preregistroKPIs, envioKPIs, envioPorTurno, backlogData, 
             </div>
           </div>
         </ChartCard>,
-
-        /* ── Ranking con ppMin y barra de rendimiento ── */
-        <ChartCard key="reg-equipos" title="Ranking de equipos por tiempo de registro">
-          <div style={{ display: "grid", gap: 10 }}>
-            {rankingEquiposRegistro.map((item, i) => (
-              <div key={item.equipo} style={{
-                border: `1px solid ${STATUS_COLOR[item.status]}44`,
-                borderRadius: 8, padding: "12px 14px", background: STATUS_BG[item.status],
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{
-                      width: 24, height: 24, borderRadius: "50%", background: STATUS_COLOR[item.status],
-                      color: "#fff", fontSize: 11, fontWeight: 700,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>{i + 1}</span>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: "#1F1F1F" }}>{item.equipo}</div>
-                      <div style={{ fontSize: 11, color: "#6B6B6B" }}>{item.ppCrossDock} pp en cross-dock</div>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: STATUS_COLOR[item.status] }}>{item.tiempoPromedio}</div>
-                    <div style={{ fontSize: 11, color: "#6B6B6B" }}>{item.ppMin} pp/min</div>
-                  </div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ flex: 1, height: 6, borderRadius: 6, background: "#E7E2DC", overflow: "hidden" }}>
-                    <div style={{ width: `${Math.min(100, (item.tiempoMin / 15) * 100)}%`, height: "100%", background: STATUS_COLOR[item.status], borderRadius: 6 }} />
-                  </div>
-                  <span style={{ fontSize: 10, color: "#6B6B6B", whiteSpace: "nowrap" }}>target 10 min</span>
-                </div>
-              </div>
-            ))}
-          </div>
+        <ChartCard key="reg-equipos" title="Ranking de equipos">
+          <table style={tableStyle}>
+            <thead>
+              <tr>
+                <th style={{ ...thStyle, width: 32 }}>#</th>
+                <th style={thStyle}>Equipo</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>
+                  Tiempo Promedio
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rankingParaRegistro.map((item, i) => (
+                <tr
+                  key={item.equipo}
+                  style={{ background: STATUS_BG[item.status] }}
+                >
+                  <td style={{ ...tdStyle, color: "#6B6B6B" }}>{i + 1}</td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      fontWeight: 600,
+                      color: STATUS_COLOR[item.status],
+                    }}
+                  >
+                    {item.equipo}
+                  </td>
+                  <td
+                    style={{ ...tdStyle, textAlign: "right", fontWeight: 700 }}
+                  >
+                    {item.tiempoPromedio}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </ChartCard>,
 
         /* ── Backlog con alertas precisas, etapa y semáforo ── */
@@ -2472,27 +2507,33 @@ function buildStageData(preregistroKPIs, envioKPIs, envioPorTurno, backlogData, 
               </tr>
             </thead>
             <tbody>
-              {backlogPPs.map((item) => {
-                const nivel = item.minutosEnSistema >= 20 ? "error" : item.minutosEnSistema >= 10 ? "warning" : null;
-                return (
-                  <tr key={item.pp} style={{ background: nivel ? STATUS_BG[nivel] : "transparent" }}>
-                    <td style={{ ...tdStyle, fontWeight: 600 }}>{item.pp}</td>
-                    <td style={tdStyle}>{item.proveedor}</td>
-                    <td style={tdStyle}>{item.equipo}</td>
-                    <td style={tdStyle}>
-                      <span style={{ fontSize: 11, background: "#F0EDE8", borderRadius: 4, padding: "2px 6px" }}>
-                        {item.etapa}
-                      </span>
-                    </td>
-                    <td style={{ ...tdStyle, textAlign: "right", fontWeight: 700, color: nivel ? STATUS_COLOR[nivel] : "#1F1F1F" }}>
-                      {item.minutosEnSistema} min
-                    </td>
-                    <td style={{ ...tdStyle, textAlign: "center" }}>
-                      {nivel === "error" ? "🔴" : nivel === "warning" ? "⚠️" : <span style={{ color: "#6B6B6B" }}>—</span>}
-                    </td>
-                  </tr>
-                );
-              })}
+              {backlogParaRegistro.map((item) => (
+                <tr
+                  key={item.pp}
+                  style={{
+                    background: getBacklogRowBg(item.minutosEnSistema, 10, 20),
+                  }}
+                >
+                  <td style={{ ...tdStyle, fontWeight: 600 }}>{item.pp}</td>
+                  <td style={tdStyle}>{item.proveedor}</td>
+                  <td style={tdStyle}>{item.equipo}</td>
+                  <td
+                    style={{
+                      ...tdStyle,
+                      textAlign: "right",
+                      fontWeight: 700,
+                      color:
+                        item.minutosEnSistema >= 20
+                          ? STATUS_COLOR.error
+                          : item.minutosEnSistema >= 10
+                            ? STATUS_COLOR.warning
+                            : "#1F1F1F",
+                    }}
+                  >
+                    {item.minutosEnSistema}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table></div>
         </ChartCard>,
@@ -2593,7 +2634,7 @@ function buildStageData(preregistroKPIs, envioKPIs, envioPorTurno, backlogData, 
         <ChartCard key="sorter-dist" title="Distribución de paquetes en bahías">
           <ResponsiveContainer width="100%" height={240}>
             <BarChart
-              data={paquetesPorBahia}
+              data={paquetesPorBahiaData}
               margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
             >
               <CartesianGrid {...gridStyle} />
@@ -2721,14 +2762,14 @@ function buildStageData(preregistroKPIs, envioKPIs, envioPorTurno, backlogData, 
         },
       ],
       charts: [
-        <BayGrid key="bay-grid" bahias={bahiasGeneral.bahias} />,
+        <BayGrid key="bay-grid" bahias={bahiasParaGrid} />,
         <ChartCard
           key="bay-tendencia"
           title="Tendencia de ocupación por bahía (B01–B05)"
         >
           <ResponsiveContainer width="100%" height={240}>
             <LineChart
-              data={tendenciaOcupacionBahias}
+              data={tendenciaParaBahias}
               margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
             >
               <CartesianGrid {...gridStyle} />
@@ -2755,7 +2796,7 @@ function buildStageData(preregistroKPIs, envioKPIs, envioPorTurno, backlogData, 
         >
           <ResponsiveContainer width="100%" height={240}>
             <BarChart
-              data={capacidadBahias}
+              data={capacidadBahiasData}
               margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
             >
               <CartesianGrid {...gridStyle} />
@@ -2987,10 +3028,29 @@ export default function Dashboard() {
   const { data: ordenesIncompletas } = useOrdenesIncompletas();
   const { kpis: envioKPIs, porTurno: envioPorTurno } = useEnvioKPIs();
   const { data: backlogData, loading: backlogLoading } = useBacklogEnvio();
+  const { kpis: qaKPIs, erroresPorProveedor: erroresPPData, prepacksActivos: prepacksQA } = useQAKPIs();
+  const { kpis: registroKPIs, equipos: registroEquipos, backlog: registroBacklog } = useRegistroKPIs();
+  const { kpis: sorterKPIs, paquetesPorBahia: sorterPorBahia } = useSorterKPIs();
+  const { kpis: bahiasKPIs, ocupacion: bahiasOcupacionData, tendencia: bahiasTendencia } = useBahiasKPIs();
+  const { kpis: auditoriaKPIs } = useAuditoriaKPIs();
   const [activeStage, setActiveStage] = useState(getCurrentStageId);
   const stageData = useMemo(
-    () => buildStageData(preregistroKPIs, envioKPIs, envioPorTurno, backlogData, backlogLoading),
-    [preregistroKPIs, envioKPIs, envioPorTurno, backlogData, backlogLoading],
+    () => buildStageData(
+      preregistroKPIs, envioKPIs, envioPorTurno, backlogData, backlogLoading,
+      qaKPIs, erroresPPData, prepacksQA,
+      registroKPIs, registroEquipos, registroBacklog,
+      sorterKPIs, sorterPorBahia,
+      bahiasKPIs, bahiasOcupacionData, bahiasTendencia,
+      auditoriaKPIs,
+    ),
+    [
+      preregistroKPIs, envioKPIs, envioPorTurno, backlogData, backlogLoading,
+      qaKPIs, erroresPPData, prepacksQA,
+      registroKPIs, registroEquipos, registroBacklog,
+      sorterKPIs, sorterPorBahia,
+      bahiasKPIs, bahiasOcupacionData, bahiasTendencia,
+      auditoriaKPIs,
+    ],
   );
   const currentStage = stageData[activeStage] || stageData.preregistro;
 

@@ -45,26 +45,19 @@ interface RendimientoAggregate {
 export const getKPIsPreregistro = async (req: Request, res: Response): Promise<void> => {
   try {
     const ahora = new Date()
-    const inicioSemana = new Date(ahora)
-    inicioSemana.setDate(ahora.getDate() - ahora.getDay() + 1)
-    inicioSemana.setHours(0, 0, 0, 0)
-    const finSemana = new Date(inicioSemana)
-    finSemana.setDate(inicioSemana.getDate() + 7)
-
-    console.log('Inicio semana:', inicioSemana)
-    console.log('Fin semana:', finSemana)
-    console.log('Total docs en colección:', await Orden.countDocuments({}))
+    const inicioHoy = new Date(ahora)
+    inicioHoy.setHours(0, 0, 0, 0)
 
     const semanaEnCurso = `S${Math.ceil(ahora.getDate() / 7)}`
 
-    const filtroSemana = {
-      fecha_creacion: { $gte: inicioSemana, $lt: finSemana },
+    const filtroHoy = {
+      fecha_creacion: { $gte: inicioHoy },
     }
 
-    const ordenesRecibidas = await Orden.countDocuments(filtroSemana)
+    const ordenesRecibidas = await Orden.countDocuments(filtroHoy)
 
     const ordenesIncompletas = await Orden.countDocuments({
-      ...filtroSemana,
+      ...filtroHoy,
       $expr: { $lt: [{ $size: '$prepacks' }, '$total_prepacks'] },
     })
 
@@ -74,7 +67,7 @@ export const getKPIsPreregistro = async (req: Request, res: Response): Promise<v
         : '0'
 
     const proveedoresConIncidencias = await Orden.distinct('id_proveedor', {
-      ...filtroSemana,
+      ...filtroHoy,
       $expr: { $lt: [{ $size: '$prepacks' }, '$total_prepacks'] },
     })
 
