@@ -7,8 +7,8 @@
     Actualizado por: Isaac Calderon Laflor (#185 — simulación día completo)
 */
 
-import { RfidEventModel, OrdenModel } from '../models/PrepackModel';
-import type { Prepack, Etapa } from '../types/rfid.types';
+import { RfidEventModel, OrdenModel } from '../models/PrepackModel.js';
+import type { Prepack, Etapa } from '../types/rfid.types.js';
 import mongoose from 'mongoose';
 
 /*

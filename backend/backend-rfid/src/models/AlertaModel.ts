@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import type { Alerta } from '../types/alertas.types';
+import type { Alerta } from '../types/alertas.types.js';
 
 export interface AlertaDocument extends Alerta, Document {}
 

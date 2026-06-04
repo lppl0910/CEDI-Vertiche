@@ -4,7 +4,7 @@
  * — Si no: usa array en memoria como fallback.
  * Guardar logs en la base de datos — Isaac Calderon Laflor (#187)
  */
-import type { Alerta } from '../types/alertas.types';
+import type { Alerta } from '../types/alertas.types.js';
 import { isDBConnected } from '../config/database.js';
 import { AlertaModel } from '../models/AlertaModel.js';
 
