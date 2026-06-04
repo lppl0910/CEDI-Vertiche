@@ -43,9 +43,13 @@ export const io = new Server(httpServer, {
     cors: { origin: process.env.FRONTEND_URL ?? 'http://localhost:5173' },
 });
 
+const allowedOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim())
+    : ['http://localhost:5173'];
+
 app.use(helmet());
 app.use(cors(
-    { origin: process.env.FRONTEND_URL ?? 'http://localhost:5173' }
+    { origin: allowedOrigins }
 ));
 app.use(express.json());
 app.use(limiter); // Aplicar limitador de velocidad a todas las rutas
