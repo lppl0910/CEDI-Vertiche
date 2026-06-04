@@ -21,7 +21,7 @@ export function IngresosUnidadesChart({ lineData }) {
         <LegendDot color={C.black} />Ingresos &nbsp;
         <LegendDot color={C.taupe} />Unidades /10
       </div>
-      <ResponsiveContainer width="100%" height={130}>
+      <ResponsiveContainer width="100%" height={130} role="img" aria-label="Gráfica de líneas con doble eje: ingresos acumulados en miles de pesos y unidades vendidas por período">
         <LineChart data={lineData} margin={{ top: 2, right: 8, bottom: 0, left: -10 }}>
           <CartesianGrid strokeDasharray="3 3" {...grid} />
           <XAxis dataKey="label" tick={ax} axisLine={false} tickLine={false} />

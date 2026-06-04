@@ -238,7 +238,7 @@
 }
 
 .chat-fab__suggestion-btn {
-  background: #D9BFA0;   /* ← antes #C8A882 */
+  background: #D9BFA0;
   border: 1px solid #C8A882;
   border-radius: 8px;
   padding: 5px 10px;
@@ -251,7 +251,7 @@
 }
 
 .chat-fab__suggestion-btn:hover {
-  background: #C8A882; 
+  background: #C8A882;
 }
 
 /* ── Loading dots ── */
@@ -277,3 +277,91 @@
   0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
   40%           { transform: scale(1);   opacity: 1; }
 }
+
+/* ── Thinking block ─────────────────────────────────────────────────── */
+
+.chat-fab__thinking {
+  width: 100%;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--c-bg);
+  margin-bottom: 4px;
+}
+
+.chat-fab__thinking-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--c-muted);
+  text-align: left;
+  letter-spacing: 0.3px;
+  transition: background 0.1s;
+}
+
+.chat-fab__thinking-toggle:hover {
+  background: var(--c-border);
+}
+
+.chat-fab__thinking-icon {
+  display: flex;
+  align-items: center;
+  color: var(--c-muted);
+  flex-shrink: 0;
+}
+
+.chat-fab__thinking-label {
+  flex: 1;
+}
+
+.chat-fab__thinking-chevron {
+  display: flex;
+  align-items: center;
+  color: var(--c-muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chat-fab__thinking-chevron--open {
+  transform: rotate(180deg);
+}
+
+.chat-fab__thinking-body {
+  padding: 8px 10px;
+  font-size: 10px;
+  line-height: 1.55;
+  color: var(--c-muted);
+  border-top: 1px solid var(--c-border);
+  max-height: 140px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font);
+  animation: chatFadeIn 0.15s ease;
+}
+
+/* Puntos animados dentro del thinking live */
+.chat-fab__thinking-dots {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.chat-fab__thinking-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--c-muted);
+  animation: loadingDot 1.2s infinite ease-in-out;
+}
+
+.chat-fab__thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.chat-fab__thinking-dots span:nth-child(3) { animation-delay: 0.4s; }

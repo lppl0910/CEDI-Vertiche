@@ -1,15 +1,7 @@
 import { Request, Response } from "express";
 import AbstractController from "./AbstractController";
 import db from "../models";
-const { fn, col, literal } = require("sequelize");
-
-const diasMap: Record<string, number> = {
-  "7d": 7,
-  "30d": 30,
-  "90d": 90,
-  "1y": 365,
-};
-const fechaBase = "2025-12-31";
+const { fn, col } = require("sequelize");
 
 export default class TendenciasController extends AbstractController {
   private static _instance: TendenciasController;
@@ -25,29 +17,12 @@ export default class TendenciasController extends AbstractController {
     this.router.get("/festivos",    this.getFestivos.bind(this));
   }
 
-  // ── Helper ───────────────────────────────────────────────────────────
-  private buildWhere(req: Request) {
-    const zona      = req.query.zona      as string;
-    const temporada = req.query.temporada as string;
-
-    const tiendaWhere   = zona      && zona      !== "all" ? { region: zona } : undefined;
-    const productoWhere = temporada && temporada !== "all" ? { temporada }    : undefined;
-    const tiempoWhere   = (dias: number) =>
-      literal(`Dim_Tiempo.fecha >= DATE_SUB('${fechaBase}', INTERVAL ${dias} DAY)`);
-
-    return { tiendaWhere, productoWhere, tiempoWhere };
-  }
-
   // ── GET /tendencias/yoy ──────────────────────────────────────────────
   private async getYoY(req: Request, res: Response) {
     try {
-      const anioActual   = 2025;
+      const anioActual   = parseInt(AbstractController.fechaBase.slice(0, 4));
       const anioAnterior = anioActual - 1;
-      const zona         = req.query.zona      as string;
-      const temporada    = req.query.temporada as string;
-
-      const tiendaWhere   = zona      && zona      !== "all" ? { region: zona } : undefined;
-      const productoWhere = temporada && temporada !== "all" ? { temporada }    : undefined;
+      const { tiendaWhere, productoWhere } = this.buildWhere(req);
 
       const query = async (anio: number) =>
         db.Fact_Ventas.findAll({
@@ -56,8 +31,8 @@ export default class TendenciasController extends AbstractController {
             [fn("SUM", col("precio_final")), "ingresos"],
           ],
           include: [
-            { model: db.Dim_Tiempo, attributes: [], where: { anio } },
-            { model: db.Dim_Tienda, attributes: [], where: tiendaWhere, required: !!tiendaWhere },
+            { model: db.Dim_Tiempo,   attributes: [], where: { anio } },
+            { model: db.Dim_Tienda,   attributes: [], where: tiendaWhere,   required: !!tiendaWhere },
             ...(productoWhere
               ? [{ model: db.Dim_Producto, attributes: [], where: productoWhere, required: true }]
               : []),
@@ -67,8 +42,8 @@ export default class TendenciasController extends AbstractController {
         });
 
       const meses = [
-        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+        "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+        "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre",
       ];
 
       const toArray = (rows: any[]) =>
@@ -86,17 +61,14 @@ export default class TendenciasController extends AbstractController {
         anterior: toArray(anterior),
       });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
+      this.handleError(res, err, "Error al obtener comparativa YoY");
     }
   }
 
   // ── GET /tendencias/performance ──────────────────────────────────────
   private async getPerformance(req: Request, res: Response) {
     try {
-      const period = (req.query.period as string) || "30d";
-      const dias   = diasMap[period] ?? 30;
-      const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
+      const { tiendaWhere, productoWhere, tiempoWhere, dias, period } = this.buildWhere(req);
 
       let groupBy: string;
       if (period === "7d")      groupBy = "dia_semana";
@@ -112,7 +84,7 @@ export default class TendenciasController extends AbstractController {
         attributes: [
           [col(`Dim_Tiempo.${groupBy}`), "label"],
           [fn("SUM", col("Fact_Ventas.precio_final")), "revenue"],
-          [fn("SUM", col("Fact_Ventas.cantidad")), "units"],
+          [fn("SUM", col("Fact_Ventas.cantidad")),     "units"],
         ],
         include: [
           { model: db.Dim_Tiempo,   attributes: [], where: tiempoWhere(dias), required: true },
@@ -131,9 +103,9 @@ export default class TendenciasController extends AbstractController {
 
       const ventasKpi = await db.Fact_Ventas.findAll({
         attributes: [
-          [fn("SUM", col("precio_final")), "ingresos_totales"],
-          [fn("COUNT", fn("DISTINCT", col("id_nota"))), "num_folios"],
-          [fn("SUM", col("cantidad")), "unidades_vendidas"],
+          [fn("SUM", col("precio_final")),                          "ingresos_totales"],
+          [fn("COUNT", fn("DISTINCT", col("id_nota"))),             "num_folios"],
+          [fn("SUM", col("cantidad")),                              "unidades_vendidas"],
         ],
         include: [
           { model: db.Dim_Tiempo,   attributes: [], where: tiempoWhere(dias), required: true },
@@ -154,14 +126,13 @@ export default class TendenciasController extends AbstractController {
         revenue: serieOrdenada.map((r: any) => Math.round(parseFloat(r.revenue) / 1000)),
         units:   serieOrdenada.map((r: any) => parseInt(r.units)),
         kpis: [
-          { label: "Ingresos Totales",      value: `$${(ingresos / 1000000).toFixed(2)}M`, delta: "", pos: true, cl: "c1" },
+          { label: "Ingresos Totales",        value: `$${(ingresos / 1000000).toFixed(2)}M`, delta: "", pos: true, cl: "c1" },
           { label: "Ticket Promedio / Folio", value: `$${Math.round(ingresos / folios).toLocaleString("es-MX")}`, delta: "", pos: true, cl: "c2" },
-          { label: "Unidades Vendidas",     value: unidades.toLocaleString("es-MX"), delta: "", pos: true, cl: "c3" },
+          { label: "Unidades Vendidas",       value: unidades.toLocaleString("es-MX"), delta: "", pos: true, cl: "c3" },
         ],
       });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
+      this.handleError(res, err, "Error al obtener performance");
     }
   }
 
@@ -189,28 +160,25 @@ export default class TendenciasController extends AbstractController {
         rows.map((r: any) => ({ season: r.season, value: Math.round(parseFloat(r.value) / 1000) }))
       );
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
+      this.handleError(res, err, "Error al obtener datos trimestrales");
     }
   }
 
   // ── GET /tendencias/festivos ─────────────────────────────────────────
   private async getFestivos(req: Request, res: Response) {
     try {
-      const period = (req.query.period as string) || "30d";
-      const dias   = diasMap[period] ?? 30;
-      const { tiendaWhere, productoWhere, tiempoWhere } = this.buildWhere(req);
+      const { tiendaWhere, productoWhere, tiempoWhere, dias } = this.buildWhere(req);
 
       const rows = await db.Fact_Ventas.findAll({
         attributes: [
-          [col("Dim_Tiempo.es_festivo"), "es_festivo"],
-          [fn("SUM", col("Fact_Ventas.precio_final")), "ingresos_total"],
-          [fn("AVG", col("Fact_Ventas.precio_final")), "ticket_prom"],
-          [fn("COUNT", fn("DISTINCT", col("Dim_Tiempo.id_tiempo"))), "num_dias"],
+          [col("Dim_Tiempo.es_festivo"),                            "es_festivo"],
+          [fn("SUM", col("Fact_Ventas.precio_final")),              "ingresos_total"],
+          [fn("AVG", col("Fact_Ventas.precio_final")),              "ticket_prom"],
+          [fn("COUNT", fn("DISTINCT", col("Dim_Tiempo.id_tiempo"))),"num_dias"],
         ],
         include: [
-          { model: db.Dim_Tiempo, attributes: [], where: tiempoWhere(dias) },
-          { model: db.Dim_Tienda, attributes: [], where: tiendaWhere },
+          { model: db.Dim_Tiempo,   attributes: [], where: tiempoWhere(dias) },
+          { model: db.Dim_Tienda,   attributes: [], where: tiendaWhere },
           ...(productoWhere
             ? [{ model: db.Dim_Producto, attributes: [], where: productoWhere }]
             : []),
@@ -234,8 +202,7 @@ export default class TendenciasController extends AbstractController {
         { label: "Ticket prom. festivo",  val: `$${ticketFest.toLocaleString("es-MX")}`, color: "#A48F7A", sub: `vs $${ticketNorm.toLocaleString("es-MX")} días normales` },
       ]);
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: err });
+      this.handleError(res, err, "Error al obtener datos de festivos");
     }
   }
 }

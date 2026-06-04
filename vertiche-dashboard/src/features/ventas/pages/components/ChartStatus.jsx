@@ -13,7 +13,7 @@ export function ChartStatus({ type, message }) {
   const isError = type === 'error';
   return (
     <div className={`chart-status chart-status--${type}`}>
-      <span className="chart-status__icon">{isError ? '⚠️' : '📭'}</span>
+      <span className="chart-status__icon" aria-hidden="true">{isError ? '⚠️' : '📭'}</span>
       <p className="chart-status__title">
         {isError ? 'No se pudo cargar' : 'Sin datos disponibles'}
       </p>

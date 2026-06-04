@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
+import { ContextoFiltros } from "./Contexto";
 import { fetchTallas, fetchTemporadasCategoria, fetchTopProductos } from "../data/ventasApi";
 import { useVentasFetch } from "./useVentasFetch";
 import { useSectionStatus } from "../hooks/useSectionStatus.js";
@@ -7,7 +8,7 @@ import { SectionSep } from "./SectionSep";
 import { TwoCol } from "./TwoCol";
 import { TopProductosChart } from "./charts/TopProductosChart";
 import { ParetoSKUChart } from "./charts/ParetoSKUChart";
-import { VentasTemporadaChart } from "./charts/VentasTemporadaChart";
+import { VentasTemporadaCategoriaChart } from "./charts/VentasTemporadaCategoriaChart";
 import { UnidadesTallaChart } from "./charts/UnidadesTallaChart";
 import "./styles/SectionProductos.css";
 
@@ -50,8 +51,8 @@ function buildParetoData(products) {
  * @param {{ period: string, zona: string, temporada: string }} props.filters
  * @param {(status: string) => void} [props.onStatusChange]
  */
-export function SectionProductos({ filters, onStatusChange }) {
-  const { period, zona, temporada } = filters;
+export function SectionProductos({ onStatusChange }) {
+  const { period, zona, temporada } = useContext(ContextoFiltros);
 
   const topProductos = useVentasFetch(
     () => fetchTopProductos({ period, zona, temporada }),
@@ -107,7 +108,7 @@ export function SectionProductos({ filters, onStatusChange }) {
 
       <TwoCol>
         {render(seasonData, (data) => (
-          <VentasTemporadaChart
+          <VentasTemporadaCategoriaChart
             stackedData={data.stackedData}
             cats={data.cats}
             colors={data.colors}

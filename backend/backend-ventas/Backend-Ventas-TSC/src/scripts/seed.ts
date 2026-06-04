@@ -24,6 +24,37 @@ const CATEGORIAS = [
   'Conjuntos', 'Jeans', 'Pijamas', 'Abrigos y Ponchos', 'Faldas y Shorts',
 ];
 
+// ── CLASIFICACIÓN DE CATEGORÍAS ──────────────────────────────────────
+// Ropa abrigadora: pensada para el frío
+const CATEGORIAS_FRIO = new Set([
+  'Sudaderas y Suéteres',
+  'Chamarras y Chalecos',
+  'Abrigos y Ponchos',
+]);
+
+// Ropa de calor: prendas ligeras/cortas
+const CATEGORIAS_CALOR = new Set([
+  'Blusas',
+  'Playeras',
+  'Faldas y Shorts',
+]);
+
+// Estados con clima frío pronunciado (boost en invierno para ropa abrigadora)
+const ESTADOS_FRIO_INTENSO = new Set([
+  'Durango', 'Chihuahua', 'Sonora', 'Baja California', 'Zacatecas',
+]);
+
+// Estados con calor intenso (boost en verano para ropa de calor)
+const ESTADOS_CALOR_INTENSO = new Set([
+  'Baja California', 'Sonora', 'Coahuila', 'Sinaloa',
+]);
+
+// Estados del centro del país (ventas ~20% más altas)
+const ESTADOS_CENTRO = new Set([
+  'Ciudad de México', 'Estado de México', 'Morelos', 'Puebla',
+  'Tlaxcala', 'Hidalgo', 'Querétaro',
+]);
+
 const TALLAS_ADULTO = ['XCH', 'CH', 'M', 'G', 'XG', 'Unitalla'];
 const TALLAS_NUMERICAS = ['34', '36', '38', '40', '42'];
 
@@ -170,15 +201,110 @@ function esFestivo(mes: number, dia: number): boolean {
   return festivos.some(([m, d]) => m === mes && d === dia);
 }
 
-// Factor de ventas por mes (picos en Buen Fin y Navidad)
-function factorVentas(mes: number, dia: number): number {
+// ── FACTOR BASE DE VENTAS ─────────────────────────────────────────────
+// Incluye: picos comerciales + caída enero-febrero + estabilización abril
+function factorVentasBase(mes: number, dia: number): number {
+  // Picos comerciales especiales (se mantienen sobre cualquier otra lógica)
   if (mes === 11 && dia >= 15 && dia <= 20) return 3.5; // Buen Fin
   if (mes === 12) return 2.5;                            // Navidad
-  if (mes === 5 && dia >= 8 && dia <= 10) return 2.0;  // dia de las madres
-  if (mes === 1) return 0.6;                             // Liquidación
-  if (mes === 2) return 0.8;
-  if ([5, 6, 7].includes(mes)) return 1.3;               // Verano
+  if (mes === 5 && dia >= 8 && dia <= 10) return 2.0;  // Día de las madres
+
+  // Caída enero-febrero (~35% menos) con recuperación progresiva hacia abril
+  // Enero: factor 0.65 (caída del 35%)
+  if (mes === 1) return 0.65;
+  // Febrero: factor 0.65 (aún bajo)
+  if (mes === 2) return 0.65;
+  // Marzo: recuperación parcial ~80%
+  if (mes === 3) return 0.80;
+  // Abril: completamente estable en 1.0
+  if (mes === 4) return 1.0;
+
+  if ([5, 6, 7].includes(mes)) return 1.3;  // Verano
+  if (mes === 8) return 1.2;
   return 1.0;
+}
+
+// ── FACTOR ESTACIONAL POR CATEGORÍA ─────────────────────────────────
+// Devuelve un multiplicador según la categoría del producto y el mes de la venta.
+function factorCategoriaEstacional(categoria: string, mes: number, estado: string): number {
+  // Determinar la estación climática del mes
+  // Invierno: dic, ene, feb | Primavera: mar, abr, may | Verano: jun, jul, ago | Otoño: sep, oct, nov
+  const estacion = mesAEstacion(mes);
+
+  // ── Ropa abrigadora ──────────────────────────────────────────────
+  if (CATEGORIAS_FRIO.has(categoria)) {
+    // Base de invierno = 1.0; las demás estaciones son fracción de eso
+    let factor = 1.0;
+    if (estacion === 'Primavera') factor = 0.45;
+    else if (estacion === 'Verano') factor = 1 / 3;        // ~0.333
+    else if (estacion === 'Otoño') factor = 0.80;
+    // else Invierno → 1.0
+
+    // Boost en estados con invierno intenso (solo en invierno)
+    if (estacion === 'Invierno' && ESTADOS_FRIO_INTENSO.has(estado)) {
+      factor *= 1.40; // 40% extra en esos estados en invierno
+    }
+    return factor;
+  }
+
+  // ── Ropa de calor ────────────────────────────────────────────────
+  if (CATEGORIAS_CALOR.has(categoria)) {
+    // Base de verano = 1.0
+    let factor = 1.0;
+    if (estacion === 'Primavera') factor = 0.85;
+    else if (estacion === 'Otoño') factor = 0.40;
+    else if (estacion === 'Invierno') factor = 0.20;
+    // else Verano → 1.0
+
+    // Boost en estados con calor intenso (solo en verano)
+    if (estacion === 'Verano' && ESTADOS_CALOR_INTENSO.has(estado)) {
+      factor *= 1.35; // 35% extra en esos estados en verano
+    }
+    return factor;
+  }
+
+  // El resto de categorías no tiene ajuste estacional específico
+  return 1.0;
+}
+
+// Convierte mes numérico a estación climática (hemisferio norte / México)
+function mesAEstacion(mes: number): 'Invierno' | 'Primavera' | 'Verano' | 'Otoño' {
+  if (mes === 12 || mes === 1 || mes === 2) return 'Invierno';
+  if (mes >= 3 && mes <= 5) return 'Primavera';
+  if (mes >= 6 && mes <= 8) return 'Verano';
+  return 'Otoño'; // sep, oct, nov
+}
+
+// ── FACTOR FESTIVO ───────────────────────────────────────────────────
+// En días festivos se vende entre 1.5x y 2x más (variación aleatoria).
+// El precio también sube ~50% en días festivos para reflejar ticket más alto.
+function factorFestivo(mes: number, dia: number): number {
+  if (esFestivo(mes, dia)) {
+    // Variación entre 1.5 y 2.0
+    return 1.5 + Math.random() * 0.5;
+  }
+  return 1.0;
+}
+
+// Multiplicador del precio en días festivos (ticket ~50% más alto)
+function factorPrecioFestivo(mes: number, dia: number): number {
+  return esFestivo(mes, dia) ? 1.5 : 1.0;
+}
+
+// ── FACTOR CENTRO ────────────────────────────────────────────────────
+// Tiendas del centro del país venden ~20% más
+function factorCentro(estado: string): number {
+  return ESTADOS_CENTRO.has(estado) ? 1.20 : 1.0;
+}
+
+// ── FACTOR TOTAL DE VENTAS (cantidad de transacciones) ───────────────
+function factorVentasTotal(mes: number, dia: number, categoria: string, estado: string): number {
+  return (
+    factorVentasBase(mes, dia) *
+    factorCategoriaEstacional(categoria, mes, estado) *
+    factorFestivo(mes, dia) *
+    factorCentro(estado)
+  );
 }
 
 // ── TIENDAS ──────────────────────────────────────────────────────────
@@ -602,7 +728,7 @@ async function main() {
   // ── 4. FACT_VENTAS + FACT_INVENTARIO_TIENDA ──────────────────────
   console.log('⏳ Generando Fact_Ventas y Fact_Inventario_Tienda...');
 
-  const TOTAL_VENTAS_POR_ANIO = 10000;
+  const TOTAL_VENTAS_POR_ANIO = 100000;
   const ventasPorTiendaPorAnio = Math.ceil(TOTAL_VENTAS_POR_ANIO / TIENDAS.length);
 
   // Separar ids de tiempo por año
@@ -616,8 +742,12 @@ async function main() {
   let id_inventario = 1;
   let notaCounter  = 1;
 
-  // Mapa inventario: key = `${id_producto}-${id_tienda}-${id_tiempo_mes}` → cantidad_recibida acumulada
+  // Mapa inventario: key = `${id_producto}-${id_tienda}-${id_tiempo_mes}`
   const inventarioMap: Map<string, { recibida: number; vendida: number; id_tiempo: number }> = new Map();
+
+  // Construir índice de tiendas por id para acceso rápido al estado
+  const tiendaMap = new Map<string, typeof TIENDAS[0]>();
+  for (const t of TIENDAS) tiendaMap.set(t.id, t);
 
   for (const anio of [2024, 2025]) {
     const tiemposAnio = tiempoIdsPor[anio];
@@ -630,7 +760,6 @@ async function main() {
         const id_tiempo = pick(tiemposAnio);
         const mes       = Math.floor((id_tiempo % 10000) / 100);
         const dia       = id_tiempo % 100;
-        const factor    = factorVentas(mes, dia);
 
         // Elegir producto compatible con la temporada del mes
         const tempEsperada = TEMPORADA_MES[mes];
@@ -638,6 +767,16 @@ async function main() {
           Math.random() < 0.6 ? p.temporada === tempEsperada : true
         );
         const prod = pick(productosFiltrados);
+
+        // ── Calcular el factor de ventas combinado para este contexto ──
+        const factorTotal = factorVentasTotal(mes, dia, prod.categoria, tienda.estado);
+
+        // Usar el factor como probabilidad de aceptar esta venta.
+        // Normalizamos sobre un valor base de ~1.3 (factor típico sin ajustes).
+        // Si el factor es bajo (ropa de calor en invierno → 0.20), la mayoría
+        // de intentos se rechazan y se reintenta con otro producto/fecha.
+        const probabilidadAceptar = Math.min(factorTotal / 4.5, 1.0);
+        if (Math.random() > probabilidadAceptar) continue;
 
         // Verificar/crear inventario
         const mesKey    = `${anio}${String(mes).padStart(2,'0')}`;
@@ -656,19 +795,49 @@ async function main() {
         const stockDisponible = inv.recibida - inv.vendida;
         if (stockDisponible <= 0) continue;
 
-        // Generar venta
-        const cantidad   = Math.min(randInt(1, 3), stockDisponible);
+        // Cantidad base + boost de festivo en la cantidad
+        const esFest = esFestivo(mes, dia);
+        // En festivos se vende 1.5x–2x más (se refleja en mayor cantidad por ticket)
+        const cantidadBase = randInt(1, 3);
+        const cantidadFinal = esFest
+          ? Math.min(Math.round(cantidadBase * (1.5 + Math.random() * 0.5)), stockDisponible)
+          : Math.min(cantidadBase, stockDisponible);
+        if (cantidadFinal <= 0) continue;
+
+        // ── Precio: en festivos el ticket es ~50% más alto ──────────────
+        // Se implementa reduciendo el porcentaje de descuento en festivos
+        // (la gente paga más cerca/durante el festivo) y aplicando un
+        // multiplicador al precio_final para reflejar el ticket elevado.
         const esDescuento = Math.random() < 0.35 || mes === 1 || (mes === 11 && dia >= 15 && dia <= 20);
-        const descPct    = esDescuento ? randFloat(0.10, 0.50) : 0;
+        const descPct     = esDescuento ? randFloat(0.10, 0.50) : 0;
         const precio_original = prod.precio_lista;
-        const precio_final    = parseFloat((precio_original * (1 - descPct)).toFixed(2));
-        const id_nota    = `${tienda.id}-${anio}${String(notaCounter).padStart(7,'0')}`;
+
+        // En días festivos: precio final con el multiplicador 1.5
+        // pero sin superar precio_original (no subimos sobre precio lista).
+        // La interpretación es: en festivos se vende menos en descuento
+        // y el precio efectivo es más cercano al precio lista.
+        let precio_final: number;
+        if (esFest) {
+          // Ticket festivo: reducir descuento a la mitad y aplicar x1.5 al precio neto
+          const descPctFestivo = descPct * 0.33; // descuento mucho menor en festivos
+          const precioBase = parseFloat((precio_original * (1 - descPctFestivo)).toFixed(2));
+          // El ticket más alto se logra por la cantidad (ya aplicada arriba)
+          // y por un ligero sobreprecio de temporada (máx precio lista)
+          precio_final = Math.min(
+            parseFloat((precioBase * 1.15).toFixed(2)),
+            precio_original
+          );
+        } else {
+          precio_final = parseFloat((precio_original * (1 - descPct)).toFixed(2));
+        }
+
+        const id_nota = `${tienda.id}-${anio}${String(notaCounter).padStart(7,'0')}`;
 
         sqlLines.push(
-          `INSERT INTO Fact_Ventas (id_nota,id_producto,id_tienda,id_tiempo,precio_final,precio_original,cantidad,es_descuento) VALUES ('${id_nota}',${prod.id},'${tienda.id}',${id_tiempo},${precio_final},${precio_original},${cantidad},${esDescuento ? 1 : 0});`
+          `INSERT INTO Fact_Ventas (id_nota,id_producto,id_tienda,id_tiempo,precio_final,precio_original,cantidad,es_descuento) VALUES ('${id_nota}',${prod.id},'${tienda.id}',${id_tiempo},${precio_final},${precio_original},${cantidadFinal},${esDescuento ? 1 : 0});`
         );
 
-        inv.vendida += cantidad;
+        inv.vendida += cantidadFinal;
         id_venta++;
         notaCounter++;
         ventasGeneradas++;
@@ -677,9 +846,12 @@ async function main() {
   }
 
   // Generar inserts de inventario
-  for (const [, inv] of inventarioMap) {
+  for (const [key, inv] of inventarioMap) {
+    const parts   = key.split('-');
+    const prod_id = parts[0];
+    const tnd_id  = parts[1];
     sqlLines.push(
-      `INSERT INTO Fact_Inventario_Tienda (cantidad_recibida,id_producto,id_tiempo,id_tienda,cantidad_vendida) VALUES (${inv.recibida},${[...inventarioMap.entries()].find(([,v]) => v === inv)![0].split('-')[0]},${ inv.id_tiempo },'${[...inventarioMap.entries()].find(([,v]) => v === inv)![0].split('-')[1]}',${inv.vendida});`
+      `INSERT INTO Fact_Inventario_Tienda (cantidad_recibida,id_producto,id_tiempo,id_tienda,cantidad_vendida) VALUES (${inv.recibida},${prod_id},${inv.id_tiempo},'${tnd_id}',${inv.vendida});`
     );
     id_inventario++;
   }

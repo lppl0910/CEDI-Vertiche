@@ -16,20 +16,31 @@ export default class VentasController extends AbstractController {
     this.router.put("/:id", this.update.bind(this));
   }
 
-  // ── GET /ventas ──────────────────────────────────────────────────────
+  // ── GET /ventas?page=1&limit=50 ──────────────────────────────────────
   private async getAll(req: Request, res: Response) {
     try {
-      const ventas = await db.Fact_Ventas.findAll({
+      const page  = parseInt(req.query.page  as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+
+      const { count, rows } = await db.Fact_Ventas.findAndCountAll({
+        limit,
+        offset: (page - 1) * limit,
         include: [
           { model: db.Dim_Producto },
           { model: db.Dim_Tienda },
           { model: db.Dim_Tiempo },
         ],
       });
-      res.status(200).json(ventas);
+
+      res.status(200).json({
+        total:    count,
+        pagina:   page,
+        limite:   limit,
+        paginas:  Math.ceil(count / limit),
+        data:     rows,
+      });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: "Error al obtener ventas", error: err });
+      this.handleError(res, err, "Error al obtener ventas");
     }
   }
 
@@ -48,8 +59,7 @@ export default class VentasController extends AbstractController {
       }
       res.status(200).json(venta);
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: "Error al obtener venta", error: err });
+      this.handleError(res, err, "Error al obtener venta");
     }
   }
 
@@ -59,8 +69,7 @@ export default class VentasController extends AbstractController {
       const venta = await db.Fact_Ventas.create(req.body);
       res.status(201).json({ mensaje: "Venta creada exitosamente", data: venta });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: "Error al crear venta", error: err });
+      this.handleError(res, err, "Error al crear venta");
     }
   }
 
@@ -74,8 +83,7 @@ export default class VentasController extends AbstractController {
       await venta.update(req.body);
       res.status(200).json({ mensaje: "Venta actualizada exitosamente", data: venta });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensaje: "Error al actualizar venta", error: err });
+      this.handleError(res, err, "Error al actualizar venta");
     }
   }
 }

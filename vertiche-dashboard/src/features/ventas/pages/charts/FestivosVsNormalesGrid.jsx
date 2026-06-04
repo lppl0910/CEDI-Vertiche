@@ -8,6 +8,9 @@ import { ChartTitle } from '../ChartTitle';
  *
  * @param {{ label: string, val: string, color: string, sub: string }[]} data
  */
+
+const colors = ["#8C6726", "#111111", "#5E765B", "#7F6A57"];
+
 export function FestivosVsNormalesGrid({ data = [] }) {
   return (
     <Card>
@@ -19,7 +22,7 @@ export function FestivosVsNormalesGrid({ data = [] }) {
         {data.map((f, i) => (
           <div key={i} className="section-tendencias__festivo-card">
             <div className="section-tendencias__festivo-label">{f.label}</div>
-            <div className="section-tendencias__festivo-value" style={{ color: f.color }}>
+            <div className="section-tendencias__festivo-value" style={{ color: colors[i] }}>
               {f.val}
             </div>
             <div className="section-tendencias__festivo-sub">{f.sub}</div>

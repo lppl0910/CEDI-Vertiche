@@ -67,7 +67,7 @@ export async function fetchYoY(filters = {}) {
  * @param {{ zona?: string }} [filters={}]
  * @returns {Promise<Array<{ season: string, value: number }>>}
  */
-export async function fetchTrimestral(filters = {}) {
+export async function fetchTemporadas(filters = {}) {
   const { zona } = filters;
   return get(BASE_TENDENCIAS, 'trimestral', { zona });
 }

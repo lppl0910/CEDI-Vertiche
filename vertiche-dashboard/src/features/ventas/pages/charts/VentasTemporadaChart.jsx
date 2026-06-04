@@ -1,45 +1,35 @@
-import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar } from 'recharts';
-import { SEASON_DATA } from '../../data/ventasData';
+import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar, Cell } from 'recharts';
 import { Card } from '../Card';
 import { ChartTitle } from '../ChartTitle';
-import { LegendDot } from '../LegendDot';
-import { grid, ax } from '../CONSTANTES';
+import { grid, ax, C } from '../CONSTANTES';
+
+const QUARTER_COLORS = [C.black, '#8E9AAF', C.beige, '#080808'];
 
 /**
- * Gráfica de barras apiladas: ingresos por temporada de producto × categoría.
- * Las categorías y colores vienen del API (fetchTemporadasCategoria) pre-procesados.
- * Solo la última barra del stack recibe border-radius superior para que el "techo"
- * del grupo sea visualmente redondeado sin afectar las barras internas.
+ * VentasTrimestralChart
+ * Ingresos totales agrupados por temporada de producto.
+ * Filtros que aplican: zona (el fetch lo maneja SectionTendencias).
  *
- * @param {Array<{ season: string, [cat: string]: number }>} stackedData
- *   Cada objeto tiene 'season' más una clave por categoría con el ingreso ($K).
- * @param {string[]} cats   - Nombres de categorías en el mismo orden que `colors`
- * @param {string[]} colors - Hex por categoría, alineados con `cats[]`
+ * @param {{ season: string, value: number }[]} data
  */
-export function VentasTemporadaChart({ stackedData, cats, colors }) {
+export function VentasTemporadaChart({ data = [] }) {
   return (
     <Card>
-      <ChartTitle title="Ventas por Temporada y Categoría" sub="Primavera / Verano / Otoño / Invierno" />
-      <div className="section-productos__legend">
-        {cats.map((c, i) => (
-          <span key={i} className="section-productos__legend-item">
-            <LegendDot color={colors[i]} />{c}
-          </span>
-        ))}
-      </div>
-      <ResponsiveContainer width="100%" height={140}>
-        <BarChart data={stackedData} margin={{ top: 2, right: 8, bottom: 0, left: -10 }}>
+      <ChartTitle title="Ventas por Temporada" sub="Ingreso total" />
+      <ResponsiveContainer width="100%" height={130} role="img" aria-label="Gráfica de barras: ingreso total por temporada de producto (Primavera, Verano, Otoño, Invierno)">
+        <BarChart data={data} margin={{ top: 2, right: 8, bottom: 0, left: -10 }}>
           <CartesianGrid strokeDasharray="3 3" {...grid} />
           <XAxis dataKey="season" tick={ax} axisLine={false} tickLine={false} />
-          <YAxis tick={ax} axisLine={false} tickLine={false} tickFormatter={v => `$${v}K`} />
-          <Tooltip />
-          {cats.map((cat, i) => (
-            <Bar
-              key={cat} dataKey={cat} stackId="s"
-              fill={colors[i]}
-              radius={i === cats.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
-            />
-          ))}
+          <YAxis
+            tick={ax} axisLine={false} tickLine={false}
+            tickFormatter={v => `$${(v / 1000).toFixed(1)}M`}
+          />
+          <Tooltip formatter={v => [`$${(v / 1000).toFixed(1)}M`, 'Ingresos']} />
+          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+            {data.map((_, i) => (
+              <Cell key={i} fill={QUARTER_COLORS[i % QUARTER_COLORS.length]} />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </Card>

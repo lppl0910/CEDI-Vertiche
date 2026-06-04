@@ -1,13 +1,29 @@
 import 'dotenv/config'
 import mongoose from 'mongoose'
 import Orden from './models/ordenModel'
+import Tienda from './models/tiendaModel'
 
-const PROVEEDORES = [
-  { id: 'PROV-001', nombre: 'Textiles Norte' },
-  { id: 'PROV-002', nombre: 'Confecciones Sur' },
-  { id: 'PROV-003', nombre: 'Moda Express' },
-  { id: 'PROV-004', nombre: 'Distribuidora Central' },
-  { id: 'PROV-005', nombre: 'Manufactura Veloz' },
+const TIENDAS_DATA = [
+  {
+    id_tienda: 'SUC-Monterrey-001', nombre: 'Sucursal Monterrey', region: 'Norte',
+    direccion: { calle: 'Av. Constitución', numero: '450', codigo_postal: '64000', municipio: 'Monterrey' },
+  },
+  {
+    id_tienda: 'SUC-Guadalajara-002', nombre: 'Sucursal Guadalajara', region: 'Sur',
+    direccion: { calle: 'Av. Vallarta', numero: '1230', codigo_postal: '44100', municipio: 'Guadalajara' },
+  },
+  {
+    id_tienda: 'SUC-CDMX-003', nombre: 'Sucursal CDMX', region: 'Centro',
+    direccion: { calle: 'Insurgentes Sur', numero: '3720', codigo_postal: '14000', municipio: 'Tlalpan' },
+  },
+  {
+    id_tienda: 'SUC-Leon-004', nombre: 'Sucursal León', region: 'Oeste',
+    direccion: { calle: 'Blvd. López Mateos', numero: '812', codigo_postal: '37000', municipio: 'León' },
+  },
+  {
+    id_tienda: 'SUC-Puebla-005', nombre: 'Sucursal Puebla', region: 'Este',
+    direccion: { calle: 'Av. Juárez', numero: '2100', codigo_postal: '72000', municipio: 'Puebla' },
+  },
 ]
 
 function randomInt(min: number, max: number): number {
@@ -35,7 +51,11 @@ async function seed(): Promise<void> {
   await mongoose.connect(process.env.MONGO_URI!)
   console.log('Conectado a MongoDB')
 
-  await Orden.deleteMany({ id_orden: { $regex: /^ORD-W\d{2}-/ } })
+  await Tienda.deleteMany({})
+  await Tienda.insertMany(TIENDAS_DATA)
+  console.log(`Insertadas ${TIENDAS_DATA.length} tiendas`)
+
+  await Orden.deleteMany({})
 
   const docs: any[] = []
 
@@ -45,12 +65,11 @@ async function seed(): Promise<void> {
 
     for (let i = 0; i < baseIncompletas; i++) {
       const total_prepacks = randomInt(5, 10)
-      const prov = PROVEEDORES[randomInt(0, PROVEEDORES.length - 1)]
+      const id_tienda = TIENDAS_DATA[randomInt(0, TIENDAS_DATA.length - 1)].id_tienda
       const id_orden = `ORD-W${String(12 - w).padStart(2, '0')}-INC-${i + 1}`
       docs.push({
         id_orden,
-        id_proveedor: prov.id,
-        nombre_proveedor: prov.nombre,
+        id_tienda,
         fecha_creacion: dateInWeek(w),
         estado: 'en_proceso',
         total_prepacks,
@@ -58,7 +77,7 @@ async function seed(): Promise<void> {
           id_prepack: ppId(id_orden, idx + 1),
           modelo: `MOD-${randomInt(100, 999)}`,
           cantidad_total: randomInt(10, 50),
-          estado_actual: 'preregistro',
+          estado_actual: '',
           bahia_asignada: randomInt(1, 10),
           distribucion_color: [{ color: 'negro', num_color: 1 }],
           distribucion_talla: { CH: 2, M: 3, G: 2, XG: 1 },
@@ -68,12 +87,11 @@ async function seed(): Promise<void> {
 
     for (let i = 0; i < completas; i++) {
       const total_prepacks = randomInt(4, 8)
-      const prov = PROVEEDORES[randomInt(0, PROVEEDORES.length - 1)]
+      const id_tienda = TIENDAS_DATA[randomInt(0, TIENDAS_DATA.length - 1)].id_tienda
       const id_orden = `ORD-W${String(12 - w).padStart(2, '0')}-COM-${i + 1}`
       docs.push({
         id_orden,
-        id_proveedor: prov.id,
-        nombre_proveedor: prov.nombre,
+        id_tienda,
         fecha_creacion: dateInWeek(w),
         estado: 'completada',
         total_prepacks,
@@ -81,7 +99,7 @@ async function seed(): Promise<void> {
           id_prepack: ppId(id_orden, idx + 1),
           modelo: `MOD-${randomInt(100, 999)}`,
           cantidad_total: randomInt(10, 50),
-          estado_actual: 'envio',
+          estado_actual: '',
           bahia_asignada: randomInt(1, 10),
           distribucion_color: [{ color: 'negro', num_color: 1 }],
           distribucion_talla: { CH: 2, M: 3, G: 2, XG: 1 },

@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
+import { ContextoFiltros } from "./Contexto";
 import { DATA } from "../data/ventasData";
 import { fetchPerformance } from "../data/ventasApi";
 import { useVentasFetch } from "./useVentasFetch";
@@ -21,8 +22,8 @@ import "./styles/SectionPerformance.css";
  * @param {(status: string) => void} [props.onStatusChange]
  *   Callback que recibe el sectionStatus cada vez que cambia.
  */
-export function SectionPerformance({ filters, onStatusChange }) {
-  const { period, zona, temporada } = filters;
+export function SectionPerformance({ onStatusChange }) {
+  const { period, zona, temporada } = useContext(ContextoFiltros);
 
   const performance = useVentasFetch(
     () => fetchPerformance({ period, zona, temporada }),

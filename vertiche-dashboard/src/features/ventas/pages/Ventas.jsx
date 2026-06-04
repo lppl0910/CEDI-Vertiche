@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ContextoFiltros } from "./Contexto";
 import { SectionPerformance } from "./SectionPerformance";
 import { SectionTendencias } from "./SectionTendencias";
 import { SectionProductos } from "./SectionProductos";
@@ -46,30 +47,26 @@ export default function Ventas({
   const globalError = perfStatus === "error" && sectionStatus === "error";
 
   return (
-    <div className="ventas">
-      <ComponenteEsquina periodoParametro={filters.period} />
+    <ContextoFiltros.Provider value={filters}>
+      <div className="ventas">
+        <ComponenteEsquina />
 
-      {globalError ? (
-        <div className="ventas__global-error">
-          <ChartStatus
-            type="error"
-            message="No se pudo conectar con el servidor. Por favor, refresque la página."
-          />
-        </div>
-      ) : (
-        <>
-          <SectionPerformance
-            filters={filters}
-            onStatusChange={setPerfStatus}
-          />
-          <ActiveSection
-            filters={filters}
-            onStatusChange={setSectionStatus}
-          />
-        </>
-      )}
+        {globalError ? (
+          <div className="ventas__global-error">
+            <ChartStatus
+              type="error"
+              message="No se pudo conectar con el servidor. Por favor, refresque la página."
+            />
+          </div>
+        ) : (
+          <>
+            <SectionPerformance onStatusChange={setPerfStatus} />
+            <ActiveSection     onStatusChange={setSectionStatus} />
+          </>
+        )}
 
-      <ChatFAB />
-    </div>
+        <ChatFAB />
+      </div>
+    </ContextoFiltros.Provider>
   );
 }

@@ -24,6 +24,12 @@ const METRICS = [
  */
 const ZONE_COLOR = { Norte: '#111111', Sur: '#A48F7A', all: '#6E8B6B' };
 
+const METRIC_ARIA = {
+  ingresos: 'ingresos en miles de pesos',
+  ticket:   'ticket promedio por venta',
+  unidades: 'unidades vendidas',
+};
+
 /**
  * Mapa de calor de ventas por estado de la república mexicana, renderizado con D3.
  *
@@ -149,6 +155,8 @@ export function MapaCalorMexico({ data = [], zona = 'all' }) {
       <div style={{ position: 'relative' }}>
         <svg
           ref={svgRef}
+          role="img"
+          aria-label={`Mapa de calor de México: ${METRIC_ARIA[metric]} por estado. Zona: ${zona === 'all' ? 'todas las zonas' : zona}`}
           width="100%"
           height={320}
           style={{ display: 'block' }}
@@ -179,11 +187,11 @@ export function MapaCalorMexico({ data = [], zona = 'all' }) {
         )}
 
         {/* Leyenda gradiente */}
-        <div style={{
+        <div aria-hidden="true" style={{
           position:   'absolute',
           bottom:     8,
           right:      8,
-          fontSize:   9,
+          fontSize:   11,
           color:      'var(--text-secondary)',
           display:    'flex',
           alignItems: 'center',

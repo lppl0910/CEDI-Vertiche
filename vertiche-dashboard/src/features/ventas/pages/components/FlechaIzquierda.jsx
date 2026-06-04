@@ -21,6 +21,8 @@ export const FlechaIzquierda = ({ onClick, size=25 }) => {
         xmlnsXlink="http://www.w3.org/1999/xlink"
         viewBox="0 0 330 330"
         xmlSpace="preserve"
+        role="img"
+        aria-label="Expandir panel de fechas"
       >
         <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
         <g
