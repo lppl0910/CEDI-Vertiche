@@ -34,33 +34,8 @@ function mapPackage(backendData, bayId) {
 }
 
 export const apiService = {
-  subscribeToEvents(channel, onMessage) {
-    if (USE_MOCK) return () => {};
-
-    const url = `${API_BASE_URL}/events/${channel}`;
-    const source = new EventSource(url);
-
-    const handleEvent = (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        // Extrae el ID de bahía del nombre del canal: "bahia-2" → 2
-        const parts = channel.split("-");
-        const detectedBay = parts.length > 1 ? parseInt(parts[1]) : null;
-        const mapped = mapPackage(data, detectedBay);
-        if (mapped) onMessage(mapped);
-      } catch (err) {
-        console.error("Error procesando evento SSE:", err);
-      }
-    };
-
-    source.addEventListener("nuevo-prepack", handleEvent);
-    source.addEventListener("paquete-llegando", handleEvent);
-    source.onerror = (err) => {
-      console.error(`Error SSE en canal ${channel}:`, err);
-      source.close();
-    };
-
-    return () => source.close();
+  mapPackage: function(backendData, bayId) {
+    return mapPackage(backendData, bayId);
   },
 
   async getNextPackage(bayId) {
