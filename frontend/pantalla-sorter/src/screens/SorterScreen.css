@@ -1,0 +1,205 @@
+.sorter-screen {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  padding: 24px;
+  gap: 24px;
+}
+
+.sorter-left-col, .sorter-right-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.sorter-left-col {
+  flex: 0 0 58%;
+}
+
+.sorter-right-col {
+  flex: 1;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.label-title {
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  margin-bottom: 8px;
+}
+
+.bay-number {
+  font-size: 120px;
+  font-weight: 900;
+  line-height: 0.8;
+}
+
+.store-number {
+  color: var(--text);
+  font-size: 50px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.current-reading-label {
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.current-reading-id {
+  color: var(--text);
+  font-weight: bold;
+}
+
+.package-table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.section-label {
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  margin-bottom: 10px;
+}
+
+.bays-filter-grid {
+  display: flex;
+  gap: 10px;
+}
+
+.store-card-v3.bay-card {
+  flex: 1;
+  padding: 12px;
+}
+
+.bay-card-title {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.bay-card-number {
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.bay-card-count {
+  font-size: 10px;
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+.performance-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.performance-value {
+  font-size: 44px;
+  font-weight: 900;
+  color: var(--green);
+  margin-top: 10px;
+}
+
+.performance-unit {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+.history-count-badge {
+  background: var(--surface);
+  color: var(--text-mid);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 900;
+  border: 1px solid var(--border);
+}
+
+.pkg-card-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.pkg-card-store {
+  color: var(--text-mid);
+}
+
+.pkg-card-meta {
+  color: var(--text-mid);
+  font-size: 11px;
+}
+
+/* === Indicador de paquete fijado === */
+.pinned-indicator {
+  color: var(--yellow);
+  font-weight: 700;
+}
+
+.btn-live {
+  background: var(--green);
+  color: #000;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  animation: pulse-live 1.5s ease-in-out infinite;
+}
+
+.btn-live:hover {
+  opacity: 0.8;
+}
+
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* === Tarjeta fijada en el historial === */
+.pkg-card--pinned {
+  background: rgba(201, 150, 59, 0.08);
+  border-color: var(--yellow) !important;
+  box-shadow: 0 0 8px rgba(201, 150, 59, 0.15);
+}
+
+.pkg-pinned-badge {
+  margin-left: 8px;
+  font-size: 9px;
+  color: var(--yellow);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
