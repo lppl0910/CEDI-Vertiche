@@ -1,0 +1,227 @@
+.operation-screen {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  padding: 24px;
+  gap: 24px;
+}
+
+.operation-left-col {
+  flex: 0 0 58%;
+  display: flex;
+  flex-direction: column;
+}
+
+.operation-right-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.monitor-title {
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  margin-bottom: 8px;
+}
+
+.monitor-bay-number {
+  font-size: 80px;
+  font-weight: 900;
+  line-height: 0.8;
+}
+
+.monitor-current-store {
+  color: var(--text);
+  font-size: 44px;
+  font-weight: 900;
+}
+
+.monitor-package-table-wrapper {
+  flex: 0 0 35%;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.grid-title {
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  margin-bottom: 12px;
+}
+
+.store-grid-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.store-grid-row {
+  display: flex;
+  gap: 10px;
+}
+
+.dashboard-store-card {
+  flex: 1;
+  border-color: var(--border);
+}
+
+
+.dashboard-store-card.working {
+  border-color: var(--text);
+}
+
+.card-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.card-number {
+  font-size: 32px;
+  font-weight: 900;
+}
+
+.card-count {
+  font-size: 10px;
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+.dashboard-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 15px;
+}
+
+.dashboard-history-title {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.dashboard-history-count {
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* === Indicador de lectura / paquete fijado === */
+.monitor-reading-label {
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.monitor-reading-id {
+  color: var(--text);
+  font-weight: bold;
+}
+
+/* === Error Log / Desvíos === */
+.error-log-section {
+  margin-top: 12px;
+  border-top: 2px solid var(--red);
+  padding-top: 10px;
+  max-height: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+.error-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.error-log-title {
+  color: var(--red);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+
+.error-log-count {
+  background: var(--red);
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 900;
+  min-width: 20px;
+  text-align: center;
+}
+
+.error-log-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.error-log-entry {
+  background: rgba(182, 94, 74, 0.06);
+  border: 1px solid rgba(182, 94, 74, 0.2);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.error-log-entry:hover {
+  background: rgba(182, 94, 74, 0.12);
+}
+
+.error-log-entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+.error-log-pkg-id {
+  color: var(--red);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.error-log-store {
+  color: var(--text-mid);
+  font-size: 11px;
+}
+
+.error-log-detail {
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+
+/* Error badges en tarjetas del historial */
+.pkg-card--error {
+  background: rgba(182, 94, 74, 0.04);
+}
+
+.pkg-error-badge {
+  margin-left: 8px;
+  font-size: 9px;
+  color: var(--red);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}

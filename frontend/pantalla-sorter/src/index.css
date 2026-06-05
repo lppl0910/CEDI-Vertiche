@@ -1,0 +1,67 @@
+:root {
+  /* Base Vertiche */
+  --bg: #F8F6F3;
+  --surface: #FFFFFF;
+  --border: #E7E2DC;
+  --text: #1F1F1F;
+  --text-mid: #6B6B6B;
+  --text-dim: #A48F7A;
+  /* Acentos de marca */
+  --accent: #111111;
+  --accent-warm: #D8C3A5;
+  --accent-rose: #D9B8B0;
+  --accent-taupe: #A48F7A;
+  /* Colores funcionales */
+  --green: #6E8B6B;
+  --yellow: #C9963B;
+  --blue: #7C8A96;
+  --red: #B65E4A;
+  /* Bahías */
+  --bay-1: #C9963B;
+  --bay-2: #7C8A96;
+  --bay-3: #6E8B6B;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+
+@keyframes s-fadein  { from { opacity:0; transform:scale(0.97); } to { opacity:1; transform:scale(1); } }
+@keyframes s-scan    { from { transform:translateX(-100%); } to { transform:translateX(100%); } }
+@keyframes s-belt-move { from { background-position: 0 0; } to { background-position: -40px 0; } }
+
+.scroll::-webkit-scrollbar { width:4px; }
+.scroll::-webkit-scrollbar-track { background:transparent; }
+.scroll::-webkit-scrollbar-thumb { background:#D8C3A5; border-radius:4px; }
+
+.pkg-card {
+  background: #FFFFFF; border: 1px solid var(--border); border-radius: 6px; padding: 14px;
+  margin-bottom: 8px; transition: 0.2s; cursor: pointer; flex-shrink: 0;
+}
+.pkg-card:hover { border-color: #D8C3A5; background: #FDFCFB; }
+
+.store-card-v3 {
+  background: #FFFFFF; border: 2px solid var(--border); border-radius: 8px; padding: 15px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; transition: 0.2s; position: relative;
+}
+.store-card-v3:hover { background: #F5F2EE; border-color: #D8C3A5; transform: translateY(-2px); }
+
+.belt-track {
+  position: relative; height: 14px; background: #D8CFC5; border-radius: 7px; overflow: hidden;
+  background-image: repeating-linear-gradient(45deg, #C5BAB0 0, #C5BAB0 10px, #D8CFC5 10px, #D8CFC5 20px);
+  animation: s-belt-move 1s linear infinite; margin-top: 50px; box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
+}
+.belt-box {
+  position: absolute; top: -35px; width: 70px; height: 45px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px;
+  transition: left 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.5);
+}
+
+/* Placeholder "—" en los números grandes: discreto para que los datos reales destaquen */
+.num-placeholder {
+  font-size: 0.4em;
+  opacity: 0.15;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}

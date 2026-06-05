@@ -1,0 +1,55 @@
+.bay-conveyor-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 40px;
+  justify-content: center;
+}
+
+.bc-title {
+  color: var(--text-mid);
+  font-size: 16px;
+  letter-spacing: 0.2em;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.bc-status-box {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  border-radius: 12px;
+  padding: 60px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.bc-pkg-id {
+  color: var(--text);
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.bc-msg {
+  font-size: 40px;
+  font-weight: 900;
+}
+
+.bc-other-bay {
+  color: var(--text-dim);
+  font-size: 18px;
+  margin-top: 16px;
+}
+
+.bc-destination {
+  color: var(--text);
+  font-size: 24px;
+  margin-top: 16px;
+  font-weight: 700;
+}
+
+.bc-waiting {
+  color: var(--text-dim);
+  font-size: 30px;
+  font-weight: 700;
+}
