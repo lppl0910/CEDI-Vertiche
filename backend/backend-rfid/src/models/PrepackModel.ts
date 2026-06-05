@@ -54,7 +54,7 @@ const PrepackSchema = new Schema({
 const ordenSchema = new Schema(
   {
     id_orden: { type: String, required: true },
-    id_proveedor: { type: String, required: true },
+    id_tienda: { type: String, required: true },
     nombre_proveedor: { type: String, required: true },
     fecha_creacion: { type: Date, required: true },
     estado: { type: String, required: true },
