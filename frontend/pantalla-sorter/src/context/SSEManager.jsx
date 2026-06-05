@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { io } from "socket.io-client";
 import { BAYS } from "../utils/constants";
 import { apiService } from "../services/api";
 import { useSorterContext } from "./SorterProvider";
@@ -8,7 +9,6 @@ export function SSEManager() {
   const { processEntry } = useSorterContext();
   const { processBay } = useBaysContext();
 
-  // Las refs mantienen las últimas callbacks sin re-activar el efecto en cada render
   const processEntryRef = useRef(processEntry);
   const processBayRef = useRef(processBay);
 
@@ -20,7 +20,7 @@ export function SSEManager() {
   useEffect(() => {
     const processPackage = (pkg) => {
       if (!pkg) return;
-      console.log("[SSE Event] Recibido:", pkg.status, pkg.pkgId, "en Bahía:", pkg.bayId, "Error:", pkg.isError);
+      console.log("[WebSocket Event] Recibido:", pkg.status, pkg.pkgId, "en Bahía:", pkg.bayId, "Error:", pkg.isError);
 
       if (pkg.status === "ENTRADA_SORTER") {
         processEntryRef.current(pkg);
@@ -40,15 +40,31 @@ export function SSEManager() {
       return () => clearInterval(itv);
     }
 
-    console.log("Iniciando suscripciones SSE...");
-    const channels = ["entrada", "bahia-1", "bahia-2", "bahia-3"];
-    const unsubs = channels.map(channel =>
-      apiService.subscribeToEvents(channel, processPackage)
-    );
+    console.log("Iniciando conexión WebSocket...");
+    let socketUrl = import.meta.env.VITE_API_BASE_URL;
+    if (socketUrl && socketUrl.endsWith("/api")) {
+      socketUrl = socketUrl.replace("/api", "");
+    }
+    
+    // Si no está definido VITE_API_BASE_URL, asume que está en localhost:3000
+    if (!socketUrl) {
+       socketUrl = "http://localhost:3000";
+    }
+
+    const socket = io(socketUrl, { transports: ["websocket"] });
+
+    socket.on("connect", () => console.log("Conectado a WebSocket Sorter"));
+    
+    socket.on("sorter:evento", (data) => {
+        const mapped = apiService.mapPackage(data, data.detallesRuta?.bahiaDestino);
+        if (mapped) processPackage(mapped);
+    });
+
+    socket.on("disconnect", () => console.log("Desconectado de WebSocket Sorter"));
 
     return () => {
-      console.log("Limpiando suscripciones SSE...");
-      unsubs.forEach(unsub => unsub());
+      console.log("Cerrando conexión WebSocket...");
+      socket.disconnect();
     };
   }, []);
 
