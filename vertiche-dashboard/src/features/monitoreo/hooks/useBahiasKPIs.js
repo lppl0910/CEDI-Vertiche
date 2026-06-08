@@ -17,9 +17,9 @@ export function useBahiasKPIs() {
   const fetchAll = async () => {
     try {
       const [kpisRes, ocupRes, tendRes] = await Promise.all([
-        fetch('http://localhost:3001/api/bahias/kpis'),
-        fetch('http://localhost:3001/api/bahias/ocupacion'),
-        fetch('http://localhost:3001/api/bahias/tendencia'),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/bahias/kpis`),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/bahias/ocupacion`),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/bahias/tendencia`),
       ])
       const [kpisData, ocupData, tendData] = await Promise.all([
         kpisRes.json(),

@@ -16,9 +16,9 @@ export function useRegistroKPIs() {
   const fetchAll = async () => {
     try {
       const [kpisRes, equiposRes, backlogRes] = await Promise.all([
-        fetch('http://localhost:3001/api/registro/kpis'),
-        fetch('http://localhost:3001/api/registro/por-equipo'),
-        fetch('http://localhost:3001/api/registro/backlog'),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/registro/kpis`),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/registro/por-equipo`),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/registro/backlog`),
       ])
       const [kpisData, equiposData, backlogData] = await Promise.all([
         kpisRes.json(),

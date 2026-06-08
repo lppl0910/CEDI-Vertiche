@@ -18,8 +18,8 @@ export function useFlujoPPMin(ventana = 5) {
   const fetchAll = async () => {
     try {
       const [ppminRes, perfRes] = await Promise.all([
-        fetch(`http://localhost:3001/api/flujo/ppmin?ventana=${ventana}`),
-        fetch('http://localhost:3001/api/flujo/performance'),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/flujo/ppmin?ventana=${ventana}`),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/flujo/performance`),
       ])
       if (!ppminRes.ok || !perfRes.ok) throw new Error('Error en el servidor')
       const [ppminData, perfData] = await Promise.all([

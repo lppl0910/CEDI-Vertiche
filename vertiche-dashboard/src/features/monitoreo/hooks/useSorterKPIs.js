@@ -16,8 +16,8 @@ export function useSorterKPIs() {
   const fetchAll = async () => {
     try {
       const [kpisRes, bahiaRes] = await Promise.all([
-        fetch('http://localhost:3001/api/sorter/kpis'),
-        fetch('http://localhost:3001/api/sorter/por-bahia'),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/sorter/kpis`),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/sorter/por-bahia`),
       ])
       const [kpisData, bahiaData] = await Promise.all([
         kpisRes.json(),
