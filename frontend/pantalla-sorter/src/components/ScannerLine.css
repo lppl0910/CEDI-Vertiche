@@ -1,0 +1,14 @@
+.scanner-container {
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  overflow: hidden;
+  margin: 20px 0;
+  flex-shrink: 0;
+}
+
+.scanner-beam {
+  width: 100%;
+  height: 100%;
+  animation: s-scan 1s linear;
+}

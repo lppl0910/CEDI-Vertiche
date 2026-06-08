@@ -4,7 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import ordenesRouter from './routes/ordenes.js';
 import alertasRouter from './routes/alertas.js';
-import { procesoEscaneoRFID, registrarFallaPrepack } from './services/ordenService.js';
+import { procesoEscaneoRFID, registrarFallaPrepack, getDetallePrepack } from './services/ordenService.js';
 import { type Etapa } from './types/rfid.types.js';
 import { connectDB } from './config/database.js';
 import { inicializarOrdenesDesdeDB } from './data/generacionDatosEnMemoria.js';
@@ -30,10 +30,10 @@ const limiter = rateLimit({
 
 // Intentar conectar a MongoDB (si MONGODB_URI está en .env)
 await connectDB().then(() => console.log('Conexión a MongoDB establecida'))
-           .catch(err => console.error('Error conectando a MongoDB:', err));
+    .catch(err => console.error('Error conectando a MongoDB:', err));
 
 await inicializarOrdenesDesdeDB().then(() => console.log('Órdenes cargadas desde DB a memoria'))
-                                   .catch(err => console.error('Error cargando órdenes desde DB:', err));
+    .catch(err => console.error('Error cargando órdenes desde DB:', err));
 
 const app = express();
 const httpServer = createServer(app);
@@ -43,9 +43,13 @@ export const io = new Server(httpServer, {
     cors: { origin: process.env.FRONTEND_URL ?? 'http://localhost:5173' },
 });
 
+const allowedOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim())
+    : ['http://localhost:5173'];
+
 app.use(helmet());
 app.use(cors(
-    { origin: process.env.FRONTEND_URL ?? 'http://localhost:5173' }
+    { origin: allowedOrigins }
 ));
 app.use(express.json());
 app.use(limiter); // Aplicar limitador de velocidad a todas las rutas
@@ -77,6 +81,25 @@ app.post('/api/rfid/scan', async (req, res) => {
         progreso: resultado.progreso
     });
 
+    if (etapa === 'Sorter' || etapa === 'Bahias') {
+        const detalle = await getDetallePrepack(resultado.orderId, tagId);
+        const pkgData = {
+            id: tagId,
+            estado: etapa === 'Sorter' ? 'ENTRADA_SORTER' : 'LLEGADA_BAHIA',
+            isError: resultado.prepack.hasFalla || false,
+            detallesRuta: {
+                tiendaDestino: detalle ? detalle.id_tienda : 1,
+                bahiaDestino: detalle ? detalle.prepack.bahia_asignada : (Math.floor(Math.random() * 3) + 1),
+            },
+            detallesContenido: {
+                articulo: detalle ? detalle.prepack.modelo : 'Prepack Generico',
+                cantidad: detalle ? detalle.prepack.cantidad_total : 10
+            }
+        };
+        // Emitimos al frontend de sorter
+        io.emit('sorter:evento', pkgData);
+    }
+
     res.json({ success: true, ...resultado });
 });
 
@@ -101,7 +124,7 @@ app.post('/api/rfid/falla', (req, res) => {
 // Conexiones WebSocket
 io.on('connection', (socket) => {
     console.log(`Cliente conectado: ${socket.id}`);
-    socket.on('disconnect', () => 
+    socket.on('disconnect', () =>
         console.log(`Cliente desconectado: ${socket.id}`)
     );
 });

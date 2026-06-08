@@ -7,12 +7,14 @@ import {
   getHistorialProveedor,
   getRendimientoEquipos,
 } from '../controllers/preregistroController'
-import seedController from '../controllers/seedController'
+import seedController, { resetHoyController, addBatchController } from '../controllers/seedController'
 
 const router = Router()
 
 if (process.env.NODE_ENV !== 'production') {
   router.post('/seed', seedController)
+  router.post('/seed/reset-hoy', resetHoyController)
+  router.post('/seed/add', addBatchController)
 }
 
 router.get('/kpis', getKPIsPreregistro)
