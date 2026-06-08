@@ -7,6 +7,7 @@ interface Caja {
     capacidadObjetivo: number;
     prepacks: any[];
     impresa: boolean;
+    enImpresion: boolean;
 }
 
 const cajasActivas = new Map<string, Caja>();
@@ -35,69 +36,59 @@ export async function agregarPrepackACaja(
     orden: any,
     prepack: any
 ) {
-    const key = orden.id_orden;
+    // Validaciones y normalización
+    const orderId = orden?.id_orden ? String(orden.id_orden) : undefined;
+    const tiendaId = orden?.id_tienda ? String(orden.id_tienda) : undefined;
+    const totalPrepacks = Number(orden?.total_prepacks || 0);
 
+    console.log('[BOX] agregarPrepackACaja llamado', { orderId, tiendaId, prepackId: prepack?.id_prepack, totalPrepacks, activeBoxes: cajasActivas.size });
+
+    if (!orderId) {
+        console.error('[BOX] orden sin id_orden — ignorando', { orden });
+        return;
+    }
+
+    const key = orderId;
     let caja = cajasActivas.get(key);
 
     if (!caja) {
+        console.log('[BOX] Creando nueva caja para orden', { orderId, totalPrepacks });
 
         caja = {
-            boxId: `${orden.id_orden}-BOX-1`,
-            ordenId: orden.id_orden,
-            tiendaId: orden.id_tienda,
-            capacidadObjetivo:
-                calcularCapacidadCaja(
-                    orden.total_prepacks,
-                    1
-                ),
+            boxId: `${orderId}-BOX-1`,
+            ordenId: orderId,
+            tiendaId: orden?.id_tienda ? String(orden.id_tienda) : 'TIENDA_DESCONOCIDA',
+            capacidadObjetivo: calcularCapacidadCaja(totalPrepacks, 1),
             prepacks: [],
-            impresa: false
+            impresa: false,
+            enImpresion: false
         };
 
-        cajasActivas.set(key, caja);
+        cajasActivas.set(key, caja!);
+        console.log('[BOX] Claves activas ahora:', Array.from(cajasActivas.keys()).join(', '));
+    } else {
+        console.log('[BOX] Usando caja existente', { boxId: caja.boxId, currentCount: caja.prepacks.length });
     }
 
-    caja.prepacks.push(prepack);
+    if (!caja) return;
+    const cajaActual = caja;
 
-    console.log(
-        `[BOX] ${caja.boxId}: ${caja.prepacks.length}/${caja.capacidadObjetivo}`
-    );
+    cajaActual.prepacks.push(prepack);
 
-    if (
-        caja.prepacks.length >=
-        caja.capacidadObjetivo
-    ) {
-        console.log(
-            `[BOX COMPLETA] ${caja.boxId}`
-        );
+    console.log(`[BOX] ${cajaActual.boxId}: ${cajaActual.prepacks.length}/${cajaActual.capacidadObjetivo}`);
 
-        await fetch(`${process.env.PRINTER_URL}/api/imprimir`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ caja, orden })
-        });
-
-        caja.impresa = true;
-
-        const siguienteNumero =
-            Number(
-                caja.boxId.split('-BOX-')[1]
-            ) + 1;
-
-        const capacidadNueva =
-            calcularCapacidadCaja(
-                orden.total_prepacks,
-                siguienteNumero
-            );
-
-        cajasActivas.set(key, {
-            boxId:
-                `${orden.id_orden}-BOX-${siguienteNumero}`,
-            ordenId: orden.id_orden,
-            tiendaId: orden.id_tienda,
-            capacidadObjetivo: capacidadNueva,
-            prepacks: [],
-            impresa: false
-        });
+    // prevenir impresiones concurrentes
+    if (cajaActual.prepacks.length >= cajaActual.capacidadObjetivo && !cajaActual.enImpresion) {
+        cajaActual.enImpresion = true;
+        try {
+            console.log('[BOX] [BOX COMPLETA] Llamando impresora para', { boxId: cajaActual.boxId, orderId });
+            await fetch(`${process.env.PRINTER_URL}/api/imprimir`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ caja: cajaActual, orden })
+            });
+        } finally {
+            cajaActual.enImpresion = false;
+        }
     }
 }
