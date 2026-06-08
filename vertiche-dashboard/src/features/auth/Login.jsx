@@ -186,7 +186,7 @@ export default function Login({ onLogin }) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
             <button
               type="button"
-              onClick={() => window.history.pushState({}, '', '/forgot-password') && window.dispatchEvent(new PopStateEvent('popstate'))}
+              onClick={() => { window.history.pushState({}, '', '/forgot-password'); window.dispatchEvent(new PopStateEvent('popstate')); }}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#6B6B6B', fontFamily: 'var(--font)', padding: 0, textDecoration: 'underline', textUnderlineOffset: 2 }}
             >
               ¿Olvidaste tu contraseña?
