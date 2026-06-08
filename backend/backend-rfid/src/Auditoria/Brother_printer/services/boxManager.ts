@@ -38,7 +38,7 @@ export async function agregarPrepackACaja(
 ) {
     // Validaciones y normalización
     const orderId = orden?.id_orden ? String(orden.id_orden) : undefined;
-    const tiendaId = orden?.id_tienda ? String(orden.id_tienda) : undefined;
+    const tiendaId = orden?.id_tienda ? String(orden.id_tienda) : 'TIENDA_DESCONOCIDA';
     const totalPrepacks = Number(orden?.total_prepacks || 0);
 
     console.log('[BOX] agregarPrepackACaja llamado', { orderId, tiendaId, prepackId: prepack?.id_prepack, totalPrepacks, activeBoxes: cajasActivas.size });
@@ -57,7 +57,7 @@ export async function agregarPrepackACaja(
         caja = {
             boxId: `${orderId}-BOX-1`,
             ordenId: orderId,
-            tiendaId: orden?.id_tienda ? String(orden.id_tienda) : 'TIENDA_DESCONOCIDA',
+            tiendaId,
             capacidadObjetivo: calcularCapacidadCaja(totalPrepacks, 1),
             prepacks: [],
             impresa: false,
@@ -87,8 +87,34 @@ export async function agregarPrepackACaja(
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ caja: cajaActual, orden })
             });
+            cajaActual.impresa = true;
         } finally {
             cajaActual.enImpresion = false;
         }
+
+        const siguienteNumero =
+            Number(cajaActual.boxId.split('-BOX-')[1]) + 1;
+
+        const capacidadNueva = calcularCapacidadCaja(
+            totalPrepacks,
+            siguienteNumero
+        );
+
+        const nuevaCaja: Caja = {
+            boxId: `${orderId}-BOX-${siguienteNumero}`,
+            ordenId: orderId,
+            tiendaId,
+            capacidadObjetivo: capacidadNueva,
+            prepacks: [],
+            impresa: false,
+            enImpresion: false
+        };
+
+        cajasActivas.set(key, nuevaCaja);
+        console.log('[BOX] Nueva caja creada', {
+            boxId: nuevaCaja.boxId,
+            capacidadObjetivo: nuevaCaja.capacidadObjetivo,
+            activeBoxes: cajasActivas.size
+        });
     }
 }
