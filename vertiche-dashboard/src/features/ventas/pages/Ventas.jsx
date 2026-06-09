@@ -49,7 +49,7 @@ export default function Ventas({
   return (
     <ContextoFiltros.Provider value={filters}>
       <div className="ventas">
-        <ComponenteEsquina />
+        {/* <ComponenteEsquina /> */}
 
         {globalError ? (
           <div className="ventas__global-error">
