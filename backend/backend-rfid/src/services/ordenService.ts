@@ -156,7 +156,8 @@ export async function procesoEscaneoRFID(
           await agregarPrepackACaja(ordenMongo, prepackMongo);
         }
       }
-
+      
+      console.log(`Prepack ${prepack.id} de orden ${orderId} avanzado a etapa ${newEtapa}`);
       return { prepack, orderId, progreso: getProgresoOrden(orderId) };
     }
   }
