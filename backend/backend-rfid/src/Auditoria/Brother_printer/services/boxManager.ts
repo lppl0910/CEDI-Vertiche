@@ -38,7 +38,6 @@ export async function agregarPrepackACaja(
     orden: any,
     prepack: any
 ) {
-    // Validaciones y normalización
     const orderId = orden?.id_orden ? String(orden.id_orden) : undefined;
     const tiendaId = orden?.id_tienda ? String(orden.id_tienda) : 'TIENDA_DESCONOCIDA';
     const totalPrepacks = Number(orden?.total_prepacks || 0);
@@ -54,19 +53,28 @@ export async function agregarPrepackACaja(
     let caja = cajasActivas.get(key);
 
     if (!caja) {
-        console.log('[BOX] Creando nueva caja para orden', { orderId, totalPrepacks });
+        // Consultar MongoDB para saber qué número de caja corresponde
+        const ultimaCaja = await CajaModel.findOne({ ordenId: orderId })
+            .sort({ fechaCreacion: -1 })
+            .lean();
+
+        const siguienteNumero = ultimaCaja
+            ? Number(ultimaCaja.boxId.split('-BOX-')[1]) + 1
+            : 1;
+
+        console.log('[BOX] Creando nueva caja para orden', { orderId, totalPrepacks, siguienteNumero });
 
         caja = {
-            boxId: `${orderId}-BOX-1`,
+            boxId: `${orderId}-BOX-${siguienteNumero}`,
             ordenId: orderId,
             tiendaId,
-            capacidadObjetivo: calcularCapacidadCaja(totalPrepacks, 1),
+            capacidadObjetivo: calcularCapacidadCaja(totalPrepacks, siguienteNumero),
             prepacks: [],
             impresa: false,
             enImpresion: false
         };
 
-        cajasActivas.set(key, caja!);
+        cajasActivas.set(key, caja);
         console.log('[BOX] Claves activas ahora:', Array.from(cajasActivas.keys()).join(', '));
     } else {
         console.log('[BOX] Usando caja existente', { boxId: caja.boxId, currentCount: caja.prepacks.length });
@@ -79,7 +87,6 @@ export async function agregarPrepackACaja(
 
     console.log(`[BOX] ${cajaActual.boxId}: ${cajaActual.prepacks.length}/${cajaActual.capacidadObjetivo}`);
 
-    // prevenir impresiones concurrentes
     if (cajaActual.prepacks.length >= cajaActual.capacidadObjetivo && !cajaActual.enImpresion) {
         cajaActual.enImpresion = true;
         try {
