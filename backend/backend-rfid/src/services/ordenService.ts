@@ -229,6 +229,7 @@ export async function procesarEnvioCaja(readerId: string): Promise<{ orderId: st
         p.currentEtapa = 'Envio';
         await subirScaneo(prepack.id_prepack, orderId, 'Envio', evento);
         resultados.push({ orderId, progreso: getProgresoOrden(orderId) });
+        console.log(`Prepack ${p.id} de orden ${orderId} avanzado a etapa ${'Envio'} por procesoEnvioCaja()`);
         break;
       }
     }
