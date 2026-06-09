@@ -19,7 +19,9 @@ function nodeStatus(etapa, orden) {
     .flatMap(pp => (pp.historial ?? []).filter(e => e.etapa === etapa))
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-  if (etapaEvents.length === 0) return 'success';
+  // Si no hay eventos reales en el historial, no pintar el nodo
+  if (etapaEvents.length === 0) return null;
+
   return clasificarAlerta(etapa, etapaEvents[0].timestamp);
 }
 
