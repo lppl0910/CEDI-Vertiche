@@ -6,7 +6,7 @@
 import { ordenesPrueba, ordenesEnMemoria, normalizarEtapa} from '../data/generacionDatosEnMemoria.js';
 import { subirScaneo } from '../data/prePackData.js';
 import { OrdenModel, RfidEventModel } from '../models/PrepackModel.js';
-import type { ProgresoOrden, Etapa, ProgresoEtapa } from '../types/rfid.types.js';
+import type { ProgresoOrden, Etapa, ProgresoEtapa, Prepack } from '../types/rfid.types.js';
 import { agregarPrepackACaja } from '../Auditoria/Brother_printer/services/boxManager.js';
 
 const ALL_ETAPAS: Etapa[] = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
@@ -128,37 +128,39 @@ export function registrarFallaPrepack(tagId: string, etapa: Etapa) {
  * Simula recibir un escaneo RFID y avanza un prepack de etapa.
  * Author: Adrian Proano Bernal
  */
-export async function procesoEscaneoRFID(tagId: string, readerId: string, newEtapa: Etapa) {
-    for (const [orderId, prepacks] of Object.entries(ordenesEnMemoria)) {
-        const prepack = prepacks.find((p) => p.id === tagId);
-        if (prepack) {
-            const evento = {
-                etapa: newEtapa,
-                timestamp: new Date(),
-                readerId,
-            };
-            prepack.historial.push(evento);
-            prepack.currentEtapa = newEtapa;
-            await subirScaneo(tagId, orderId, newEtapa, evento);
-            
-            if(newEtapa === 'Bahias'){ // Gestionar prepacks en cajas al llegar a bahías
-                console.log(`[BAHIAS] Procesando ${tagId}`);//Verificación Bahías entran a boxManager
+export async function procesoEscaneoRFID(
+  tagId: string,
+  readerId: string,
+  newEtapa: Etapa
+): Promise<{ prepack: Prepack; orderId: string; progreso: ProgresoOrden | null } | null> {
+  for (const [orderId, prepacks] of Object.entries(ordenesEnMemoria)) {
+    const prepack = prepacks.find((p) => p.id === tagId);
+    if (prepack) {
+      const evento = {
+        etapa: newEtapa,
+        timestamp: new Date(),
+        readerId,
+      };
 
-                const ordenMongo = await OrdenModel.findOne({id_orden: orderId});
-                const prepackMongo = ordenMongo?.prepacks.find((p) => p.id_prepack === tagId);
+      prepack.historial.push(evento);
+      prepack.currentEtapa = newEtapa;
 
-                if (ordenMongo && prepackMongo) {
-                    console.log(`[BAHIAS] Agregando ${tagId} a caja`);//Verificación Bahías entran a boxManager
+      await subirScaneo(tagId, orderId, newEtapa, evento);
 
-                    await agregarPrepackACaja(ordenMongo, prepackMongo);
-                }
-            }
+      if (newEtapa === 'Bahias') {
+        const ordenMongo = await OrdenModel.findOne({ id_orden: orderId });
+        const prepackMongo = ordenMongo?.prepacks.find((p) => p.id_prepack === tagId);
 
-            console.log(`Prepack ${prepack.id} de orden ${orderId} avanzado a etapa ${newEtapa}`);
-            return { prepack, orderId, progreso: getProgresoOrden(orderId) };
+        if (ordenMongo && prepackMongo) {
+          await agregarPrepackACaja(ordenMongo, prepackMongo);
         }
+      }
+
+      return { prepack, orderId, progreso: getProgresoOrden(orderId) };
     }
-    return null;
+  }
+
+  return null;
 }
 
 export async function getDetallePrepack(orderId: string, prepackId: string) {

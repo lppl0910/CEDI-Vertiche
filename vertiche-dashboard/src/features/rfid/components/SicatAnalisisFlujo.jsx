@@ -69,15 +69,15 @@ function ExpandedRow({ order, allOrders, allHistorical, onOpenModal }) {
   return (
     <div style={{ background: '#F8F6F3', border: '1px solid #E7E2DC', borderRadius: 10, padding: '12px 14px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 10 }}>
-        <span style={{ fontSize: 12, fontWeight: 700 }}>{order.id} — {order.product}</span>
+        <span style={{ fontSize: 12, fontWeight: 700 }}>{order.id}</span>
         <span style={{ fontSize: 10, color: '#6B6B6B' }}>Doble clic en prepack para detalle completo</span>
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
           <thead>
             <tr>
-              {['ID','COLOR','TALLA','BAHÍA', ...STAGE_LABELS.map(l => l.slice(0,3))].map(h => (
-                <th key={h} style={{ padding: '4px 8px', textAlign: h === 'ID' || h === 'COLOR' || h === 'TALLA' || h === 'BAHÍA' ? 'left' : 'center', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.4px', color: '#6B6B6B', borderBottom: '1px solid #E7E2DC' }}>
+              {['ID','BAHÍA', ...STAGE_LABELS.map(l => l.slice(0,3))].map(h => (
+                <th key={h} style={{ padding: '4px 8px', textAlign: h === 'ID' || h === 'BAHÍA' ? 'left' : 'center', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.4px', color: '#6B6B6B', borderBottom: '1px solid #E7E2DC' }}>
                   {h}
                 </th>
               ))}
@@ -93,9 +93,7 @@ function ExpandedRow({ order, allOrders, allHistorical, onOpenModal }) {
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
                 <td style={{ padding: '5px 8px', fontWeight: 700, borderBottom: i < order.prepacks.length - 1 ? '1px solid #F0EDE8' : 'none' }}>{pp.id}</td>
-                <td style={{ padding: '5px 8px', borderBottom: i < order.prepacks.length - 1 ? '1px solid #F0EDE8' : 'none' }}>{pp.color}</td>
-                <td style={{ padding: '5px 8px', borderBottom: i < order.prepacks.length - 1 ? '1px solid #F0EDE8' : 'none' }}>{pp.size}</td>
-                <td style={{ padding: '5px 8px', borderBottom: i < order.prepacks.length - 1 ? '1px solid #F0EDE8' : 'none' }}>{pp.store}</td>
+                <td style={{ padding: '5px 8px', borderBottom: i < order.prepacks.length - 1 ? '1px solid #F0EDE8' : 'none' }}>{pp.bahiaIdx + 1}</td>
                 {pp.stageResults.map((r, si) => (
                   <td key={si} style={{ padding: '5px 8px', textAlign: 'center', borderBottom: i < order.prepacks.length - 1 ? '1px solid #F0EDE8' : 'none' }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: CK_COLOR[r] }}>{CK_ICON[r]}</span>
@@ -209,6 +207,9 @@ export default function AnalisisFlujo({ orders, onFiltersChange }) {
     store: detail?.id_tienda ?? modalPrepack.store,
     bahiaIdx: (detailPrepack.bahia_asignada ?? 1) - 1,
     cantidad_total: detailPrepack.cantidad_total,
+    distribucion_color: detailPrepack.distribucion_color ?? [],
+    distribucion_talla: detailPrepack.distribucion_talla ?? { CH: 0, M: 0, G: 0, XG: 0 },
+    modelo: detailPrepack.modelo ?? modalPrepack.modelo,
   } : modalPrepack;
 
   const mergedOrder = modalOrder && detailPrepack ? {
