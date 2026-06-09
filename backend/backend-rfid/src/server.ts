@@ -12,15 +12,22 @@ import { apiKeyMiddleware } from './middleware/apiKey.js';
 import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
 import { z } from 'zod';
-
+import { procesarEnvioCaja } from './services/ordenService.js';
 
 //Por ahora, esta validacion de escaneos no es tan restrictiva
 //TODO: Revisar si es necesario agregar mas campos o validaciones (ej: formato de tagId, readerId, etc.)
-const scanRFIDSchema = z.object({
-    tagId: z.string(),
+const scanRFIDSchema = z.discriminatedUnion('etapa', [
+  z.object({
+    tagId:    z.string(),
     readerId: z.string(),
-    etapa: z.enum(['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio']),
-});
+    etapa:    z.enum(['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria']),
+  }),
+  z.object({
+    tagId:    z.string().optional(),
+    readerId: z.string(),
+    etapa:    z.literal('Envio'),
+  }),
+]);
 
 const limiter = rateLimit({
     windowMs: 60 * 1000, // 1 minuto
@@ -69,6 +76,17 @@ app.post('/api/rfid/scan', async (req, res) => {
     }
 
     const { tagId, readerId, etapa } = validacion.data;
+
+    if (etapa === 'Envio') {
+        const resultados = await procesarEnvioCaja(readerId);
+        for (const resultado of resultados) {
+            io.emit('orden:progreso:actualizado', {
+                orderId: resultado.orderId,
+                progreso: resultado.progreso
+            });
+        }
+        return res.json({ success: true, enviados: resultados.length });
+    }
 
     const resultado = await procesoEscaneoRFID(tagId, readerId, etapa);
     if (!resultado) {

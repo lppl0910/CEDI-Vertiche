@@ -8,6 +8,7 @@ import { subirScaneo } from '../data/prePackData.js';
 import { OrdenModel, RfidEventModel } from '../models/PrepackModel.js';
 import type { ProgresoOrden, Etapa, ProgresoEtapa, Prepack } from '../types/rfid.types.js';
 import { agregarPrepackACaja } from '../Auditoria/Brother_printer/services/boxManager.js';
+import { CajaModel } from '../models/CajaModel.js';
 
 const ALL_ETAPAS: Etapa[] = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
 
@@ -203,4 +204,41 @@ export async function getDetallePrepack(orderId: string, prepackId: string) {
       })),
     },
   }
+}
+
+export async function procesarEnvioCaja(readerId: string): Promise<{ orderId: string; progreso: ProgresoOrden | null }[]> {
+  const caja = await CajaModel.findOne({ estado: { $ne: 'Enviada' } })
+    .sort({ fechaCreacion: 1 })
+    .lean();
+
+  if (!caja) {
+    console.log('[ENVIO] No hay cajas pendientes de envío');
+    return [];
+  }
+
+  const resultados = [];
+
+  for (const prepack of caja.prepacks) {
+    // Avanzar el prepack directamente en memoria y subir el scaneo a DB
+    // sin pasar por procesoEscaneoRFID para evitar el loop
+    for (const [orderId, prepacks] of Object.entries(ordenesEnMemoria)) {
+      const p = prepacks.find(p => p.id === prepack.id_prepack);
+      if (p) {
+        const evento = { etapa: 'Envio' as Etapa, timestamp: new Date(), readerId };
+        p.historial.push(evento);
+        p.currentEtapa = 'Envio';
+        await subirScaneo(prepack.id_prepack, orderId, 'Envio', evento);
+        resultados.push({ orderId, progreso: getProgresoOrden(orderId) });
+        break;
+      }
+    }
+  }
+
+  await CajaModel.findOneAndUpdate(
+    { boxId: caja.boxId },
+    { $set: { estado: 'Enviada' } }
+  );
+
+  console.log(`[ENVIO] Caja ${caja.boxId} marcada como Enviada`);
+  return resultados;
 }

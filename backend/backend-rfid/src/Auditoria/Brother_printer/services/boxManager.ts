@@ -1,3 +1,5 @@
+import { CajaModel } from '../../../models/CajaModel.js';
+
 const CAPACIDAD_CAJA = 5;
 
 interface Caja {
@@ -82,6 +84,15 @@ export async function agregarPrepackACaja(
         cajaActual.enImpresion = true;
         try {
             console.log('[BOX] [BOX COMPLETA] Llamando impresora para', { boxId: cajaActual.boxId, orderId });
+            await CajaModel.create({
+                boxId:         cajaActual.boxId,
+                ordenId:       cajaActual.ordenId,
+                sucursalId:    orden?.id_tienda ?? cajaActual.tiendaId,
+                estado:        'Impresa',
+                prepacks:      cajaActual.prepacks,
+                fechaCreacion: new Date(),
+            });
+            console.log(`[BOX] Caja ${cajaActual.boxId} persistida en MongoDB`);
             await fetch(`${process.env.PRINTER_URL}/api/imprimir`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
