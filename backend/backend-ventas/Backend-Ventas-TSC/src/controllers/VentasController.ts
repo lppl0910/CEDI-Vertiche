@@ -1,3 +1,14 @@
+/**
+ * Controlador CRUD para la tabla de hechos `Fact_Ventas`.
+ *
+ * Rutas montadas bajo `/ventas`:
+ *  - `GET  /`      → Lista paginada de ventas con sus dimensiones asociadas.
+ *  - `GET  /:id`   → Detalle de una venta por PK.
+ *  - `POST /`      → Crea una nueva venta.
+ *  - `PUT  /:id`   → Actualiza campos de una venta existente.
+ *
+ * Todas las rutas requieren token JWT de Supabase válido.
+ */
 import { Request, Response } from "express";
 import AbstractController from "./AbstractController";
 import db from "../models";
@@ -5,6 +16,7 @@ import db from "../models";
 export default class VentasController extends AbstractController {
   private static _instance: VentasController;
 
+  /** Singleton: devuelve la única instancia del controlador. */
   public static get instance(): VentasController {
     return this._instance || (this._instance = new this("ventas"));
   }
@@ -28,6 +40,11 @@ export default class VentasController extends AbstractController {
     );
   }
 
+  /**
+   * GET /ventas — Lista paginada de ventas incluyendo producto, tienda y fecha.
+   * @query page  Número de página (default 1).
+   * @query limit Registros por página (default 50).
+   */
   private async getAll(req: Request, res: Response) {
     try {
       const page  = parseInt(req.query.page  as string) || 1;
@@ -50,6 +67,7 @@ export default class VentasController extends AbstractController {
     }
   }
 
+  /** GET /ventas/:id — Detalle de una venta con sus dimensiones. Devuelve 404 si no existe. */
   private async getById(req: Request, res: Response) {
     try {
       const venta = await db.Fact_Ventas.findByPk(req.params.id, {
@@ -62,6 +80,7 @@ export default class VentasController extends AbstractController {
     }
   }
 
+  /** POST /ventas — Crea una nueva venta a partir del body del request. */
   private async create(req: Request, res: Response) {
     try {
       const venta = await db.Fact_Ventas.create(req.body);
@@ -71,6 +90,7 @@ export default class VentasController extends AbstractController {
     }
   }
 
+  /** PUT /ventas/:id — Actualiza los campos enviados en el body. Devuelve 404 si no existe. */
   private async update(req: Request, res: Response) {
     try {
       const venta = await db.Fact_Ventas.findByPk(req.params.id);

@@ -1,15 +1,23 @@
+/**
+ * Modelo Sequelize para la tabla de dimensión `Dim_Tiempo`.
+ *
+ * Tabla de fechas del data warehouse: cada fila representa un día calendario
+ * con sus atributos de granularidad (semana, mes, trimestre, año, temporada
+ * comercial y si es día festivo).  El PK `id_tiempo` usa el formato YYYYMMDD.
+ */
 import { Model } from 'sequelize';
 
+/** Atributos de la tabla `Dim_Tiempo`. */
 interface TiempoAtributos {
-  id_tiempo: number;
-  fecha: Date;
-  anio: number;
+  id_tiempo:  number;  // YYYYMMDD
+  fecha:      Date;
+  anio:       number;
   mes_nombre: string;
-  semana: number;
-  dia_semana: string;
+  semana:     number;
+  dia_semana: string;  // enum TiempoDiaSemana
   numero_dia: number;
-  trimestre: number;
-  temporada: string;
+  trimestre:  number;  // 1–4
+  temporada:  string;  // enum TiempoTemporada
   es_festivo: boolean;
 }
 

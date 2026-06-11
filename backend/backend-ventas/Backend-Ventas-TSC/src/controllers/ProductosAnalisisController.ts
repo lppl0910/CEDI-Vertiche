@@ -1,3 +1,15 @@
+/**
+ * Controlador de análisis de catálogo de productos.
+ *
+ * Rutas montadas bajo `/analisis/productos`:
+ *  - `GET /tallas`               → Distribución de unidades vendidas por talla en el período.
+ *  - `GET /temporadas-categoria` → Ingresos (K) en formato stacked-bar: temporada × categoría.
+ *  - `GET /top-productos`        → Ranking de productos por ingresos (K) y unidades en el período.
+ *
+ * Todos los endpoints aceptan los query params estándar (`zona`, `temporada`, `period`)
+ * definidos en `AbstractController.buildWhere()`.
+ * Todas las rutas requieren token JWT de Supabase.
+ */
 import { Request, Response } from "express";
 import AbstractController from "./AbstractController";
 import db from "../models";
@@ -6,6 +18,7 @@ const { fn, col } = require("sequelize");
 export default class ProductosAnalisisController extends AbstractController {
   private static _instance: ProductosAnalisisController;
 
+  /** Singleton: devuelve la única instancia del controlador. */
   public static get instance(): ProductosAnalisisController {
     return this._instance || (this._instance = new this("analisis/productos"));
   }
@@ -25,6 +38,10 @@ export default class ProductosAnalisisController extends AbstractController {
     );
   }
 
+  /**
+   * GET /analisis/productos/tallas — Unidades vendidas agrupadas por talla.
+   * Devuelve `[{ name: string, value: number }]` ordenado de mayor a menor.
+   */
   private async getTallas(req: Request, res: Response) {
     try {
       const { tiendaWhere, productoWhere, tiempoWhere, dias } = this.buildWhere(req);
@@ -54,6 +71,11 @@ export default class ProductosAnalisisController extends AbstractController {
     }
   }
 
+  /**
+   * GET /analisis/productos/temporadas-categoria — Ingresos (K) por temporada y categoría.
+   * Devuelve `{ cats, colors, stackedData }` para renderizar un stacked-bar chart.
+   * `stackedData` es un array de 4 objetos (uno por temporada) con ingresos por categoría.
+   */
   private async getTemporadasCategoria(req: Request, res: Response) {
     try {
       const { tiendaWhere } = this.buildWhere(req);
@@ -99,6 +121,11 @@ export default class ProductosAnalisisController extends AbstractController {
     }
   }
 
+  /**
+   * GET /analisis/productos/top-productos — Ranking de productos por ingresos.
+   * @query limit Número de productos a retornar (default 10).
+   * Devuelve `[{ name, rev: K, units }]` ordenado de mayor a menor ingreso.
+   */
   private async getTopProductos(req: Request, res: Response) {
     try {
       const { tiendaWhere, productoWhere, tiempoWhere, dias } = this.buildWhere(req);

@@ -1,15 +1,24 @@
+/**
+ * Modelo Sequelize para la tabla de hechos `Fact_Ventas`.
+ *
+ * Cada registro representa una línea de venta: un producto vendido en una tienda
+ * en una fecha determinada.  `precio_final` es el importe real cobrado al cliente;
+ * `precio_original` es el precio de lista antes de descuento.
+ * Se relaciona con `Dim_Producto`, `Dim_Tienda` y `Dim_Tiempo`.
+ */
 import { Model } from 'sequelize';
 
+/** Atributos de la tabla `Fact_Ventas`. */
 interface VentasAtributos {
-  id_venta: number; // correcta
-  id_nota: string; // correcta
-  id_producto: number; // correcta
-  id_tienda: string; // correcta
-  id_tiempo: number; // correcta
-  precio_final: number; // correcta
-  precio_original: number; // correcta
-  cantidad: number; // correcta
-  es_descuento: boolean; // correcta
+  id_venta:        number;
+  id_nota:         string;  // identificador de folio de nota de venta (único)
+  id_producto:     number;
+  id_tienda:       string;
+  id_tiempo:       number;
+  precio_final:    number;  // importe real cobrado al cliente
+  precio_original: number;  // precio de lista antes de aplicar descuento
+  cantidad:        number;
+  es_descuento:    boolean;
 }
 
 module.exports = (sequelize: any, DataTypes: any) => {

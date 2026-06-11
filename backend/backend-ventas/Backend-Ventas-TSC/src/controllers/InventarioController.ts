@@ -1,3 +1,14 @@
+/**
+ * Controlador CRUD para la tabla de hechos `Fact_Inventario_Tienda`.
+ *
+ * Rutas montadas bajo `/inventario`:
+ *  - `GET  /`      → Lista paginada de registros de inventario con sus dimensiones.
+ *  - `GET  /:id`   → Detalle de un registro de inventario por PK.
+ *  - `POST /`      → Crea un nuevo registro de inventario.
+ *  - `PUT  /:id`   → Actualiza un registro existente.
+ *
+ * Todas las rutas requieren token JWT de Supabase válido.
+ */
 import { Request, Response } from "express";
 import AbstractController from "./AbstractController";
 import db from "../models";
@@ -5,6 +16,7 @@ import db from "../models";
 export default class InventarioController extends AbstractController {
   private static _instance: InventarioController;
 
+  /** Singleton: devuelve la única instancia del controlador. */
   public static get instance(): InventarioController {
     return this._instance || (this._instance = new this("inventario"));
   }
@@ -28,6 +40,11 @@ export default class InventarioController extends AbstractController {
     );
   }
 
+  /**
+   * GET /inventario — Lista paginada con producto, tienda y fecha incluidos.
+   * @query page  Número de página (default 1).
+   * @query limit Registros por página (default 50).
+   */
   private async getAll(req: Request, res: Response) {
     try {
       const page  = parseInt(req.query.page  as string) || 1;
@@ -50,6 +67,7 @@ export default class InventarioController extends AbstractController {
     }
   }
 
+  /** GET /inventario/:id — Detalle con dimensiones. Devuelve 404 si no existe. */
   private async getById(req: Request, res: Response) {
     try {
       const registro = await db.Fact_Inventario_Tienda.findByPk(req.params.id, {
@@ -62,6 +80,7 @@ export default class InventarioController extends AbstractController {
     }
   }
 
+  /** POST /inventario — Crea un nuevo registro de inventario. */
   private async create(req: Request, res: Response) {
     try {
       const registro = await db.Fact_Inventario_Tienda.create(req.body);
@@ -71,6 +90,7 @@ export default class InventarioController extends AbstractController {
     }
   }
 
+  /** PUT /inventario/:id — Actualiza los campos enviados en el body. Devuelve 404 si no existe. */
   private async update(req: Request, res: Response) {
     try {
       const registro = await db.Fact_Inventario_Tienda.findByPk(req.params.id);

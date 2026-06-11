@@ -1,3 +1,16 @@
+"""
+Punto de entrada de la API del chatbot de análisis de ventas de Vertiche.
+
+Expone un único endpoint de streaming SSE (POST /chat/stream) que orquesta
+tres fases en secuencia:
+  1. Generación de SQL a partir de la pregunta del usuario (LLM sin streaming).
+  2. Ejecución de la consulta SQL contra MySQL (solo lectura).
+  3. Narrativa de los resultados con streaming token a token (LLM con streaming).
+
+Al finalizar, extrae preguntas de seguimiento de la narrativa y las devuelve
+como evento ``meta`` junto con una muestra de los datos crudos.
+"""
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -24,6 +37,17 @@ app.add_middleware(
 
 # ── Serializador custom para tipos MySQL ─────────────────────────────
 def default_serializer(obj):
+    """Serializa tipos de MySQL que json.dumps no maneja de forma nativa.
+
+    Convierte ``decimal.Decimal`` a ``float`` para que los resultados del
+    cursor de MySQL sean serializables a JSON.
+
+    Args:
+        obj: Objeto que json.dumps no pudo serializar.
+
+    Raises:
+        TypeError: Si el tipo no está contemplado en esta función.
+    """
     if isinstance(obj, decimal.Decimal):
         return float(obj)
     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
@@ -31,14 +55,26 @@ def default_serializer(obj):
 
 # ── Modelos Pydantic ─────────────────────────────────────────────────
 class Message(BaseModel):
-    role: str
-    content: str
+    """Un mensaje individual del historial de conversación."""
+
+    role: str     # "user" o "assistant"
+    content: str  # Texto del mensaje
+
 
 class ChatRequest(BaseModel):
-    message: str
-    history: list[Message] = []
+    """Payload de entrada para el endpoint /chat/stream."""
+
+    message: str                  # Pregunta del usuario en el turno actual
+    history: list[Message] = []   # Historial de turnos anteriores (opcional)
+
 
 class ChatResponse(BaseModel):
+    """Esquema de respuesta para el endpoint no-streaming (referencia).
+
+    No se usa directamente en /chat/stream porque éste devuelve SSE,
+    pero documenta los campos que componen una respuesta completa.
+    """
+
     answer: str
     sql: str | None = None
     results: list[dict] | None = None
@@ -50,17 +86,38 @@ class ChatResponse(BaseModel):
 # ── Endpoints ────────────────────────────────────────────────────────
 @app.get("/")
 def root():
+    """Verifica que la API esté en línea."""
     return {"status": "ok", "message": "Vertiche Chatbot API corriendo"}
 
 
 @app.get("/health")
 def health():
+    """Health-check mínimo para balanceadores de carga o monitoreo."""
     return {"status": "ok"}
 
 
 # ── POST /chat/stream ────────────────────────────────────────────────
 @app.post("/chat/stream")
 async def chat_stream(req: ChatRequest):
+    """Responde a la pregunta del usuario con un flujo de eventos SSE.
+
+    Orquesta las tres fases del pipeline (SQL → ejecución → narrativa) y
+    emite eventos Server-Sent Events con estos tipos posibles:
+
+    - ``reasoning``: tokens del razonamiento interno del modelo (si disponibles).
+    - ``sql``:       consulta SQL generada.
+    - ``content``:   tokens de la narrativa en streaming.
+    - ``clean_text``: narrativa completa sin el bloque de sugerencias.
+    - ``meta``:      sugerencias de seguimiento y muestra de resultados (máx. 5 filas).
+    - ``done``:      señal de fin de stream.
+    - ``error``:     descripción del error si alguna fase falla.
+
+    Args:
+        req: Mensaje actual del usuario más historial de la conversación.
+
+    Returns:
+        StreamingResponse con ``Content-Type: text/event-stream``.
+    """
     history = [{"role": m.role, "content": m.content} for m in req.history]
 
     async def event_generator():

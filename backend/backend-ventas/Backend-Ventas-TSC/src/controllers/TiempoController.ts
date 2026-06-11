@@ -1,3 +1,19 @@
+/**
+ * Controlador CRUD para la dimensión `Dim_Tiempo`.
+ *
+ * Rutas montadas bajo `/tiempo`:
+ *  - `GET  /`              → Lista todos los registros de tiempo.
+ *  - `GET  /:id`           → Detalle de un registro por PK (YYYYMMDD).
+ *  - `POST /refresh-fecha` → Recarga `fechaBase` desde la BD sin reiniciar el servidor.
+ *  - `POST /`              → Crea un nuevo registro de tiempo.
+ *  - `PUT  /:id`           → Actualiza un registro existente.
+ *
+ * Cuando se crea o actualiza un registro con una fecha más reciente que la actual
+ * `fechaBase`, ésta se actualiza automáticamente para que los filtros de período
+ * relativo de todos los controladores reflejen el nuevo dato.
+ *
+ * Todas las rutas requieren token JWT de Supabase válido.
+ */
 import { Request, Response } from "express";
 import AbstractController from "./AbstractController";
 import db from "../models";
@@ -5,6 +21,7 @@ import db from "../models";
 export default class TiempoController extends AbstractController {
   private static _instance: TiempoController;
 
+  /** Singleton: devuelve la única instancia del controlador. */
   public static get instance(): TiempoController {
     return this._instance || (this._instance = new this("tiempo"));
   }
@@ -32,6 +49,7 @@ export default class TiempoController extends AbstractController {
     );
   }
 
+  /** GET /tiempo — Lista todos los registros de la dimensión tiempo. */
   private async getAll(req: Request, res: Response) {
     try {
       const registros = await db.Dim_Tiempo.findAll();
@@ -41,6 +59,7 @@ export default class TiempoController extends AbstractController {
     }
   }
 
+  /** GET /tiempo/:id — Detalle de un día por PK YYYYMMDD. Devuelve 404 si no existe. */
   private async getById(req: Request, res: Response) {
     try {
       const registro = await db.Dim_Tiempo.findByPk(req.params.id);
@@ -51,6 +70,10 @@ export default class TiempoController extends AbstractController {
     }
   }
 
+  /**
+   * POST /tiempo/refresh-fecha — Reconsulta la BD para actualizar `fechaBase`
+   * en caliente, sin necesidad de reiniciar el servidor.
+   */
   private async refreshFecha(req: Request, res: Response) {
     try {
       await AbstractController.initFechaBase();
@@ -63,6 +86,11 @@ export default class TiempoController extends AbstractController {
     }
   }
 
+  /**
+   * POST /tiempo — Crea un nuevo registro de tiempo.
+   * Requiere `id_tiempo` (YYYYMMDD) y `fecha` en el body.
+   * Si la fecha es más reciente que `fechaBase`, la actualiza automáticamente.
+   */
   private async create(req: Request, res: Response) {
     try {
       if (!req.body.id_tiempo || !req.body.fecha) {
@@ -78,6 +106,7 @@ export default class TiempoController extends AbstractController {
     }
   }
 
+  /** PUT /tiempo/:id — Actualiza campos de un registro. Devuelve 404 si no existe. */
   private async update(req: Request, res: Response) {
     try {
       const registro = await db.Dim_Tiempo.findByPk(req.params.id);

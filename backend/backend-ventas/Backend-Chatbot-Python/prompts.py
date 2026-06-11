@@ -1,3 +1,14 @@
+"""
+Prompts del sistema para los dos roles del LLM en el chatbot de Vertiche.
+
+SQL_SYSTEM_PROMPT  : Instruye al modelo a generar únicamente SQL válido para MySQL,
+                     basado en el esquema del data warehouse de ventas de Vertiche.
+NARRATIVE_SYSTEM_PROMPT: Instruye al modelo a explicar en español natural los
+                          resultados de una consulta y generar preguntas de seguimiento.
+SUGGESTIONS_ONLY_PROMPT : Genera únicamente preguntas de seguimiento sobre ventas
+                           cuando ya no hay una narrativa que analizar.
+"""
+
 SCHEMA = """
 Base de datos MySQL: vertiche_ventas
 Esquema del data warehouse de una empresa de ropa femenina llamada Vertiche.
