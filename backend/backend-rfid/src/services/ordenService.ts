@@ -3,12 +3,12 @@
  * Incluye filtrado/ordenamiento optimizado en backend (#215 — Isaac Calderon Laflor).
  * Author: Adrian Proano Bernal
  */
-import { ordenesPrueba, ordenesEnMemoria, normalizarEtapa} from '../data/generacionDatosEnMemoria.js';
-import { subirScaneo } from '../data/prePackData.js';
-import { OrdenModel, RfidEventModel } from '../models/PrepackModel.js';
-import type { ProgresoOrden, Etapa, ProgresoEtapa, Prepack } from '../types/rfid.types.js';
-import { agregarPrepackACaja } from '../Auditoria/Brother_printer/services/boxManager.js';
-import { CajaModel } from '../models/CajaModel.js';
+import { ordenesPrueba, ordenesEnMemoria, normalizarEtapa} from '../data/generacionDatosEnMemoria';
+import { subirScaneo } from '../data/prePackData';
+import { OrdenModel, RfidEventModel } from '../models/PrepackModel';
+import type { ProgresoOrden, Etapa, ProgresoEtapa, Prepack } from '../types/rfid.types';
+import { agregarPrepackACaja } from '../Auditoria/Brother_printer/services/boxManager';
+import { CajaModel } from '../models/CajaModel';
 
 const ALL_ETAPAS: Etapa[] = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
 

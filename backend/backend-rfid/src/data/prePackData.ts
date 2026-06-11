@@ -1,6 +1,6 @@
-import { isDBConnected } from "../config/database.js";
-import { PrepackModel, RfidEventModel, OrdenModel} from "../models/PrepackModel.js";
-import type { Etapa, EventoEtapa } from "../types/rfid.types.js";
+import { isDBConnected } from "../config/database";
+import { PrepackModel, RfidEventModel, OrdenModel} from "../models/PrepackModel";
+import type { Etapa, EventoEtapa } from "../types/rfid.types";
 
 export async function subirScaneo(
     tagId: string,
