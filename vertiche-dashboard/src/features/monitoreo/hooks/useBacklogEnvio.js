@@ -7,6 +7,9 @@ import { useState, useEffect, useCallback, useRef } from 'react'
  * Actualización automática:
  *  - Cada 60 s (polling regular)
  *  - Al inicio de cada turno (Matutino 06:00 h · Vespertino 14:00 h)
+ *
+ * @returns {{ data: Array, loading: boolean }}
+ * @author Miguel Angel Argumedo
  */
 export function useBacklogEnvio() {
   const [data, setData] = useState([])

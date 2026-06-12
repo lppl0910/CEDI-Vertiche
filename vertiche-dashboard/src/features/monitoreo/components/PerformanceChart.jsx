@@ -1,3 +1,14 @@
+/**
+ * Gráfica de líneas de rendimiento por etapa del flujo operativo.
+ * Muestra la evolución del throughput de Preregistro, QA, Registro,
+ * Sorter y Envío a lo largo del tiempo en un único chart comparativo.
+ *
+ * @param {Object} props
+ * @param {Array}  props.data - Serie temporal; cada elemento debe incluir
+ *                             la clave `tiempo` y un campo numérico por etapa
+ * @returns {JSX.Element}
+ * @author Miguel Angel Argumedo
+ */
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,

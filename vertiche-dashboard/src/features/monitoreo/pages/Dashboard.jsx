@@ -1,4 +1,14 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+﻿/**
+ * Dashboard principal del módulo de monitoreo operativo.
+ * Integra KPIs, tablas y gráficas de todas las etapas del flujo:
+ * Preregistro, QA, Registro, Sorter, Bahías, Auditoría y Envío.
+ * Los datos se obtienen de los hooks correspondientes y se refrescan
+ * automáticamente cada 30 s.
+ *
+ * @returns {JSX.Element}
+ * @author Miguel Angel Argumedo
+ */
+import React, { useEffect, useMemo, useState } from "react";
 import { API_URLS } from '../../../config/api.js';
 import '../monitoreo.css';
 import {

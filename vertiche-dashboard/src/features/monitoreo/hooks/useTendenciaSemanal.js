@@ -1,3 +1,11 @@
+/**
+ * Devuelve la tendencia semanal de órdenes completas vs incompletas
+ * en Preregistro para el gráfico de líneas del turno.
+ *
+ * @param {number} [semanas=8] - Número de semanas a consultar hacia atrás
+ * @returns {{ data: Array, loading: boolean }}
+ * @author Miguel Angel Argumedo
+ */
 import { API_URLS } from '../../../config/api.js';
 import { useState, useEffect, useCallback } from 'react'
 

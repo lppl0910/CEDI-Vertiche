@@ -1,3 +1,10 @@
+/**
+ * Devuelve los KPIs, la ocupación actual y la tendencia histórica de Bahías.
+ * Refresca automáticamente cada 30 s.
+ *
+ * @returns {{ kpis: Object, ocupacion: Array, tendencia: Array, loading: boolean }}
+ * @author Miguel Angel Argumedo
+ */
 import { useState, useEffect } from 'react'
 
 const DEFAULT_KPIS = {

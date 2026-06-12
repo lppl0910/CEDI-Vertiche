@@ -1,3 +1,11 @@
+/**
+ * Devuelve los KPIs de QA, el detalle de errores por proveedor
+ * y los prepacks actualmente en proceso de revisión.
+ * Refresca automáticamente cada 30 s.
+ *
+ * @returns {{ kpis: Object, erroresPorProveedor: Array, prepacksActivos: Array, loading: boolean }}
+ * @author Miguel Angel Argumedo
+ */
 import { useState, useEffect } from 'react'
 
 const DEFAULT_KPIS = {

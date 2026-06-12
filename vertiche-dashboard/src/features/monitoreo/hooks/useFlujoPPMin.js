@@ -1,3 +1,12 @@
+/**
+ * Devuelve el flujo de pp/min en tiempo real para todas las etapas
+ * (Preregistro, QA, Registro, Sorter, Bahías, Auditoría, Envío)
+ * y los datos históricos de performance del turno actual.
+ *
+ * @param {number} [ventana=5] - Minutos de ventana de agregación para el cálculo de pp/min
+ * @returns {{ flowData: Array, performanceData: Array, loading: boolean }}
+ * @author Miguel Angel Argumedo
+ */
 import { useState, useEffect } from 'react'
 
 const DEFAULT_ETAPAS = {

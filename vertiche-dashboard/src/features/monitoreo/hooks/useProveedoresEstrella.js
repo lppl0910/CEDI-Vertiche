@@ -3,11 +3,15 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 
 /**
  * Devuelve el ranking de clasificación de proveedores estrella.
- * @param {number} semanas - 0 = todos los datos; >0 = últimas N semanas
+ *
+ * @param {number} [semanas=0] - 0 = todos los datos; >0 = últimas N semanas
  *
  * Actualización automática:
  *  - Cada 60 s (polling regular)
  *  - Al inicio de cada turno (Matutino 06:00 h · Vespertino 14:00 h)
+ *
+ * @returns {{ data: Array, loading: boolean }}
+ * @author Miguel Angel Argumedo
  */
 export function useProveedoresEstrella(semanas = 0) {
   const [data, setData] = useState([])

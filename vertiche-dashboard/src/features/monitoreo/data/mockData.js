@@ -1,3 +1,13 @@
+/**
+ * Datos de prueba (mock) para la feature de monitoreo.
+ * Cubren todas las etapas del flujo: Preregistro, QA, Registro,
+ * Sorter, Bahías, Auditoría y Envío. Se usan como fallback mientras
+ * los datos reales cargan o en entornos sin backend.
+ *
+ * @module mockData
+ * @author Miguel Angel Argumedo
+ */
+
 export const kpiData = {
   prepacksMin:   { valor: 230, delta: +7,   unidad: 'pp/min' },
   rechazoQA:     { valor: 3.8, delta: -0.6, unidad: '%' },

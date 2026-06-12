@@ -1,3 +1,16 @@
+/**
+ * Componente dinámico de gráficas para la feature de monitoreo.
+ * Renderiza un gráfico de líneas, barras o pie según el tipo recibido,
+ * e incluye KPIBig para métricas destacadas y CustomTooltip para tooltips
+ * personalizados de Recharts.
+ *
+ * @param {Object} props
+ * @param {'line'|'bar'|'pie'} props.tipo     - Tipo de gráfica a renderizar
+ * @param {Array}              props.grafica   - Datos para el gráfico
+ * @param {Object}             [props.dato]    - KPI adicional a mostrar sobre la gráfica
+ * @returns {JSX.Element}
+ * @author Miguel Angel Argumedo
+ */
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar,
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend,

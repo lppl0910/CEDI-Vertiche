@@ -1,3 +1,14 @@
+/**
+ * Tabla de flujo de prepacks por minuto para la etapa de Análisis de Flujo.
+ * Incluye indicadores de estado por etapa (PpMinCircle), popup de detalle
+ * de bahías (BahiasPopup) y columnas de throughput con semáforo visual.
+ *
+ * @param {Object} props
+ * @param {Array}  props.data - Filas de datos de flujo; cada fila representa
+ *                             el throughput de una ventana de tiempo por etapa
+ * @returns {JSX.Element}
+ * @author Miguel Angel Argumedo
+ */
 import { useState } from 'react';
 import '../monitoreo.css';
 

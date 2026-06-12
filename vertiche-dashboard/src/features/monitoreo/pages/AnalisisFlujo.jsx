@@ -1,3 +1,12 @@
+/**
+ * Página de Análisis de Flujo del módulo de monitoreo.
+ * Muestra la tabla de throughput por minuto (FlowTable) y la gráfica
+ * de rendimiento por etapa (PerformanceChart), consumiendo datos en
+ * tiempo real a través de useFlujoPPMin.
+ *
+ * @returns {JSX.Element}
+ * @author Miguel Angel Argumedo
+ */
 import '../monitoreo.css';
 import FlowTable from '../components/FlowTable';
 import PerformanceChart from '../components/PerformanceChart';

@@ -1,3 +1,11 @@
+/**
+ * Devuelve los KPIs de Registro, el rendimiento por equipo
+ * y el backlog de prepacks pendientes de registrar.
+ * Refresca automáticamente cada 30 s.
+ *
+ * @returns {{ kpis: Object, equipos: Array, backlog: Array, loading: boolean }}
+ * @author Miguel Angel Argumedo
+ */
 import { useState, useEffect } from 'react'
 
 const DEFAULT_KPIS = {

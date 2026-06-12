@@ -1,3 +1,11 @@
+/**
+ * Devuelve los KPIs de la etapa de Auditoría.
+ * Consulta cajas auditadas, tasa de éxito y tiempo promedio.
+ * Refresca automáticamente cada 30 s.
+ *
+ * @returns {{ kpis: Object, loading: boolean }}
+ * @author Miguel Angel Argumedo
+ */
 import { useState, useEffect } from 'react'
 
 const DEFAULT_KPIS = {

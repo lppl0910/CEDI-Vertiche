@@ -1,3 +1,11 @@
+/**
+ * Devuelve los KPIs de Sorter y la distribución de paquetes por bahía.
+ * Incluye total clasificado, paquetes en bahía incorrecta y tiempo promedio.
+ * Refresca automáticamente cada 30 s.
+ *
+ * @returns {{ kpis: Object, paquetesPorBahia: Array, loading: boolean }}
+ * @author Miguel Angel Argumedo
+ */
 import { useState, useEffect } from 'react'
 
 const DEFAULT_KPIS = {
