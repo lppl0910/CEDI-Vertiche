@@ -48,6 +48,9 @@ class ServerRFID {
         this.app.get('/', (req: Request, res: Response) => {
             res.send(`Servidor RFID corriendo en puerto ${this.port}`);
         })
+        this.app.get("/health", (req, res) => {
+          res.status(200).send("OK");
+        });
         controllers.forEach(controller => {
             this.app.use("/"+controller.prefix,controller.router);
         });
