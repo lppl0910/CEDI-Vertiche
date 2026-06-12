@@ -1,5 +1,6 @@
 ﻿import React, { useEffect, useMemo, useState } from "react";
 import { API_URLS } from '../../../config/api.js';
+import '../monitoreo.css';
 import {
   ResponsiveContainer,
   LineChart,
@@ -113,28 +114,15 @@ function formatNumber(value, decimals = 0) {
 function StatusDot({ status }) {
   return (
     <span
-      style={{
-        width: 8,
-        height: 8,
-        borderRadius: "50%",
-        background: STATUS_COLOR[status],
-        display: "inline-block",
-        flexShrink: 0,
-      }}
+      className="mon-status-dot"
+      style={{ background: STATUS_COLOR[status] }}
     />
   );
 }
 
 function StageTabs({ activeStage, onStageChange, alertCounts = {} }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: 6,
-        overflowX: "auto",
-        paddingBottom: 2,
-      }}
-    >
+    <div className="mon-stage-tabs">
       {stageRoutes.map((stage) => {
         const isActive = activeStage === stage.id;
         const count = alertCounts[stage.id] || 0;
@@ -142,42 +130,11 @@ function StageTabs({ activeStage, onStageChange, alertCounts = {} }) {
           <button
             key={stage.id}
             onClick={() => onStageChange(stage)}
-            style={{
-              position: "relative",
-              border: "1px solid #E7E2DC",
-              background: isActive ? "#111111" : "#FFFFFF",
-              color: isActive ? "#FFFFFF" : "#6B6B6B",
-              borderRadius: 8,
-              padding: "8px 14px",
-              fontSize: 13,
-              fontWeight: isActive ? 600 : 500,
-              fontFamily: "var(--font)",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
+            className={`mon-tab-btn${isActive ? " active" : ""}`}
           >
             {stage.label}
             {count > 0 && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: -7,
-                  right: -7,
-                  background: "#B65E4A",
-                  color: "#FFFFFF",
-                  borderRadius: "50%",
-                  minWidth: 18,
-                  height: 18,
-                  fontSize: 10,
-                  fontWeight: 700,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "0 4px",
-                  lineHeight: 1,
-                  boxSizing: "border-box",
-                }}
-              >
+              <span className="mon-tab-badge">
                 {count > 99 ? "99+" : count}
               </span>
             )}
@@ -190,63 +147,15 @@ function StageTabs({ activeStage, onStageChange, alertCounts = {} }) {
 
 function SectionHeader({ title, summary, status }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        gap: 16,
-        marginBottom: 18,
-      }}
-    >
+    <div className="mon-section-header">
       <div>
-        <div
-          style={{
-            fontSize: 11,
-            color: "#6B6B6B",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            fontWeight: 600,
-            marginBottom: 6,
-          }}
-        >
-          Dashboard operativo
-        </div>
-        <h1
-          style={{
-            fontSize: 28,
-            lineHeight: 1.15,
-            fontWeight: 600,
-            color: "#1F1F1F",
-            margin: 0,
-          }}
-        >
-          {title}
-        </h1>
-        <p
-          style={{
-            fontSize: 14,
-            color: "#6B6B6B",
-            marginTop: 6,
-            maxWidth: 680,
-          }}
-        >
-          {summary}
-        </p>
+        <div className="mon-section-label">Dashboard operativo</div>
+        <h1 className="mon-section-title">{title}</h1>
+        <p className="mon-section-summary">{summary}</p>
       </div>
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          background: STATUS_BG[status],
-          color: STATUS_COLOR[status],
-          borderRadius: 20,
-          padding: "6px 12px",
-          fontSize: 12,
-          fontWeight: 700,
-          whiteSpace: "nowrap",
-        }}
+        className="mon-section-status-badge"
+        style={{ background: STATUS_BG[status], color: STATUS_COLOR[status] }}
       >
         {/* <StatusDot status={status} />
         {STATUS_LABEL[status]} */}
@@ -298,91 +207,27 @@ function AlertaBannerPreregistro({ ordenesIncompletas }) {
   const atencion = alertas.filter((a) => a.tipo === "warning").length;
 
   return (
-    <div
-      style={{
-        background: "#FFF9F7",
-        border: "1px solid #F0D9D4",
-        borderRadius: 10,
-        padding: "12px 16px",
-        marginBottom: 18,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 10,
-          flexWrap: "wrap",
-        }}
-      >
-        <span style={{ fontSize: 14, fontWeight: 600, color: "#1F1F1F" }}>
-          Alertas
-        </span>
-        <span
-          style={{
-            background: "#B65E4A",
-            color: "#FFFFFF",
-            borderRadius: 999,
-            fontSize: 11,
-            fontWeight: 700,
-            padding: "2px 8px",
-          }}
-        >
-          {alertas.length}
-        </span>
+    <div className="mon-alert-banner">
+      <div className="mon-alert-banner__header">
+        <span className="mon-alert-banner__title">Alertas</span>
+        <span className="mon-alert-banner__count">{alertas.length}</span>
         {criticas > 0 && (
-          <span
-            style={{
-              background: STATUS_BG.error,
-              color: STATUS_COLOR.error,
-              borderRadius: 999,
-              fontSize: 11,
-              fontWeight: 600,
-              padding: "2px 8px",
-            }}
-          >
+          <span className="mon-badge" style={{ background: STATUS_BG.error, color: STATUS_COLOR.error }}>
             {criticas} crítica{criticas !== 1 ? "s" : ""}
           </span>
         )}
         {atencion > 0 && (
-          <span
-            style={{
-              background: STATUS_BG.warning,
-              color: STATUS_COLOR.warning,
-              borderRadius: 999,
-              fontSize: 11,
-              fontWeight: 600,
-              padding: "2px 8px",
-            }}
-          >
+          <span className="mon-badge" style={{ background: STATUS_BG.warning, color: STATUS_COLOR.warning }}>
             {atencion} en atención
           </span>
         )}
       </div>
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        {alertas.map((alerta, idx) => (
-          <div
-            key={alerta.proveedor}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              fontSize: 13,
-              color: "#333333",
-              padding: "5px 0",
-              borderTop: idx === 0 ? "none" : "1px solid #F0EDE9",
-            }}
-          >
+      <div className="mon-alert-banner__list">
+        {alertas.map((alerta) => (
+          <div key={alerta.proveedor} className="mon-alert-banner__item">
             <StatusDot status={alerta.tipo} />
-            <span style={{ fontWeight: 600, flex: 1 }}>{alerta.proveedor}</span>
-            <span
-              style={{
-                color: STATUS_COLOR[alerta.tipo],
-                fontWeight: 600,
-                fontSize: 12,
-              }}
-            >
+            <span className="mon-alert-banner__item-name">{alerta.proveedor}</span>
+            <span className="mon-alert-banner__item-value" style={{ color: STATUS_COLOR[alerta.tipo] }}>
               {alerta.incompletas} incompleta{alerta.incompletas !== 1 ? "s" : ""}
             </span>
           </div>
@@ -418,93 +263,29 @@ function AlertaBannerEnvio({ data }) {
   const atencion = alertas.filter((a) => a.tipo === "warning").length;
 
   return (
-    <div
-      style={{
-        background: "#FFF9F7",
-        border: "1px solid #F0D9D4",
-        borderRadius: 10,
-        padding: "12px 16px",
-        marginBottom: 18,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 10,
-          flexWrap: "wrap",
-        }}
-      >
-        <span style={{ fontSize: 14, fontWeight: 600, color: "#1F1F1F" }}>
-          🔔 Alertas activas
-        </span>
-        <span
-          style={{
-            background: "#B65E4A",
-            color: "#FFFFFF",
-            borderRadius: 999,
-            fontSize: 11,
-            fontWeight: 700,
-            padding: "2px 8px",
-          }}
-        >
-          {alertas.length}
-        </span>
+    <div className="mon-alert-banner">
+      <div className="mon-alert-banner__header">
+        <span className="mon-alert-banner__title">🔔 Alertas activas</span>
+        <span className="mon-alert-banner__count">{alertas.length}</span>
         {criticas > 0 && (
-          <span
-            style={{
-              background: STATUS_BG.error,
-              color: STATUS_COLOR.error,
-              borderRadius: 999,
-              fontSize: 11,
-              fontWeight: 600,
-              padding: "2px 8px",
-            }}
-          >
+          <span className="mon-badge" style={{ background: STATUS_BG.error, color: STATUS_COLOR.error }}>
             {criticas} crítica{criticas !== 1 ? "s" : ""}
           </span>
         )}
         {atencion > 0 && (
-          <span
-            style={{
-              background: STATUS_BG.warning,
-              color: STATUS_COLOR.warning,
-              borderRadius: 999,
-              fontSize: 11,
-              fontWeight: 600,
-              padding: "2px 8px",
-            }}
-          >
+          <span className="mon-badge" style={{ background: STATUS_BG.warning, color: STATUS_COLOR.warning }}>
             {atencion} en atención
           </span>
         )}
       </div>
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        {alertas.map((alerta, idx) => (
-          <div
-            key={alerta.id_orden}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              fontSize: 13,
-              color: "#333333",
-              padding: "5px 0",
-              borderTop: idx === 0 ? "none" : "1px solid #F0EDE9",
-            }}
-          >
+      <div className="mon-alert-banner__list">
+        {alertas.map((alerta) => (
+          <div key={alerta.id_orden} className="mon-alert-banner__item">
             <StatusDot status={alerta.tipo} />
-            <span style={{ fontWeight: 600, flex: 1 }}>
-              {alerta.nombre_proveedor}
-            </span>
+            <span className="mon-alert-banner__item-name">{alerta.nombre_proveedor}</span>
             <span
-              style={{
-                color: STATUS_COLOR[alerta.tipo],
-                fontWeight: 600,
-                fontSize: 12,
-                fontVariantNumeric: "tabular-nums",
-              }}
+              className="mon-alert-banner__item-value"
+              style={{ color: STATUS_COLOR[alerta.tipo], fontVariantNumeric: "tabular-nums" }}
             >
               {alerta.elapsed} min en espera
             </span>
@@ -518,22 +299,9 @@ function AlertaBannerEnvio({ data }) {
 function ChartCard({ title, children, footer }) {
   return (
     <div className="card" style={{ minHeight: 320 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 12,
-          marginBottom: 16,
-        }}
-      >
-        <h2
-          style={{ fontSize: 15, fontWeight: 600, color: "#1F1F1F", margin: 0 }}
-        >
-          {title}
-        </h2>
-        {footer && (
-          <div style={{ fontSize: 12, color: "#6B6B6B" }}>{footer}</div>
-        )}
+      <div className="mon-chart-header">
+        <h2 className="mon-chart-title">{title}</h2>
+        {footer && <div className="mon-chart-footer">{footer}</div>}
       </div>
       {children}
     </div>
@@ -543,22 +311,13 @@ function ChartCard({ title, children, footer }) {
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div
-      style={{
-        background: "#FFFFFF",
-        border: "1px solid #E7E2DC",
-        borderRadius: 8,
-        padding: "8px 12px",
-        fontSize: 12,
-        fontFamily: "Inter",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-      }}
-    >
-      <div style={{ color: "#6B6B6B", marginBottom: 4 }}>{label}</div>
+    <div className="mon-tooltip">
+      <div className="mon-tooltip__label">{label}</div>
       {payload.map((item) => (
         <div
           key={item.dataKey}
-          style={{ color: item.color || "#1F1F1F", fontWeight: 600 }}
+          className="mon-tooltip__row"
+          style={{ color: item.color || "#1F1F1F" }}
         >
           {item.name}: {item.value}
         </div>
@@ -625,24 +384,14 @@ function LineMetricChart({ data, lines }) {
 
 function ProgressBar({ value, status = "success" }) {
   return (
-    <div style={{ width: "100%" }}>
+    <div className="mon-progress">
       <div
+        className="mon-progress__fill"
         style={{
-          height: 6,
-          borderRadius: 6,
-          background: "#F0EDE8",
-          overflow: "hidden",
+          width: `${Math.max(0, Math.min(value, 100))}%`,
+          background: STATUS_COLOR[status],
         }}
-      >
-        <div
-          style={{
-            width: `${Math.max(0, Math.min(value, 100))}%`,
-            height: "100%",
-            background: STATUS_COLOR[status],
-            borderRadius: 6,
-          }}
-        />
-      </div>
+      />
     </div>
   );
 }
@@ -901,22 +650,12 @@ function TendenciaSemanalChart() {
     <ChartCard
       title="Tendencia semanal de órdenes incompletas"
       footer={
-        <div style={{ display: "flex", gap: 4 }}>
+        <div className="mon-toggle-group">
           {[4, 8, 12].map((n) => (
             <button
               key={n}
               onClick={() => setSemanas(n)}
-              style={{
-                border: "1px solid #E7E2DC",
-                background: semanas === n ? "#111111" : "#FFFFFF",
-                color: semanas === n ? "#FFFFFF" : "#6B6B6B",
-                borderRadius: 6,
-                padding: "2px 8px",
-                fontSize: 11,
-                fontWeight: 600,
-                fontFamily: "var(--font)",
-                cursor: "pointer",
-              }}
+              className={`mon-toggle-btn${semanas === n ? " active" : ""}`}
             >
               {n}S
             </button>
@@ -993,42 +732,16 @@ function ParetoProveedorTable() {
           : "success",
   }));
 
-  const tableStyle = { width: "100%", borderCollapse: "collapse", fontSize: 13, fontFamily: "Inter" };
-  const thStyle = {
-    textAlign: "left",
-    padding: "8px 10px",
-    fontSize: 11,
-    fontWeight: 600,
-    color: "#6B6B6B",
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    borderBottom: "1px solid #E7E2DC",
-    background: "#FAFAF8",
-  };
-  const tdStyle = { padding: "9px 10px", borderBottom: "1px solid #F0EDE8", color: "#1F1F1F", verticalAlign: "middle" };
-
-  const btnStyle = (active) => ({
-    border: "1px solid #E7E2DC",
-    background: active ? "#111111" : "#FFFFFF",
-    color: active ? "#FFFFFF" : "#6B6B6B",
-    borderRadius: 6,
-    padding: "2px 8px",
-    fontSize: 11,
-    fontWeight: 600,
-    fontFamily: "var(--font)",
-    cursor: "pointer",
-  });
-
   return (
     <ChartCard
       title="Órdenes incompletas por proveedor (Pareto)"
       footer={
-        <div style={{ display: "flex", gap: 4 }}>
+        <div className="mon-toggle-group">
           {SEMANAS_OPTIONS.map((n) => (
             <button
               key={n}
               onClick={() => setSemanas(n)}
-              style={btnStyle(semanas === n)}
+              className={`mon-toggle-btn${semanas === n ? " active" : ""}`}
             >
               {n === 0 ? "Todo" : `${n}S`}
             </button>
@@ -1037,32 +750,26 @@ function ParetoProveedorTable() {
       }
     >
       {loading ? (
-        <div style={{ height: 160, display: "flex", alignItems: "center", justifyContent: "center", color: "#6B6B6B", fontSize: 13 }}>
-          Cargando...
-        </div>
+        <div className="mon-state-empty--sm">Cargando...</div>
       ) : paretoData.length === 0 ? (
-        <div style={{ height: 160, display: "flex", alignItems: "center", justifyContent: "center", color: "#6B6B6B", fontSize: 13 }}>
-          Sin órdenes incompletas
-        </div>
+        <div className="mon-state-empty--sm">Sin órdenes incompletas</div>
       ) : (
-        <table style={tableStyle}>
+        <table className="mon-table">
           <thead>
             <tr>
-              <th style={thStyle}>Proveedor</th>
-              <th style={{ ...thStyle, textAlign: "right" }}>Incompletas</th>
-              <th style={{ ...thStyle, textAlign: "right" }}>% Acum</th>
+              <th className="mon-th">Proveedor</th>
+              <th className="mon-th mon-th--right">Incompletas</th>
+              <th className="mon-th mon-th--right">% Acum</th>
             </tr>
           </thead>
           <tbody>
             {paretoData.map((item) => (
               <tr key={item.proveedor} style={{ background: STATUS_BG[item.banda] }}>
-                <td style={{ ...tdStyle, fontWeight: 600, color: STATUS_COLOR[item.banda] }}>
+                <td className="mon-td mon-td--bold" style={{ color: STATUS_COLOR[item.banda] }}>
                   {item.proveedor}
                 </td>
-                <td style={{ ...tdStyle, textAlign: "right", fontWeight: 600 }}>
-                  {item.incompletas}
-                </td>
-                <td style={{ ...tdStyle, textAlign: "right", fontWeight: 700, color: STATUS_COLOR[item.banda] }}>
+                <td className="mon-td mon-td--right mon-td--bold">{item.incompletas}</td>
+                <td className="mon-td mon-td--right" style={{ fontWeight: 700, color: STATUS_COLOR[item.banda] }}>
                   {item.pctAcum}%
                 </td>
               </tr>
@@ -1099,30 +806,6 @@ function ProveedoresEstrellaTable() {
   const [historial, setHistorial] = useState([]);
   const [loadingHistorial, setLoadingHistorial] = useState(false);
 
-  const tableStyle = {
-    width: "100%",
-    borderCollapse: "collapse",
-    fontSize: 13,
-    fontFamily: "Inter",
-  };
-  const thStyle = {
-    textAlign: "left",
-    padding: "8px 10px",
-    fontSize: 11,
-    fontWeight: 600,
-    color: "#6B6B6B",
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    borderBottom: "1px solid #E7E2DC",
-    background: "#FAFAF8",
-  };
-  const tdStyle = {
-    padding: "9px 10px",
-    borderBottom: "1px solid #F0EDE8",
-    color: "#1F1F1F",
-    verticalAlign: "middle",
-  };
-
   const handleRowClick = async (item) => {
     if (expanded === item.id_proveedor) {
       setExpanded(null);
@@ -1144,28 +827,16 @@ function ProveedoresEstrellaTable() {
     }
   };
 
-  const btnStyle = (active) => ({
-    border: "1px solid #E7E2DC",
-    background: active ? "#111111" : "#FFFFFF",
-    color: active ? "#FFFFFF" : "#6B6B6B",
-    borderRadius: 6,
-    padding: "2px 8px",
-    fontSize: 11,
-    fontWeight: 600,
-    fontFamily: "var(--font)",
-    cursor: "pointer",
-  });
-
   return (
     <ChartCard
       title="Ranking de proveedores"
       footer={
-        <div style={{ display: "flex", gap: 4 }}>
+        <div className="mon-toggle-group">
           {[0, 4, 8, 12].map((n) => (
             <button
               key={n}
               onClick={() => { setSemanas(n); setExpanded(null); }}
-              style={btnStyle(semanas === n)}
+              className={`mon-toggle-btn${semanas === n ? ' active' : ''}`}
             >
               {n === 0 ? "Todo" : `${n}S`}
             </button>
@@ -1174,27 +845,16 @@ function ProveedoresEstrellaTable() {
       }
     >
       {loading ? (
-        <div
-          style={{
-            height: 200,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#6B6B6B",
-            fontSize: 13,
-          }}
-        >
-          Cargando...
-        </div>
+        <div className="mon-state-empty">Cargando...</div>
       ) : (
-        <div className="table-scroll"><table style={tableStyle}>
+        <div className="table-scroll"><table className="mon-table">
           <thead>
             <tr>
-              <th style={{ ...thStyle, width: 32 }}>#</th>
-              <th style={thStyle}>Proveedor</th>
-              <th style={{ ...thStyle, textAlign: "right" }}>Tasa Acept (%)</th>
-              <th style={{ ...thStyle, textAlign: "right" }}>Volumen (pp)</th>
-              <th style={{ ...thStyle, textAlign: "center" }}>Categoría</th>
+              <th className="mon-th" style={{ width: 32 }}>#</th>
+              <th className="mon-th">Proveedor</th>
+              <th className="mon-th mon-th--right">Tasa Acept (%)</th>
+              <th className="mon-th mon-th--right">Volumen (pp)</th>
+              <th className="mon-th mon-th--center">Categoría</th>
             </tr>
           </thead>
           <tbody>
@@ -1210,24 +870,20 @@ function ProveedoresEstrellaTable() {
                     cursor: "pointer",
                   }}
                 >
-                  <td style={{ ...tdStyle, color: "#6B6B6B" }}>{i + 1}</td>
-                  <td style={{ ...tdStyle, fontWeight: 600 }}>
+                  <td className="mon-td mon-td--muted">{i + 1}</td>
+                  <td className="mon-td mon-td--bold">
                     {item.proveedor}
                   </td>
                   <td
-                    style={{
-                      ...tdStyle,
-                      textAlign: "right",
-                      fontWeight: 700,
-                      color: ESTRELLA_COLOR[item.categoria],
-                    }}
+                    className="mon-td mon-td--right"
+                    style={{ fontWeight: 700, color: ESTRELLA_COLOR[item.categoria] }}
                   >
                     {item.tasa_aceptacion}%
                   </td>
-                  <td style={{ ...tdStyle, textAlign: "right" }}>
+                  <td className="mon-td mon-td--right">
                     {item.volumen.toLocaleString("es-MX")}
                   </td>
-                  <td style={{ ...tdStyle, textAlign: "center" }}>
+                  <td className="mon-td mon-td--center">
                     <span
                       style={{
                         background: ESTRELLA_BG[item.categoria],
@@ -1358,18 +1014,7 @@ function RendimientoEquiposPreregistro() {
   if (loading) {
     return (
       <ChartCard title="Rendimiento por equipo">
-        <div
-          style={{
-            height: 200,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#6B6B6B",
-            fontSize: 13,
-          }}
-        >
-          Cargando...
-        </div>
+        <div className="mon-state-empty">Cargando...</div>
       </ChartCard>
     );
   }
@@ -1377,18 +1022,7 @@ function RendimientoEquiposPreregistro() {
   if (!data.length) {
     return (
       <ChartCard title="Rendimiento por equipo">
-        <div
-          style={{
-            height: 200,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#6B6B6B",
-            fontSize: 13,
-          }}
-        >
-          Sin órdenes activas asignadas a equipos
-        </div>
+        <div className="mon-state-empty">Sin órdenes activas asignadas a equipos</div>
       </ChartCard>
     );
   }
@@ -1507,25 +1141,8 @@ function RendimientoEquiposPreregistro() {
               </div>
 
               {isExpanded && item.prepacks.length > 0 && (
-                <div
-                  style={{
-                    border: "1px solid #E7E2DC",
-                    borderTop: "none",
-                    borderRadius: "0 0 8px 8px",
-                    background: "#FFFFFF",
-                    padding: "12px 16px",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: "#6B6B6B",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                      marginBottom: 10,
-                    }}
-                  >
+                <div className="mon-expand-panel">
+                  <div className="mon-expand-panel__label">
                     Prepacks recibidos ({item.prepacks.length})
                   </div>
                   <div style={{ display: "grid", gap: 8 }}>
@@ -1604,30 +1221,6 @@ function BacklogEnvioTable({ data, loading }) {
     .map((item) => ({ ...item, elapsed: elapsedMinutes(item.fecha_creacion) }))
     .sort((a, b) => b.elapsed - a.elapsed);
 
-  const tableStyle = {
-    width: "100%",
-    borderCollapse: "collapse",
-    fontSize: 13,
-    fontFamily: "Inter",
-  };
-  const thStyle = {
-    textAlign: "left",
-    padding: "8px 10px",
-    fontSize: 11,
-    fontWeight: 600,
-    color: "#6B6B6B",
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    borderBottom: "1px solid #E7E2DC",
-    background: "#FAFAF8",
-  };
-  const tdStyle = {
-    padding: "9px 10px",
-    borderBottom: "1px solid #F0EDE8",
-    color: "#1F1F1F",
-    verticalAlign: "middle",
-  };
-
   const alertCount = rows.filter((r) => r.elapsed >= BACKLOG_CRITICAL_MIN).length;
   const warningCount = rows.filter(
     (r) => r.elapsed >= BACKLOG_WARNING_MIN && r.elapsed < BACKLOG_CRITICAL_MIN,
@@ -1669,39 +1262,17 @@ function BacklogEnvioTable({ data, loading }) {
   return (
     <ChartCard title="Backlog de órdenes" footer={footer}>
       {loading ? (
-        <div
-          style={{
-            height: 200,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#6B6B6B",
-            fontSize: 13,
-          }}
-        >
-          Cargando...
-        </div>
+        <div className="mon-state-empty">Cargando...</div>
       ) : rows.length === 0 ? (
-        <div
-          style={{
-            height: 200,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#6B6B6B",
-            fontSize: 13,
-          }}
-        >
-          Sin órdenes activas en las últimas 12 h
-        </div>
+        <div className="mon-state-empty">Sin órdenes activas en las últimas 12 h</div>
       ) : (
-        <div className="table-scroll"><table style={tableStyle}>
+        <div className="table-scroll"><table className="mon-table">
           <thead>
             <tr>
-              <th style={thStyle}>Orden</th>
-              <th style={thStyle}>Proveedor</th>
-              <th style={{ ...thStyle, textAlign: "right" }}>Recibidos</th>
-              <th style={{ ...thStyle, textAlign: "right" }}>Tiempo</th>
+              <th className="mon-th">Orden</th>
+              <th className="mon-th">Proveedor</th>
+              <th className="mon-th mon-th--right">Recibidos</th>
+              <th className="mon-th mon-th--right">Tiempo</th>
             </tr>
           </thead>
           <tbody>
@@ -1721,21 +1292,16 @@ function BacklogEnvioTable({ data, loading }) {
                   : "transparent";
               return (
                 <tr key={item.id_orden} style={{ background: rowBg }}>
-                  <td style={{ ...tdStyle, fontWeight: 600 }}>
+                  <td className="mon-td mon-td--bold">
                     {item.id_orden}
                   </td>
-                  <td style={tdStyle}>{item.nombre_proveedor}</td>
-                  <td style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}>
+                  <td className="mon-td">{item.nombre_proveedor}</td>
+                  <td className="mon-td mon-td--right mon-td--muted">
                     {item.prepacks_recibidos}/{item.total_prepacks}
                   </td>
                   <td
-                    style={{
-                      ...tdStyle,
-                      textAlign: "right",
-                      fontWeight: 700,
-                      color: timeColor,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
+                    className="mon-td mon-td--right"
+                    style={{ fontWeight: 700, color: timeColor, fontVariantNumeric: "tabular-nums" }}
                   >
                     {item.elapsed} min
                     {isCritical && (
@@ -1810,72 +1376,14 @@ function OrdenesActivasTable() {
     })
     .sort((a, b) => b.elapsed - a.elapsed);
 
-  const selectStyle = {
-    border: "1px solid #E7E2DC",
-    borderRadius: 6,
-    padding: "4px 8px",
-    fontSize: 12,
-    fontFamily: "var(--font)",
-    background: "#FFFFFF",
-    color: "#1F1F1F",
-    cursor: "pointer",
-    outline: "none",
-  };
-
-  const alertBtnStyle = (active, variant) => ({
-    border: `1px solid ${active ? STATUS_COLOR[variant] : "#E7E2DC"}`,
-    background: active ? STATUS_BG[variant] : "#FFFFFF",
-    color: active ? STATUS_COLOR[variant] : "#6B6B6B",
-    borderRadius: 6,
-    padding: "4px 10px",
-    fontSize: 11,
-    fontWeight: 600,
-    fontFamily: "var(--font)",
-    cursor: "pointer",
-  });
-
-  const tableStyle = {
-    width: "100%",
-    borderCollapse: "collapse",
-    fontSize: 13,
-    fontFamily: "Inter",
-  };
-  const thStyle = {
-    textAlign: "left",
-    padding: "8px 10px",
-    fontSize: 11,
-    fontWeight: 600,
-    color: "#6B6B6B",
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    borderBottom: "1px solid #E7E2DC",
-    background: "#FAFAF8",
-  };
-  const tdStyle = {
-    padding: "9px 10px",
-    borderBottom: "1px solid #F0EDE8",
-    color: "#1F1F1F",
-    verticalAlign: "middle",
-  };
-
   return (
     <ChartCard title="Estatus de órdenes activas">
       {/* Filter bar */}
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          alignItems: "center",
-          flexWrap: "wrap",
-          marginBottom: 14,
-          paddingBottom: 12,
-          borderBottom: "1px solid #F0EDE8",
-        }}
-      >
+      <div className="mon-filter-bar">
         <select
           value={filtroProveedor}
           onChange={(e) => setFiltroProveedor(e.target.value)}
-          style={selectStyle}
+          className="mon-select"
         >
           <option value="">Todos los proveedores</option>
           {proveedores.map((p) => (
@@ -1888,7 +1396,7 @@ function OrdenesActivasTable() {
         <select
           value={filtroEtapa}
           onChange={(e) => setFiltroEtapa(e.target.value)}
-          style={selectStyle}
+          className="mon-select"
         >
           <option value="">Todas las etapas</option>
           {etapas.map((e) => (
@@ -1898,59 +1406,45 @@ function OrdenesActivasTable() {
           ))}
         </select>
 
-        <div style={{ display: "flex", gap: 4, marginLeft: "auto" }}>
+        <div className="mon-toggle-group" style={{ marginLeft: "auto" }}>
           {[
             { key: "todos", label: "Todos", variant: "success" },
             { key: "atencion", label: "Atención", variant: "warning" },
             { key: "critico", label: "Crítico", variant: "error" },
-          ].map(({ key, label, variant }) => (
-            <button
-              key={key}
-              onClick={() => setFiltroAlerta(key)}
-              style={alertBtnStyle(filtroAlerta === key, variant)}
-            >
-              {label}
-            </button>
-          ))}
+          ].map(({ key, label, variant }) => {
+            const active = filtroAlerta === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setFiltroAlerta(key)}
+                className="mon-toggle-btn mon-toggle-btn--alert"
+                style={active ? {
+                  background: STATUS_BG[variant],
+                  color: STATUS_COLOR[variant],
+                  borderColor: STATUS_COLOR[variant],
+                } : undefined}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {loading ? (
-        <div
-          style={{
-            height: 180,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#6B6B6B",
-            fontSize: 13,
-          }}
-        >
-          Cargando...
-        </div>
+        <div className="mon-state-empty">Cargando...</div>
       ) : filtered.length === 0 ? (
-        <div
-          style={{
-            height: 180,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#6B6B6B",
-            fontSize: 13,
-          }}
-        >
-          Sin órdenes activas con los filtros seleccionados
-        </div>
+        <div className="mon-state-empty">Sin órdenes activas con los filtros seleccionados</div>
       ) : (
-        <div className="table-scroll"><table style={tableStyle}>
+        <div className="table-scroll"><table className="mon-table">
           <thead>
             <tr>
-              <th style={thStyle}>Orden</th>
-              <th style={thStyle}>Proveedor</th>
-              <th style={thStyle}>Etapa</th>
-              <th style={{ ...thStyle, textAlign: "right" }}>Prepacks</th>
-              <th style={{ ...thStyle, textAlign: "right" }}>Hora ingreso</th>
-              <th style={{ ...thStyle, textAlign: "right" }}>Tiempo</th>
+              <th className="mon-th">Orden</th>
+              <th className="mon-th">Proveedor</th>
+              <th className="mon-th">Etapa</th>
+              <th className="mon-th mon-th--right">Prepacks</th>
+              <th className="mon-th mon-th--right">Hora ingreso</th>
+              <th className="mon-th mon-th--right">Tiempo</th>
             </tr>
           </thead>
           <tbody>
@@ -1976,42 +1470,24 @@ function OrdenesActivasTable() {
               });
               return (
                 <tr key={item.id_orden} style={{ background: rowBg }}>
-                  <td style={{ ...tdStyle, fontWeight: 600, fontSize: 12 }}>
+                  <td className="mon-td mon-td--bold" style={{ fontSize: 12 }}>
                     {item.id_orden}
                   </td>
-                  <td style={tdStyle}>{item.nombre_proveedor}</td>
-                  <td style={tdStyle}>
-                    <span
-                      style={{
-                        background: "#F0EDE8",
-                        borderRadius: 10,
-                        padding: "2px 8px",
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: "#1F1F1F",
-                      }}
-                    >
+                  <td className="mon-td">{item.nombre_proveedor}</td>
+                  <td className="mon-td">
+                    <span className="mon-tag">
                       {ETAPA_LABEL[item.etapa_actual] ?? item.etapa_actual}
                     </span>
                   </td>
-                  <td
-                    style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}
-                  >
+                  <td className="mon-td mon-td--right mon-td--muted">
                     {item.prepacks_recibidos}/{item.total_prepacks}
                   </td>
-                  <td
-                    style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}
-                  >
+                  <td className="mon-td mon-td--right mon-td--muted">
                     {horaIngreso}
                   </td>
                   <td
-                    style={{
-                      ...tdStyle,
-                      textAlign: "right",
-                      fontWeight: 700,
-                      color: timeColor,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
+                    className="mon-td mon-td--right"
+                    style={{ fontWeight: 700, color: timeColor, fontVariantNumeric: "tabular-nums" }}
                   >
                     {item.elapsed} min
                     {isCritical && (
@@ -2050,30 +1526,6 @@ function buildStageData(
   bahiasKPIs, bahiasOcupacionData, bahiasTendencia,
   auditoriaKPIs,
 ) {
-  // shared table styles
-  const tableStyle = {
-    width: "100%",
-    borderCollapse: "collapse",
-    fontSize: 13,
-    fontFamily: "Inter",
-  };
-  const thStyle = {
-    textAlign: "left",
-    padding: "8px 10px",
-    fontSize: 11,
-    fontWeight: 600,
-    color: "#6B6B6B",
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    borderBottom: "1px solid #E7E2DC",
-    background: "#FAFAF8",
-  };
-  const tdStyle = {
-    padding: "9px 10px",
-    borderBottom: "1px solid #F0EDE8",
-    color: "#1F1F1F",
-    verticalAlign: "middle",
-  };
   const PIE_COLORS = ["#6E8B6B", "#A48F7A", "#C9963B", "#B65E4A", "#8B7355"];
   const CATEGORIA_COLOR = {
     estrella: "success",
@@ -2274,12 +1726,12 @@ function buildStageData(
       ],
       charts: [
         <ChartCard key="qa-pareto" title="Errores por proveedor (Pareto)">
-          <div className="table-scroll"><table style={tableStyle}>
+          <div className="table-scroll"><table className="mon-table">
             <thead>
               <tr>
-                <th style={thStyle}>Proveedor</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Errores</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>% Acum</th>
+                <th className="mon-th">Proveedor</th>
+                <th className="mon-th mon-th--right">Errores</th>
+                <th className="mon-th mon-th--right">% Acum</th>
               </tr>
             </thead>
             <tbody>
@@ -2288,19 +1740,13 @@ function buildStageData(
                   key={item.proveedor}
                   style={{ background: STATUS_BG[item.banda] }}
                 >
-                  <td style={tdStyle}>{item.proveedor}</td>
-                  <td
-                    style={{ ...tdStyle, textAlign: "right", fontWeight: 600 }}
-                  >
+                  <td className="mon-td">{item.proveedor}</td>
+                  <td className="mon-td mon-td--right mon-td--bold">
                     {item.errores}
                   </td>
                   <td
-                    style={{
-                      ...tdStyle,
-                      textAlign: "right",
-                      fontWeight: 700,
-                      color: STATUS_COLOR[item.banda],
-                    }}
+                    className="mon-td mon-td--right"
+                    style={{ fontWeight: 700, color: STATUS_COLOR[item.banda] }}
                   >
                     {item.pctAcum}%
                   </td>
@@ -2310,26 +1756,24 @@ function buildStageData(
           </table></div>
         </ChartCard>,
         <ChartCard key="qa-retornados" title="Prepacks retornados por QA">
-          <div className="table-scroll"><table style={tableStyle}>
+          <div className="table-scroll"><table className="mon-table">
             <thead>
               <tr>
-                <th style={thStyle}>PP</th>
-                <th style={thStyle}>Proveedor</th>
-                <th style={thStyle}>Motivo</th>
-                <th style={thStyle}>Equipo</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Hora</th>
+                <th className="mon-th">PP</th>
+                <th className="mon-th">Proveedor</th>
+                <th className="mon-th">Motivo</th>
+                <th className="mon-th">Equipo</th>
+                <th className="mon-th mon-th--right">Hora</th>
               </tr>
             </thead>
             <tbody>
               {(prepacksQA.length > 0 ? prepacksQA : prepacksRetornadosQA).map((item) => (
                 <tr key={item.pp}>
-                  <td style={{ ...tdStyle, fontWeight: 600 }}>{item.pp}</td>
-                  <td style={tdStyle}>{item.proveedor}</td>
-                  <td style={tdStyle}>{item.motivo ?? "—"}</td>
-                  <td style={tdStyle}>{item.equipo}</td>
-                  <td
-                    style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}
-                  >
+                  <td className="mon-td mon-td--bold">{item.pp}</td>
+                  <td className="mon-td">{item.proveedor}</td>
+                  <td className="mon-td">{item.motivo ?? "—"}</td>
+                  <td className="mon-td">{item.equipo}</td>
+                  <td className="mon-td mon-td--right mon-td--muted">
                     {item.hora}
                   </td>
                 </tr>
@@ -2423,7 +1867,7 @@ function buildStageData(
       charts: [
         /* ── Pastel con leyenda detallada ── */
         <ChartCard key="reg-pie" title="Distribución por almacén">
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div className="mon-pie-legend-layout">
             <ResponsiveContainer width={200} height={200}>
               <PieChart>
                 <Pie data={distribucionAlmacen} dataKey="prepacks" nameKey="almacen"
@@ -2435,34 +1879,32 @@ function buildStageData(
                 <Tooltip content={<CustomTooltip />} />
               </PieChart>
             </ResponsiveContainer>
-            <div style={{ flex: 1, display: "grid", gap: 10 }}>
+            <div className="mon-pie-legend-list">
               {(() => {
                 const totalAlmacen = distribucionAlmacen.reduce((s, d) => s + d.prepacks, 0);
                 return distribucionAlmacen.map((item, i) => (
-                  <div key={item.almacen} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: 2, background: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
+                  <div key={item.almacen} className="mon-pie-legend-item">
+                    <div className="mon-pie-legend-swatch" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1F1F1F" }}>{item.almacen}</div>
-                      <div style={{ fontSize: 11, color: "#6B6B6B" }}>{item.prepacks} pp · {((item.prepacks / totalAlmacen) * 100).toFixed(1)}%</div>
+                      <div className="mon-pie-legend-name">{item.almacen}</div>
+                      <div className="mon-pie-legend-detail">{item.prepacks} pp · {((item.prepacks / totalAlmacen) * 100).toFixed(1)}%</div>
                     </div>
                   </div>
                 ));
               })()}
-              <div style={{ borderTop: "1px solid #E7E2DC", paddingTop: 8, fontSize: 12, fontWeight: 700, color: "#1F1F1F" }}>
+              <div className="mon-pie-legend-total">
                 Total: {distribucionAlmacen.reduce((s, d) => s + d.prepacks, 0)} prepacks
               </div>
             </div>
           </div>
         </ChartCard>,
         <ChartCard key="reg-equipos" title="Ranking de equipos">
-          <table style={tableStyle}>
+          <table className="mon-table">
             <thead>
               <tr>
-                <th style={{ ...thStyle, width: 32 }}>#</th>
-                <th style={thStyle}>Equipo</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>
-                  Tiempo Promedio
-                </th>
+                <th className="mon-th" style={{ width: 32 }}>#</th>
+                <th className="mon-th">Equipo</th>
+                <th className="mon-th mon-th--right">Tiempo Promedio</th>
               </tr>
             </thead>
             <tbody>
@@ -2471,19 +1913,14 @@ function buildStageData(
                   key={item.equipo}
                   style={{ background: STATUS_BG[item.status] }}
                 >
-                  <td style={{ ...tdStyle, color: "#6B6B6B" }}>{i + 1}</td>
+                  <td className="mon-td mon-td--muted">{i + 1}</td>
                   <td
-                    style={{
-                      ...tdStyle,
-                      fontWeight: 600,
-                      color: STATUS_COLOR[item.status],
-                    }}
+                    className="mon-td mon-td--bold"
+                    style={{ color: STATUS_COLOR[item.status] }}
                   >
                     {item.equipo}
                   </td>
-                  <td
-                    style={{ ...tdStyle, textAlign: "right", fontWeight: 700 }}
-                  >
+                  <td className="mon-td mon-td--right" style={{ fontWeight: 700 }}>
                     {item.tiempoPromedio}
                   </td>
                 </tr>
@@ -2495,15 +1932,15 @@ function buildStageData(
         /* ── Backlog con alertas precisas, etapa y semáforo ── */
         <ChartCard key="reg-backlog" title="Backlog de PPs desde preregistro"
           footer={`Umbrales: ⚠ >10 min · 🔴 >20 min`}>
-          <div className="table-scroll"><table style={tableStyle}>
+          <div className="table-scroll"><table className="mon-table">
             <thead>
               <tr>
-                <th style={thStyle}>PP</th>
-                <th style={thStyle}>Proveedor</th>
-                <th style={thStyle}>Equipo</th>
-                <th style={thStyle}>Etapa</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Tiempo</th>
-                <th style={{ ...thStyle, textAlign: "center" }}>Alerta</th>
+                <th className="mon-th">PP</th>
+                <th className="mon-th">Proveedor</th>
+                <th className="mon-th">Equipo</th>
+                <th className="mon-th">Etapa</th>
+                <th className="mon-th mon-th--right">Tiempo</th>
+                <th className="mon-th mon-th--center">Alerta</th>
               </tr>
             </thead>
             <tbody>
@@ -2514,13 +1951,12 @@ function buildStageData(
                     background: getBacklogRowBg(item.minutosEnSistema, 10, 20),
                   }}
                 >
-                  <td style={{ ...tdStyle, fontWeight: 600 }}>{item.pp}</td>
-                  <td style={tdStyle}>{item.proveedor}</td>
-                  <td style={tdStyle}>{item.equipo}</td>
+                  <td className="mon-td mon-td--bold">{item.pp}</td>
+                  <td className="mon-td">{item.proveedor}</td>
+                  <td className="mon-td">{item.equipo}</td>
                   <td
+                    className="mon-td mon-td--right"
                     style={{
-                      ...tdStyle,
-                      textAlign: "right",
                       fontWeight: 700,
                       color:
                         item.minutosEnSistema >= 20
@@ -2581,12 +2017,12 @@ function buildStageData(
               <Bar dataKey="ppCrossDock" name="pp/min cross-dock" fill="#A48F7A" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-          <div style={{ display: 'flex', gap: 16, marginTop: 8, justifyContent: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#6B6B6B' }}>
-              <div style={{ width: 10, height: 10, background: '#6E8B6B', borderRadius: 2 }} /> pp/min total
+          <div className="mon-legend-row">
+            <div className="mon-legend-item">
+              <div className="mon-legend-swatch" style={{ background: '#6E8B6B' }} /> pp/min total
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#6B6B6B' }}>
-              <div style={{ width: 10, height: 10, background: '#A48F7A', borderRadius: 2 }} /> pp/min cross-dock
+            <div className="mon-legend-item">
+              <div className="mon-legend-swatch" style={{ background: '#A48F7A' }} /> pp/min cross-dock
             </div>
           </div>
         </ChartCard>,
@@ -2649,47 +2085,34 @@ function buildStageData(
           key="sorter-incorrectos"
           title="Paquetes sorteados incorrectamente"
         >
-          <div className="table-scroll"><table style={tableStyle}>
+          <div className="table-scroll"><table className="mon-table">
             <thead>
               <tr>
-                <th style={thStyle}>PP</th>
-                <th style={{ ...thStyle, textAlign: "center" }}>
-                  Bahía Actual
-                </th>
-                <th style={{ ...thStyle, textAlign: "center" }}>
-                  Bahía Correcta
-                </th>
-                <th style={thStyle}>Equipo</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Hora</th>
+                <th className="mon-th">PP</th>
+                <th className="mon-th mon-th--center">Bahía Actual</th>
+                <th className="mon-th mon-th--center">Bahía Correcta</th>
+                <th className="mon-th">Equipo</th>
+                <th className="mon-th mon-th--right">Hora</th>
               </tr>
             </thead>
             <tbody>
               {paquetesIncorrectos.map((item) => (
                 <tr key={item.pp} style={{ background: STATUS_BG.error }}>
-                  <td style={{ ...tdStyle, fontWeight: 600 }}>{item.pp}</td>
+                  <td className="mon-td mon-td--bold">{item.pp}</td>
                   <td
-                    style={{
-                      ...tdStyle,
-                      textAlign: "center",
-                      fontWeight: 700,
-                      color: STATUS_COLOR.error,
-                    }}
+                    className="mon-td mon-td--center"
+                    style={{ fontWeight: 700, color: STATUS_COLOR.error }}
                   >
                     {item.bahiaActual}
                   </td>
                   <td
-                    style={{
-                      ...tdStyle,
-                      textAlign: "center",
-                      color: STATUS_COLOR.success,
-                    }}
+                    className="mon-td mon-td--center"
+                    style={{ color: STATUS_COLOR.success }}
                   >
                     {item.bahiaCorrecta}
                   </td>
-                  <td style={tdStyle}>{item.equipo}</td>
-                  <td
-                    style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}
-                  >
+                  <td className="mon-td">{item.equipo}</td>
+                  <td className="mon-td mon-td--right mon-td--muted">
                     {item.hora}
                   </td>
                 </tr>
@@ -2856,16 +2279,16 @@ function buildStageData(
       charts: [
         /* ── Lista completa: badge de tipo, proveedor, piezas y barra de tiempo ── */
         <ChartCard key="audit-cajas" title="Detalle completo de cajas incorrectas">
-          <div className="table-scroll"><table style={tableStyle}>
+          <div className="table-scroll"><table className="mon-table">
             <thead>
               <tr>
-                <th style={thStyle}>Caja</th>
-                <th style={thStyle}>Tipo</th>
-                <th style={thStyle}>Proveedor</th>
-                <th style={thStyle}>Equipo</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Piezas</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Tiempo</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Hora</th>
+                <th className="mon-th">Caja</th>
+                <th className="mon-th">Tipo</th>
+                <th className="mon-th">Proveedor</th>
+                <th className="mon-th">Equipo</th>
+                <th className="mon-th mon-th--right">Piezas</th>
+                <th className="mon-th mon-th--right">Tiempo</th>
+                <th className="mon-th mon-th--right">Hora</th>
               </tr>
             </thead>
             <tbody>
@@ -2873,32 +2296,29 @@ function buildStageData(
                 const tipoColor = { Faltante: "error", Dañado: "error", Sobrante: "warning", "Error etiqueta": "warning" }[item.tipo] || "warning";
                 return (
                   <tr key={item.caja}>
-                    <td style={{ ...tdStyle, fontWeight: 600 }}>{item.caja}</td>
-                    <td style={tdStyle}>
-                      <span style={{
-                        background: STATUS_BG[tipoColor], color: STATUS_COLOR[tipoColor],
-                        borderRadius: 4, padding: "2px 7px", fontSize: 11, fontWeight: 700,
+                    <td className="mon-td mon-td--bold">{item.caja}</td>
+                    <td className="mon-td">
+                      <span className="mon-badge mon-badge--sm" style={{
+                        background: STATUS_BG[tipoColor], color: STATUS_COLOR[tipoColor], borderRadius: 4,
                       }}>{item.tipo}</span>
                     </td>
-                    <td style={{ ...tdStyle, fontSize: 12, color: "#6B6B6B" }}>{item.proveedor}</td>
-                    <td style={tdStyle}>{item.equipo}</td>
-                    <td style={{ ...tdStyle, textAlign: "right", fontWeight: 600 }}>{item.piezas}</td>
-                    <td style={{ ...tdStyle, textAlign: "right" }}>
+                    <td className="mon-td mon-td--muted" style={{ fontSize: 12 }}>{item.proveedor}</td>
+                    <td className="mon-td">{item.equipo}</td>
+                    <td className="mon-td mon-td--right mon-td--bold">{item.piezas}</td>
+                    <td className="mon-td mon-td--right">
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}>
                         <span style={{ fontWeight: 700, color: item.minutosAuditoria > 8 ? STATUS_COLOR.error : "#1F1F1F" }}>
                           {item.minutosAuditoria} min
                         </span>
-                        <div style={{ width: 48, height: 4, borderRadius: 4, background: "#F0EDE8", overflow: "hidden" }}>
-                          <div style={{
+                        <div className="mon-progress mon-progress--sm" style={{ width: 48 }}>
+                          <div className="mon-progress__fill" style={{
                             width: `${Math.min(100, (item.minutosAuditoria / 15) * 100)}%`,
-                            height: "100%",
                             background: item.minutosAuditoria > 8 ? STATUS_COLOR.error : STATUS_COLOR.warning,
-                            borderRadius: 4,
                           }} />
                         </div>
                       </div>
                     </td>
-                    <td style={{ ...tdStyle, textAlign: "right", color: "#6B6B6B" }}>{item.hora}</td>
+                    <td className="mon-td mon-td--right mon-td--muted">{item.hora}</td>
                   </tr>
                 );
               })}
@@ -2938,14 +2358,14 @@ function buildStageData(
               </ResponsiveContainer>
             );
           })()}
-          <div style={{ display: "flex", gap: 16, marginTop: 8, justifyContent: "center" }}>
+          <div className="mon-legend-row">
             {[
               { color: "#A48F7A", label: "< 8 min (normal)" },
               { color: "#C9963B", label: "8–12 min (lento)" },
               { color: "#B65E4A", label: "> 12 min (crítico)" },
             ].map((l) => (
-              <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#6B6B6B" }}>
-                <div style={{ width: 10, height: 10, background: l.color, borderRadius: 2 }} />{l.label}
+              <div key={l.label} className="mon-legend-item">
+                <div className="mon-legend-swatch" style={{ background: l.color }} />{l.label}
               </div>
             ))}
           </div>
@@ -3080,14 +2500,8 @@ export default function Dashboard() {
   };
 
   return (
-    <div
-      style={{
-        padding: 24,
-        background: "#F8F6F3",
-        minHeight: "calc(100vh - 56px)",
-      }}
-    >
-      <div style={{ display: "grid", gap: 18, marginBottom: 24 }}>
+    <div className="mon-page">
+      <div className="mon-header-grid">
         <StageTabs
           activeStage={activeStage}
           onStageChange={onStageChange}
@@ -3110,13 +2524,7 @@ export default function Dashboard() {
         secondaryKpis={currentStage.secondaryKpis}
       />
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
-          gap: 18,
-        }}
-      >
+      <div className="mon-chart-grid">
         {currentStage.charts}
         {activeStage === "preregistro" ? (
           <RendimientoEquiposPreregistro />
