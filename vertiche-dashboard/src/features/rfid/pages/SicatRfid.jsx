@@ -120,6 +120,13 @@ function adaptOrden(orden) {
   const adaptedPrepacks = rawPP.map((pp, i) => {
     const currentIdx    = ppEtapaIdx[i];
     const histEtapaSet  = new Set((pp.historial ?? []).map(e => e.etapa));
+    const distribucionColor = Array.isArray(pp.distribucion_color) ? pp.distribucion_color : [];
+    const distribucionTalla = pp.distribucion_talla ?? {};
+    const colores = distribucionColor.map(d => d.color).filter(Boolean);
+    const tallas = Object.entries(distribucionTalla).filter(([, valor]) => Number(valor) > 0).map(([k]) => k);
+    const bahiaIdx = Number.isFinite(pp.bahia_asignada) && Number(pp.bahia_asignada) > 0
+      ? Number(pp.bahia_asignada) - 1
+      : 0;
     const stageResults  = STAGE_KEYS.map((key, si) => {
       const etapa = ETAPA_NAMES[si];
       const s     = stages[key];
@@ -130,13 +137,24 @@ function adaptOrden(orden) {
       if (currentIdx >= 0 && si < currentIdx) return 'pend';
       return 'pend';
     });
-    return { id: pp.id, color: '—', size: '—', store: '—', bahiaIdx: 0, stageResults };
+    return {
+      id: pp.id,
+      color: colores.length > 0 ? colores.join(', ') : '—',
+      size: tallas.length > 0 ? tallas.join(', ') : '—',
+      store: '—',
+      bahiaIdx,
+      modelo: pp.modelo ?? orden.orderId,
+      cantidad_total: pp.cantidad_total,
+      distribucion_color: distribucionColor,
+      distribucion_talla: distribucionTalla,
+      stageResults,
+    };
   });
 
   return {
     id: orden.orderId,
     team: '',
-    product: orden.orderId,
+    product: rawPP.find(pp => pp.modelo)?.modelo ?? orden.orderId,
     pidx: 0,
     arrivalTs,
     // hasFalla a nivel de orden: solo si hay fallas ACTIVAS (prepack aún atascado).

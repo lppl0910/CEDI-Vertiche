@@ -1,10 +1,27 @@
+"""
+Módulo de acceso a la base de datos MySQL del data warehouse de Vertiche.
+
+Provee una conexión configurada desde variables de entorno y una función
+de consulta de solo lectura con límite de filas para proteger el rendimiento.
+"""
+
 import mysql.connector
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-def get_connection():
+
+def get_connection() -> mysql.connector.MySQLConnection:
+    """Crea y devuelve una nueva conexión a la base de datos MySQL.
+
+    La conexión lee las credenciales desde variables de entorno (.env).
+    autocommit=False porque todas las operaciones son de solo lectura;
+    no se requiere control de transacciones explícito.
+
+    Returns:
+        mysql.connector.MySQLConnection: Conexión activa lista para usar.
+    """
     return mysql.connector.connect(
         host=os.getenv("DB_HOST", "127.0.0.1"),
         port=int(os.getenv("DB_PORT", 3306)),
@@ -14,8 +31,24 @@ def get_connection():
         autocommit=False,
     )
 
+
 def execute_query(sql: str) -> list[dict]:
-    """Ejecuta una query SELECT y regresa lista de dicts. Solo lectura."""
+    """Ejecuta una consulta SELECT y devuelve los resultados como lista de diccionarios.
+
+    Solo acepta sentencias SELECT o WITH (CTEs). Cualquier intento de escritura
+    (INSERT, UPDATE, DELETE, DROP, etc.) lanza ValueError como medida de seguridad.
+    El número de filas retornadas está limitado a 200 para evitar respuestas excesivas.
+
+    Args:
+        sql: Consulta SQL a ejecutar. Se eliminan espacios y punto y coma al final.
+
+    Returns:
+        Lista de diccionarios donde cada elemento es una fila con columna→valor.
+
+    Raises:
+        ValueError: Si la sentencia no comienza con SELECT o WITH.
+        mysql.connector.Error: Si ocurre un error de base de datos durante la ejecución.
+    """
     sql_clean = sql.strip().rstrip(";")
 
     # Seguridad: solo permitir SELECT

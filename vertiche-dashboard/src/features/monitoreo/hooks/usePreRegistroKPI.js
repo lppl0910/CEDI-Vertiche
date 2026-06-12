@@ -1,3 +1,12 @@
+/**
+ * Devuelve los KPIs principales de la etapa de Preregistro:
+ * órdenes recibidas, incompletas, tasa de completitud y
+ * proveedores con incidencias en la semana en curso.
+ * Refresca automáticamente cada 30 s.
+ *
+ * @returns {{ kpis: Object, loading: boolean, error: string|null }}
+ * @author Miguel Angel Argumedo
+ */
 import { API_URLS } from '../../../config/api.js';
 import { useState, useEffect } from 'react';
 

@@ -1,3 +1,11 @@
+/**
+ * Devuelve los KPIs de Sorter y la distribución de paquetes por bahía.
+ * Incluye total clasificado, paquetes en bahía incorrecta y tiempo promedio.
+ * Refresca automáticamente cada 30 s.
+ *
+ * @returns {{ kpis: Object, paquetesPorBahia: Array, loading: boolean }}
+ * @author Miguel Angel Argumedo
+ */
 import { useState, useEffect } from 'react'
 
 const DEFAULT_KPIS = {
@@ -16,8 +24,8 @@ export function useSorterKPIs() {
   const fetchAll = async () => {
     try {
       const [kpisRes, bahiaRes] = await Promise.all([
-        fetch('http://localhost:3001/api/sorter/kpis'),
-        fetch('http://localhost:3001/api/sorter/por-bahia'),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/sorter/kpis`),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/sorter/por-bahia`),
       ])
       const [kpisData, bahiaData] = await Promise.all([
         kpisRes.json(),

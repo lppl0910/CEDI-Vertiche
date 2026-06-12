@@ -1,3 +1,14 @@
+/**
+ * Controlador CRUD para la dimensión `Dim_Producto`.
+ *
+ * Rutas montadas bajo `/productos`:
+ *  - `GET  /`      → Lista todos los productos del catálogo.
+ *  - `GET  /:id`   → Detalle de un producto por PK.
+ *  - `POST /`      → Crea un nuevo producto.
+ *  - `PUT  /:id`   → Actualiza un producto existente.
+ *
+ * Todas las rutas requieren token JWT de Supabase válido.
+ */
 import { Request, Response } from "express";
 import AbstractController from "./AbstractController";
 import db from "../models";
@@ -5,6 +16,7 @@ import db from "../models";
 export default class ProductoController extends AbstractController {
   private static _instance: ProductoController;
 
+  /** Singleton: devuelve la única instancia del controlador. */
   public static get instance(): ProductoController {
     return this._instance || (this._instance = new this("productos"));
   }
@@ -28,6 +40,7 @@ export default class ProductoController extends AbstractController {
     );
   }
 
+  /** GET /productos — Lista todos los productos del catálogo. */
   private async getAll(req: Request, res: Response) {
     try {
       const productos = await db.Dim_Producto.findAll();
@@ -37,6 +50,7 @@ export default class ProductoController extends AbstractController {
     }
   }
 
+  /** GET /productos/:id — Detalle de un producto. Devuelve 404 si no existe. */
   private async getById(req: Request, res: Response) {
     try {
       const producto = await db.Dim_Producto.findByPk(req.params.id);
@@ -47,6 +61,7 @@ export default class ProductoController extends AbstractController {
     }
   }
 
+  /** POST /productos — Crea un nuevo producto en el catálogo. */
   private async create(req: Request, res: Response) {
     try {
       const producto = await db.Dim_Producto.create(req.body);
@@ -56,6 +71,7 @@ export default class ProductoController extends AbstractController {
     }
   }
 
+  /** PUT /productos/:id — Actualiza los campos enviados en el body. Devuelve 404 si no existe. */
   private async update(req: Request, res: Response) {
     try {
       const producto = await db.Dim_Producto.findByPk(req.params.id);

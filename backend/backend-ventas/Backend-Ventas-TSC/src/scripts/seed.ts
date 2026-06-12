@@ -1,4 +1,20 @@
 // @ts-nocheck
+/**
+ * Script de semilla (seed) para el data warehouse de Vertiche.
+ *
+ * Genera y carga datos sintéticos pero realistas en las tablas:
+ *   Dim_Tienda, Dim_Producto, Dim_Tiempo, Fact_Ventas y Fact_Inventario_Tienda.
+ *
+ * Los factores de ventas simulan comportamiento real:
+ *   - Picos en Buen Fin (3.5×), Navidad (2.5×) y Día de las madres (2×).
+ *   - Caída en enero–febrero (0.65×) con recuperación progresiva hacia abril.
+ *   - Ajuste estacional por categoría de producto (ropa de abrigo vs ropa de calor).
+ *   - Boost geográfico para estados con clima extremo y estados del centro del país.
+ *   - Ticket y volumen mayores en días festivos.
+ *
+ * Uso (desde la carpeta Backend-Ventas-TSC):
+ *   npx ts-node src/scripts/seed.ts
+ */
 import 'dotenv/config';
 import { Sequelize, DataTypes } from 'sequelize';
 import { faker } from '@faker-js/faker/locale/es_MX';
@@ -179,7 +195,7 @@ const TEMPORADA_MES: Record<number, string> = {
   10: 'Otoño', 11: 'Invierno', 12: 'Invierno',
 };
 
-// Temporada comercial según mes
+/** Devuelve la temporada comercial de Vertiche para una fecha dada. */
 function temporadaComercial(mes: number, dia: number): string {
   if (mes === 1) return 'Liquidación de Temporada';
   if (mes === 5 && dia >= 1 && dia <= 15) return 'Día de las madres';
@@ -192,7 +208,7 @@ function temporadaComercial(mes: number, dia: number): string {
   return 'Temporada Regular';
 }
 
-// Festivos México
+/** Indica si una fecha es día festivo oficial en México. */
 function esFestivo(mes: number, dia: number): boolean {
   const festivos = [
     [1, 1], [2, 5], [3, 21], [5, 1], [9, 16],
@@ -201,8 +217,11 @@ function esFestivo(mes: number, dia: number): boolean {
   return festivos.some(([m, d]) => m === mes && d === dia);
 }
 
-// ── FACTOR BASE DE VENTAS ─────────────────────────────────────────────
-// Incluye: picos comerciales + caída enero-febrero + estabilización abril
+/**
+ * Factor multiplicador base de ventas según mes y día.
+ * Modela picos comerciales (Buen Fin, Navidad, Día de las madres)
+ * y la caída estacional de enero–febrero.
+ */
 function factorVentasBase(mes: number, dia: number): number {
   // Picos comerciales especiales (se mantienen sobre cualquier otra lógica)
   if (mes === 11 && dia >= 15 && dia <= 20) return 3.5; // Buen Fin
@@ -224,8 +243,11 @@ function factorVentasBase(mes: number, dia: number): number {
   return 1.0;
 }
 
-// ── FACTOR ESTACIONAL POR CATEGORÍA ─────────────────────────────────
-// Devuelve un multiplicador según la categoría del producto y el mes de la venta.
+/**
+ * Factor estacional por categoría de producto y estado.
+ * La ropa abrigadora vende más en invierno (boost extra en estados con frío intenso);
+ * la ropa de calor vende más en verano (boost extra en estados con calor intenso).
+ */
 function factorCategoriaEstacional(categoria: string, mes: number, estado: string): number {
   // Determinar la estación climática del mes
   // Invierno: dic, ene, feb | Primavera: mar, abr, may | Verano: jun, jul, ago | Otoño: sep, oct, nov
@@ -267,7 +289,7 @@ function factorCategoriaEstacional(categoria: string, mes: number, estado: strin
   return 1.0;
 }
 
-// Convierte mes numérico a estación climática (hemisferio norte / México)
+/** Convierte un número de mes a la estación climática correspondiente (hemisferio norte). */
 function mesAEstacion(mes: number): 'Invierno' | 'Primavera' | 'Verano' | 'Otoño' {
   if (mes === 12 || mes === 1 || mes === 2) return 'Invierno';
   if (mes >= 3 && mes <= 5) return 'Primavera';
@@ -275,9 +297,10 @@ function mesAEstacion(mes: number): 'Invierno' | 'Primavera' | 'Verano' | 'Otoñ
   return 'Otoño'; // sep, oct, nov
 }
 
-// ── FACTOR FESTIVO ───────────────────────────────────────────────────
-// En días festivos se vende entre 1.5x y 2x más (variación aleatoria).
-// El precio también sube ~50% en días festivos para reflejar ticket más alto.
+/**
+ * Factor de volumen de ventas en días festivos: entre 1.5× y 2.0× aleatorio.
+ * Días normales retornan 1.0 (sin boost).
+ */
 function factorFestivo(mes: number, dia: number): number {
   if (esFestivo(mes, dia)) {
     // Variación entre 1.5 y 2.0
@@ -286,18 +309,17 @@ function factorFestivo(mes: number, dia: number): number {
   return 1.0;
 }
 
-// Multiplicador del precio en días festivos (ticket ~50% más alto)
+/** Multiplicador del precio en días festivos: 1.5× (ticket ~50% más alto). */
 function factorPrecioFestivo(mes: number, dia: number): number {
   return esFestivo(mes, dia) ? 1.5 : 1.0;
 }
 
-// ── FACTOR CENTRO ────────────────────────────────────────────────────
-// Tiendas del centro del país venden ~20% más
+/** Boost del 20% para tiendas en estados del centro del país. */
 function factorCentro(estado: string): number {
   return ESTADOS_CENTRO.has(estado) ? 1.20 : 1.0;
 }
 
-// ── FACTOR TOTAL DE VENTAS (cantidad de transacciones) ───────────────
+/** Factor total de ventas: producto de los cuatro factores parciales. */
 function factorVentasTotal(mes: number, dia: number, categoria: string, estado: string): number {
   return (
     factorVentasBase(mes, dia) *

@@ -1,18 +1,27 @@
+/**
+ * Modelo Sequelize para la tabla de dimensión `Dim_Tienda`.
+ *
+ * Almacena la información geográfica y de clasificación de cada punto de venta
+ * de Vertiche. Las tiendas se agrupan en región Norte o Sur, dato utilizado
+ * por los controladores de análisis para filtrar y comparar zonas.
+ */
 import { Model } from 'sequelize';
 
+/** Atributos de la tabla `Dim_Tienda`. */
 interface TiendaAtributos {
-  id_tienda: string; // correcto
-  nombre: string; // correcto
-  region: string; // ya es un enum 
-  estado: string; // correcto un enun de 32 esta largo
-  latitud: number; // correcto
-  longitud: number; // correcto
-  ciudad: string; // correcto
+  id_tienda: string;
+  nombre:    string;
+  region:    string; // enum TiendaRegion
+  estado:    string;
+  latitud:   number;
+  longitud:  number;
+  ciudad:    string;
 }
 
+/** Regiones geográficas válidas para una tienda. */
 export enum TiendaRegion {
   NORTE = 'Norte',
-  SUR = 'Sur',
+  SUR   = 'Sur',
 }
 
 module.exports = (sequelize: any, DataTypes: any) => {

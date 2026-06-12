@@ -1,3 +1,16 @@
+/**
+ * Controlador de análisis de tendencias temporales de ventas.
+ *
+ * Rutas montadas bajo `/tendencias`:
+ *  - `GET /yoy`         → Comparativa Year-over-Year de ingresos mensuales (año actual vs anterior).
+ *  - `GET /performance` → Serie temporal de ingresos y unidades en el período seleccionado,
+ *                         más KPIs agregados (ingresos totales, ticket promedio, unidades vendidas).
+ *  - `GET /trimestral`  → Ingresos por temporada de producto (Primavera, Verano, Otoño, Invierno).
+ *  - `GET /festivos`    → Comparativa de ingresos y ticket promedio en días festivos vs días normales.
+ *
+ * Todos los endpoints aceptan los query params `zona`, `temporada` y `period` definidos en
+ * `AbstractController.buildWhere()`.  Todas las rutas requieren token JWT de Supabase.
+ */
 import { Request, Response } from "express";
 import AbstractController from "./AbstractController";
 import db from "../models";
@@ -6,6 +19,7 @@ const { fn, col } = require("sequelize");
 export default class TendenciasController extends AbstractController {
   private static _instance: TendenciasController;
 
+  /** Singleton: devuelve la única instancia del controlador. */
   public static get instance(): TendenciasController {
     return this._instance || (this._instance = new this("tendencias"));
   }
@@ -29,6 +43,11 @@ export default class TendenciasController extends AbstractController {
     );
   }
 
+  /**
+   * GET /tendencias/yoy — Ingresos mensuales del año actual y el anterior.
+   * Devuelve dos arrays de 12 posiciones (uno por año) con ingresos en miles (K).
+   * Respeta los filtros de `zona` y `temporada`.
+   */
   private async getYoY(req: Request, res: Response) {
     try {
       const anioActual   = parseInt(AbstractController.fechaBase.slice(0, 4));
@@ -75,6 +94,12 @@ export default class TendenciasController extends AbstractController {
     }
   }
 
+  /**
+   * GET /tendencias/performance — Serie temporal de ingresos (K) y unidades vendidas.
+   * La granularidad del eje X varía según `period`: día de la semana (7d),
+   * número de semana (30d/90d) o nombre de mes (1y).
+   * Incluye tres KPIs agregados del período completo.
+   */
   private async getPerformance(req: Request, res: Response) {
     try {
       const { tiendaWhere, productoWhere, tiempoWhere, dias, period } = this.buildWhere(req);
@@ -145,6 +170,11 @@ export default class TendenciasController extends AbstractController {
     }
   }
 
+  /**
+   * GET /tendencias/trimestral — Ingresos totales (K) agrupados por temporada de producto.
+   * No aplica filtro de período temporal; agrega todos los datos disponibles.
+   * Respeta el filtro de `zona`.
+   */
   private async getTrimestral(req: Request, res: Response) {
     try {
       const { tiendaWhere } = this.buildWhere(req);
@@ -172,6 +202,11 @@ export default class TendenciasController extends AbstractController {
     }
   }
 
+  /**
+   * GET /tendencias/festivos — Métricas de ingreso promedio diario y ticket en días festivos
+   * comparadas con días normales, más el ratio festivo/normal.
+   * Respeta filtros de `zona`, `temporada` y `period`.
+   */
   private async getFestivos(req: Request, res: Response) {
     try {
       const { tiendaWhere, productoWhere, tiempoWhere, dias } = this.buildWhere(req);

@@ -3,10 +3,12 @@
  * Incluye filtrado/ordenamiento optimizado en backend (#215 — Isaac Calderon Laflor).
  * Author: Adrian Proano Bernal
  */
-import { ordenesPrueba, ordenesEnMemoria, normalizarEtapa} from '../data/generacionDatosEnMemoria.js';
-import { subirScaneo } from '../data/prePackData.js';
-import { OrdenModel, RfidEventModel } from '../models/PrepackModel.js';
-import type { ProgresoOrden, Etapa, ProgresoEtapa } from '../types/rfid.types.js';
+import { ordenesPrueba, ordenesEnMemoria, normalizarEtapa} from '../data/generacionDatosEnMemoria';
+import { subirScaneo } from '../data/prePackData';
+import { OrdenModel, RfidEventModel } from '../models/PrepackModel';
+import type { ProgresoOrden, Etapa, ProgresoEtapa, Prepack } from '../types/rfid.types';
+import { agregarPrepackACaja } from '../Auditoria/Brother_printer/services/boxManager';
+import { CajaModel } from '../models/CajaModel';
 
 const ALL_ETAPAS: Etapa[] = ['Preregistro', 'QA', 'Registro', 'Sorter', 'Bahias', 'Auditoria', 'Envio'];
 
@@ -127,23 +129,40 @@ export function registrarFallaPrepack(tagId: string, etapa: Etapa) {
  * Simula recibir un escaneo RFID y avanza un prepack de etapa.
  * Author: Adrian Proano Bernal
  */
-export async function procesoEscaneoRFID(tagId: string, readerId: string, newEtapa: Etapa) {
-    for (const [orderId, prepacks] of Object.entries(ordenesEnMemoria)) {
-        const prepack = prepacks.find((p) => p.id === tagId);
-        if (prepack) {
-            const evento = {
-                etapa: newEtapa,
-                timestamp: new Date(),
-                readerId,
-            };
-            prepack.historial.push(evento);
-            prepack.currentEtapa = newEtapa;
-            await subirScaneo(tagId, orderId, newEtapa, evento);
-            console.log(`Prepack ${prepack.id} de orden ${orderId} avanzado a etapa ${newEtapa}`);
-            return { prepack, orderId, progreso: getProgresoOrden(orderId) };
+export async function procesoEscaneoRFID(
+  tagId: string,
+  readerId: string,
+  newEtapa: Etapa
+): Promise<{ prepack: Prepack; orderId: string; progreso: ProgresoOrden | null } | null> {
+  for (const [orderId, prepacks] of Object.entries(ordenesEnMemoria)) {
+    const prepack = prepacks.find((p) => p.id === tagId);
+    if (prepack) {
+      const evento = {
+        etapa: newEtapa,
+        timestamp: new Date(),
+        readerId,
+      };
+
+      prepack.historial.push(evento);
+      prepack.currentEtapa = newEtapa;
+
+      await subirScaneo(tagId, orderId, newEtapa, evento);
+
+      if (newEtapa === 'Bahias') {
+        const ordenMongo = await OrdenModel.findOne({ id_orden: orderId });
+        const prepackMongo = ordenMongo?.prepacks.find((p) => p.id_prepack === tagId);
+
+        if (ordenMongo && prepackMongo) {
+          await agregarPrepackACaja(ordenMongo, prepackMongo);
         }
+      }
+      
+      console.log(`Prepack ${prepack.id} de orden ${orderId} avanzado a etapa ${newEtapa}`);
+      return { prepack, orderId, progreso: getProgresoOrden(orderId) };
     }
-    return null;
+  }
+
+  return null;
 }
 
 export async function getDetallePrepack(orderId: string, prepackId: string) {
@@ -186,4 +205,42 @@ export async function getDetallePrepack(orderId: string, prepackId: string) {
       })),
     },
   }
+}
+
+export async function procesarEnvioCaja(readerId: string): Promise<{ orderId: string; progreso: ProgresoOrden | null }[]> {
+  const caja = await CajaModel.findOne({ estado: { $ne: 'Enviada' } })
+    .sort({ fechaCreacion: 1 })
+    .lean();
+
+  if (!caja) {
+    console.log('[ENVIO] No hay cajas pendientes de envío');
+    return [];
+  }
+
+  const resultados = [];
+
+  for (const prepack of caja.prepacks) {
+    // Avanzar el prepack directamente en memoria y subir el scaneo a DB
+    // sin pasar por procesoEscaneoRFID para evitar el loop
+    for (const [orderId, prepacks] of Object.entries(ordenesEnMemoria)) {
+      const p = prepacks.find(p => p.id === prepack.id_prepack);
+      if (p) {
+        const evento = { etapa: 'Envio' as Etapa, timestamp: new Date(), readerId };
+        p.historial.push(evento);
+        p.currentEtapa = 'Envio';
+        await subirScaneo(prepack.id_prepack, orderId, 'Envio', evento);
+        resultados.push({ orderId, progreso: getProgresoOrden(orderId) });
+        console.log(`Prepack ${p.id} de orden ${orderId} avanzado a etapa ${'Envio'} por procesoEnvioCaja()`);
+        break;
+      }
+    }
+  }
+
+  await CajaModel.findOneAndUpdate(
+    { boxId: caja.boxId },
+    { $set: { estado: 'Enviada' } }
+  );
+
+  console.log(`[ENVIO] Caja ${caja.boxId} marcada como Enviada`);
+  return resultados;
 }

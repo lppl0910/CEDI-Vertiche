@@ -1,3 +1,11 @@
+/**
+ * Devuelve los KPIs de Registro, el rendimiento por equipo
+ * y el backlog de prepacks pendientes de registrar.
+ * Refresca automáticamente cada 30 s.
+ *
+ * @returns {{ kpis: Object, equipos: Array, backlog: Array, loading: boolean }}
+ * @author Miguel Angel Argumedo
+ */
 import { useState, useEffect } from 'react'
 
 const DEFAULT_KPIS = {
@@ -16,9 +24,9 @@ export function useRegistroKPIs() {
   const fetchAll = async () => {
     try {
       const [kpisRes, equiposRes, backlogRes] = await Promise.all([
-        fetch('http://localhost:3001/api/registro/kpis'),
-        fetch('http://localhost:3001/api/registro/por-equipo'),
-        fetch('http://localhost:3001/api/registro/backlog'),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/registro/kpis`),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/registro/por-equipo`),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/registro/backlog`),
       ])
       const [kpisData, equiposData, backlogData] = await Promise.all([
         kpisRes.json(),

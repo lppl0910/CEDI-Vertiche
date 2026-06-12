@@ -1,12 +1,21 @@
+/**
+ * Modelo Sequelize para la tabla de hechos `Fact_Inventario_Tienda`.
+ *
+ * Registra el inventario de productos enviados y vendidos por tienda en una
+ * fecha específica.  La diferencia entre `cantidad_recibida` y `cantidad_vendida`
+ * da el inventario disponible en ese corte de tiempo.
+ * Se relaciona con `Dim_Producto`, `Dim_Tiempo` y `Dim_Tienda`.
+ */
 import { Model } from 'sequelize';
 
+/** Atributos de la tabla `Fact_Inventario_Tienda`. */
 interface InventarioAtributos {
-  id_inventario: number; // correcta
-  cantidad_recibida: number; // correcta
-  id_producto: number; // correcta
-  id_tiempo: number; // correcta
-  id_tienda: string; // correcta
-  cantidad_vendida: number; // correcta
+  id_inventario:     number;
+  cantidad_recibida: number;  // unidades enviadas a la tienda en esa fecha
+  id_producto:       number;
+  id_tiempo:         number;
+  id_tienda:         string;
+  cantidad_vendida:  number;  // unidades vendidas de ese producto en esa fecha
 }
 
 module.exports = (sequelize: any, DataTypes: any) => {

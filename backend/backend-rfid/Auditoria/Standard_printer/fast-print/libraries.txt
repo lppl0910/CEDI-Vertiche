@@ -1,8 +1,0 @@
------------------------------------------------------------------------------------------
-
-printer -----------------> Genera texto raw más sencillo de entender para la impresoras
-
-pdf-to-printer ----------> pdf a raw
-
-net----------------------> 
-

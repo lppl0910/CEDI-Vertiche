@@ -1,18 +1,26 @@
+/**
+ * Modelo Sequelize para la tabla de dimensión `Dim_Producto`.
+ *
+ * Representa cada SKU del catálogo de ropa de Vertiche con sus atributos de
+ * clasificación (talla, temporada, categoría, fit) y precio de lista.
+ * Se relaciona con `Fact_Ventas` y `Fact_Inventario_Tienda` mediante `id_producto`.
+ */
 import { Model } from 'sequelize';
 
+/** Atributos de la tabla `Dim_Producto`. */
 interface ProductoAtributos {
-  id_producto: number; // es correcto
-  modelo_id: number; // es correcto
-  descripcion: string; // es correcto
-  material_principal: string; // es correcto
-  porcentaje_principal: number; // es correcto
-  composicion_completa: string; // es correcto
-  talla: string; // es un enum
-  color: string; // es correcto
-  temporada: string; // es un enum
-  categoria: string; // es un enum
-  fit: string; // es un enunm
-  precio_lista: number; // es correcto
+  id_producto:          number;
+  modelo_id:            number;
+  descripcion:          string;
+  material_principal:   string;
+  porcentaje_principal: number;
+  composicion_completa: string;
+  talla:                string; // enum ProductoTalla
+  color:                string;
+  temporada:            string; // enum ProductoTemporada
+  categoria:            string; // enum ProductoCategoria
+  fit:                  string; // enum ProductoFit
+  precio_lista:         number;
 }
 
 export enum ProductoTalla {

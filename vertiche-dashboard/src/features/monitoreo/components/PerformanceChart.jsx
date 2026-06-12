@@ -1,7 +1,19 @@
+/**
+ * Gráfica de líneas de rendimiento por etapa del flujo operativo.
+ * Muestra la evolución del throughput de Preregistro, QA, Registro,
+ * Sorter y Envío a lo largo del tiempo en un único chart comparativo.
+ *
+ * @param {Object} props
+ * @param {Array}  props.data - Serie temporal; cada elemento debe incluir
+ *                             la clave `tiempo` y un campo numérico por etapa
+ * @returns {JSX.Element}
+ * @author Miguel Angel Argumedo
+ */
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
+import '../monitoreo.css';
 
 const STAGE_LINES = [
   { key: 'preregistro', label: 'Preregistro', color: '#6E8B6B' },
@@ -16,12 +28,8 @@ const STAGE_LINES = [
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{
-      background: '#1F1F1F', borderRadius: 8, padding: '10px 14px',
-      fontSize: 12, fontFamily: 'var(--font)', lineHeight: 1.8,
-      boxShadow: '0 2px 12px rgba(0,0,0,0.22)',
-    }}>
-      <div style={{ color: '#9B9590', marginBottom: 4, fontWeight: 500 }}>{label}</div>
+    <div className="mon-tooltip mon-tooltip--dark">
+      <div className="mon-tooltip__label">{label}</div>
       {payload.map(p => (
         <div key={p.dataKey} style={{ color: p.color }}>
           {p.name}: <strong style={{ color: '#FFFFFF' }}>{p.value} pp/min</strong>
@@ -34,11 +42,9 @@ function CustomTooltip({ active, payload, label }) {
 export default function PerformanceChart({ data }) {
   return (
     <div className="card" style={{ padding: '20px 24px' }}>
-      <div style={{ marginBottom: 16 }}>
-        <h2 style={{ fontSize: 14, fontWeight: 600, color: '#1F1F1F', marginBottom: 2 }}>
-          Performance por etapa
-        </h2>
-        <p style={{ fontSize: 12, color: '#6B6B6B' }}>
+      <div className="mon-perf-header">
+        <h2 className="mon-perf-title">Performance por etapa</h2>
+        <p className="mon-perf-subtitle">
           pp/min a lo largo del turno · {data[0]?.tiempo} – {data[data.length - 1]?.tiempo}
         </p>
       </div>

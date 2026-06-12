@@ -7,13 +7,22 @@
     Actualizado por: Isaac Calderon Laflor (#185 — simulación día completo)
 */
 
-import { RfidEventModel, OrdenModel } from '../models/PrepackModel.js';
-import type { Prepack, Etapa } from '../types/rfid.types.js';
+import { RfidEventModel, OrdenModel } from '../models/PrepackModel';
+import type { Prepack, Etapa } from '../types/rfid.types';
 import mongoose from 'mongoose';
 
 /*
     Creacion de nuevo tipo para cargar las ordenes directamente desde la base de datos.
 */
+
+interface PrepackMemoria extends Prepack {
+    modelo?: string;
+    cantidad_total?: number;
+    bahia_asignada?: number;
+    distribucion_color?: Array<{ color: string; num_color: number }>;
+    distribucion_talla?: { CH: number; M: number; G: number; XG: number };
+    categoria?: string;
+}
 
 //Funcion para normailizar las etapas leidas de la base de datos
 export function normalizarEtapa(raw: string): Etapa {
@@ -29,7 +38,7 @@ export function normalizarEtapa(raw: string): Etapa {
   return map[raw.toLowerCase()] ?? '';
 }
 
-function generarPrepackPrueba(orderId: string, num: number): Prepack {
+function generarPrepackPrueba(orderId: string, num: number): PrepackMemoria {
     return {
         id:           `PP-${orderId}-${String(num).padStart(3, '0')}`,
         orderId,
@@ -48,7 +57,7 @@ function generarOrdenPrueba(orderId: string, total: number): Prepack[] {
     · 8 órdenes medianas (30–45 prepacks) — reposición estándar
     · 7 órdenes pequeñas (12–25 prepacks) — urgentes / tiendas chicas
 */
-export const ordenesPrueba: Record<string, Prepack[]> = {
+export const ordenesPrueba: Record<string, PrepackMemoria[]> = {
     // — Órdenes grandes —
     'ORD-2891': generarOrdenPrueba('ORD-2891', 58),
     'ORD-2892': generarOrdenPrueba('ORD-2892', 54),
@@ -76,10 +85,10 @@ export const ordenesPrueba: Record<string, Prepack[]> = {
     'ORD-2910': generarOrdenPrueba('ORD-2910', 24),
 };
 
-export async function cargarOrdenesDesdeDB(): Promise<Record<string, Prepack[]>> {
+export async function cargarOrdenesDesdeDB(): Promise<Record<string, PrepackMemoria[]>> {
     // Aquí se implementaría la lógica para cargar las órdenes desde la base de datos MongoDB
     const ordenes = await OrdenModel.find({}).lean();
-    const mapaOrdenes: Record<string, Prepack[]> = {};
+    const mapaOrdenes: Record<string, PrepackMemoria[]> = {};
     const allPrepackIds = ordenes.flatMap(o => o.prepacks.map(p => p.id_prepack));
 
     const rfidEvents = await RfidEventModel
@@ -99,12 +108,17 @@ export async function cargarOrdenesDesdeDB(): Promise<Record<string, Prepack[]>>
             orderId: orden.id_orden,
             currentEtapa: normalizarEtapa(pp.estado_actual),
             historial: eventosPorPrepack.get(pp.id_prepack) ?? [],
+            modelo: pp.modelo,
+            cantidad_total: pp.cantidad_total,
+            bahia_asignada: pp.bahia_asignada,
+            distribucion_color: pp.distribucion_color,
+            distribucion_talla: pp.distribucion_talla,
         }));
   }
   return mapaOrdenes;
 }
 
-export let ordenesEnMemoria: Record<string, Prepack[]> = ordenesPrueba; // Inicialmente cargamos las órdenes de prueba
+export let ordenesEnMemoria: Record<string, PrepackMemoria[]> = ordenesPrueba; // Inicialmente cargamos las órdenes de prueba
 
 export async function inicializarOrdenesDesdeDB(): Promise<void> {
   ordenesEnMemoria = await cargarOrdenesDesdeDB();

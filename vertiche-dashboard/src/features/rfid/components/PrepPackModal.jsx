@@ -8,8 +8,15 @@ export default function PrepPackModal({ order, prepack, loading, error, onClose 
 
   const seed   = prepack.id.charCodeAt(3) + prepack.id.charCodeAt(4);
   const pzas   = prepack.cantidad_total ?? (6 + (seed % 7));
-  const colChips = (prepack.distribucion_color ?? []).map(d => `${d.color}: ${d.num_color} pzas`);
-  const szChips = prepack.distribucion_talla ? Object.entries(prepack.distribucion_talla).map(([k, v]) => `T-${k}: ${v} pzas`): [];
+  const colChips = (prepack.distribucion_color?.length
+    ? prepack.distribucion_color.map(d => `${d.color}: ${d.num_color} pzas`)
+    : (prepack.color && prepack.color !== '—' ? [prepack.color] : [])
+  );
+  const szChips = prepack.distribucion_talla
+    ? Object.entries(prepack.distribucion_talla)
+        .filter(([, v]) => Number(v) > 0)
+        .map(([k, v]) => `T-${k}: ${v} pzas`)
+    : (prepack.size && prepack.size !== '—' ? [prepack.size] : []);
 
   const tlRows = STAGE_KEYS.map((k, si) => {
     const s   = order[k];
@@ -75,7 +82,6 @@ export default function PrepPackModal({ order, prepack, loading, error, onClose 
               {[
                 ['Modelo',        order.product],
                 ['Tienda destino',prepack.store],
-                ['Color / Talla', `${prepack.color} / ${prepack.size}`],
                 ['Total piezas',  `${pzas} pzas`],
                 ['Bahía destino', `Bahía ${prepack.bahiaIdx + 1}`],
                 ['Orden padre',   order.id],

@@ -1,0 +1,855 @@
+/* ─────────────────────────────────────────────────────────────
+   monitoreo.css
+   Estilos para la feature de monitoreo.
+   Usa las variables de /src/index.css (--bg-main, --border, etc.)
+   ───────────────────────────────────────────────────────────── */
+
+/* ── Tokens locales ─────────────────────────────────────────── */
+.mon-root {
+  --mon-bg-surface:   #FAFAF8;
+  --mon-bg-row-alt:   #F8F6F3;
+  --mon-text-muted:   #9B9590;
+  --mon-border-light: #F0EDE9;
+  --mon-radius-sm:    6px;
+  --mon-radius-md:    8px;
+  --mon-radius-lg:    12px;
+}
+
+/* ── Contenedor de página ────────────────────────────────────── */
+/* Dashboard.jsx línea 3083-3088, AnalisisFlujo.jsx línea 10 */
+.mon-page {
+  padding: 24px;
+  background: var(--bg-main);
+  min-height: calc(100vh - 56px);
+}
+
+.mon-page--overflow {
+  overflow-x: auto;
+}
+
+/* ── Cabecera de sección (antes del grid de KPIs) ───────────── */
+/* AnalisisFlujo.jsx líneas 11-18 */
+.mon-page-header {
+  margin-bottom: 20px;
+}
+
+.mon-page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.mon-page-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ── SectionHeader (Dashboard) ──────────────────────────────── */
+/* Dashboard.jsx líneas 192-256 */
+.mon-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.mon-section-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.mon-section-title {
+  font-size: 28px;
+  line-height: 1.15;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.mon-section-summary {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  max-width: 680px;
+}
+
+.mon-section-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── Stage tabs ─────────────────────────────────────────────── */
+/* Dashboard.jsx líneas 130-188 */
+.mon-stage-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.mon-tab-btn {
+  position: relative;
+  border: 1px solid var(--border);
+  background: #FFFFFF;
+  color: var(--text-secondary);
+  border-radius: var(--mon-radius-md, 8px);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+
+.mon-tab-btn.active,
+.mon-tab-btn[data-active="true"] {
+  background: #111111;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.mon-tab-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  background: var(--error);
+  color: #FFFFFF;
+  border-radius: 50%;
+  min-width: 18px;
+  height: 18px;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+/* ── Botones de toggle (período / filtros) ──────────────────── */
+/* TendenciaSemanalChart, ParetoProveedorTable, ProveedoresEstrellaTable,
+   BacklogEnvioTable (footer chips), OrdenesActivasTable (alert chips)
+   Dashboard.jsx líneas 905-920, 1010-1020, 1147-1157 */
+.mon-toggle-group {
+  display: flex;
+  gap: 4px;
+}
+
+.mon-toggle-btn {
+  border: 1px solid var(--border);
+  background: #FFFFFF;
+  color: var(--text-secondary);
+  border-radius: var(--mon-radius-sm, 6px);
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.mon-toggle-btn.active,
+.mon-toggle-btn[data-active="true"] {
+  background: #111111;
+  color: #FFFFFF;
+  border-color: #111111;
+}
+
+/* Variante de alertas (Todos / Atención / Crítico en OrdenesActivas) */
+.mon-toggle-btn--alert {
+  padding: 4px 10px;
+}
+
+/* ── Barra de filtros ───────────────────────────────────────── */
+/* OrdenesActivasTable */
+.mon-filter-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--mon-border-light, #F0EDE8);
+}
+
+/* ── Selector <select> en filtros ───────────────────────────── */
+/* OrdenesActivasTable líneas 1813-1823 */
+.mon-select {
+  border: 1px solid var(--border);
+  border-radius: var(--mon-radius-sm, 6px);
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: var(--font);
+  background: #FFFFFF;
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+}
+
+/* ── Alert banners (Preregistro y Envío comparten estructura) ── */
+/* AlertaBannerPreregistro líneas 300-393, AlertaBannerEnvio líneas 420-515 */
+.mon-alert-banner {
+  background: #FFF9F7;
+  border: 1px solid #F0D9D4;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+}
+
+.mon-alert-banner__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.mon-alert-banner__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mon-alert-banner__count {
+  background: var(--error);
+  color: #FFFFFF;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+}
+
+.mon-alert-banner__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.mon-alert-banner__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #333333;
+  padding: 5px 0;
+}
+
+.mon-alert-banner__item + .mon-alert-banner__item {
+  border-top: 1px solid var(--mon-border-light, #F0EDE9);
+}
+
+.mon-alert-banner__item-name {
+  font-weight: 600;
+  flex: 1;
+}
+
+.mon-alert-banner__item-value {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* ── StatusDot ───────────────────────────────────────────────── */
+/* Dashboard.jsx líneas 113-126 */
+.mon-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ── Badges / pills de estado ───────────────────────────────── */
+/* Usado en alertas, tablas, labels de categoría, etc.
+   Patrón: borderRadius: 999, padding: '2px 8px', fontSize: 11, fontWeight: 7xx */
+.mon-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.mon-badge--sm {
+  font-size: 10px;
+  padding: 2px 7px;
+}
+
+.mon-badge--outline {
+  border: 1px solid currentColor;
+}
+
+/* Tag de etapa actual (OrdenesActivas) */
+.mon-tag {
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #F0EDE8;
+  color: var(--text-primary);
+}
+
+/* ── Tablas compartidas ─────────────────────────────────────── */
+/* tableStyle / thStyle / tdStyle definidos 5+ veces identicamente:
+   ParetoProveedorTable, ProveedoresEstrellaTable, BacklogEnvioTable,
+   OrdenesActivasTable, buildStageData */
+.mon-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-family: var(--font);
+}
+
+.mon-th {
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+  background: var(--mon-bg-surface, #FAFAF8);
+  white-space: nowrap;
+}
+
+.mon-th--right { text-align: right; }
+.mon-th--center { text-align: center; }
+
+.mon-td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--mon-border-light, #F0EDE8);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.mon-td--right  { text-align: right; }
+.mon-td--center { text-align: center; }
+.mon-td--muted  { color: var(--text-secondary); }
+.mon-td--bold   { font-weight: 600; }
+.mon-td--no-border { border-bottom: none; }
+
+/* ── FlowTable styles (tabla horizontal de etapas) ──────────── */
+/* FlowTable.jsx líneas 309-338 */
+.mon-flow-th {
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.mon-flow-td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--mon-border-light, #F0EDE9);
+  vertical-align: middle;
+}
+
+.mon-flow-th-btn {
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.mon-flow-th-btn:hover {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-taupe);
+}
+
+/* ── pp/min circle (FlowTable) ──────────────────────────────── */
+/* FlowTable.jsx líneas 141-184 */
+.mon-pp-circle {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.mon-pp-circle__ring {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border-width: 3px;
+  border-style: solid;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.mon-pp-circle__ring:hover {
+  transform: scale(1.08);
+}
+
+.mon-pp-circle__value {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font);
+}
+
+.mon-pp-circle__label {
+  font-size: 10px;
+  color: var(--mon-text-muted, #9B9590);
+  font-family: var(--font);
+  letter-spacing: 0.04em;
+}
+
+.mon-pp-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1F1F1F;
+  color: #FFFFFF;
+  border-radius: var(--mon-radius-sm, 6px);
+  padding: 5px 10px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  font-family: var(--font);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.mon-pp-tooltip__arrow {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #1F1F1F;
+}
+
+/* ── BahíasPopup overlay ────────────────────────────────────── */
+/* FlowTable.jsx líneas 188-226 */
+.mon-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.mon-popup {
+  background: #FFFFFF;
+  border-radius: var(--mon-radius-lg, 12px);
+  padding: 28px;
+  min-width: 320px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+  font-family: var(--font);
+}
+
+.mon-popup__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.mon-popup__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mon-popup__subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.mon-popup__close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text-secondary);
+  line-height: 1;
+  padding: 2px;
+}
+
+.mon-popup__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Progress bar ───────────────────────────────────────────── */
+/* ProgressBar (Dashboard.jsx), BahiasPopup (FlowTable.jsx),
+   cajas incorrectas auditoría (Dashboard.jsx línea 2891) */
+.mon-progress {
+  width: 100%;
+  height: 6px;
+  border-radius: 6px;
+  background: #F0EDE8;
+  overflow: hidden;
+}
+
+.mon-progress--sm {
+  height: 4px;
+}
+
+.mon-progress--track {
+  height: 8px;
+  background: #F0EDE9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mon-progress__fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+
+/* ── Fila de tarjeta (OrdersTable, TeamPerformance, BayGrid) ── */
+/* Dashboard.jsx líneas 757-793, 706-748, 808-843 */
+.mon-card-row {
+  border: 1px solid var(--border);
+  border-radius: var(--mon-radius-md, 8px);
+  padding: 14px 16px;
+  background: var(--mon-bg-surface, #FAFAF8);
+}
+
+.mon-card-row__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.mon-card-row__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mon-card-row__subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.mon-card-row__value {
+  font-size: 18px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.mon-card-row__unit {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Fila expandida (RendimientoEquiposPreregistro) */
+.mon-expand-panel {
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  background: #FFFFFF;
+  padding: 12px 16px;
+}
+
+.mon-expand-panel__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+/* Inline badge "Bajo umbral" / "Atención" dentro de row title */
+.mon-inline-badge {
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 2px 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Grid de charts 2 columnas (Dashboard) ───────────────────── */
+/* Dashboard.jsx líneas 3113-3120 */
+.mon-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+/* ── ChartCard header ────────────────────────────────────────── */
+/* ChartCard (Dashboard.jsx líneas 518-541) */
+.mon-chart-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mon-chart-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.mon-chart-footer {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ── Tooltip de gráficas ─────────────────────────────────────── */
+/* DynamicChart.jsx líneas 15-27, Dashboard.jsx líneas 543-568 */
+.mon-tooltip {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--mon-radius-md, 8px);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: var(--font);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.mon-tooltip__label {
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.mon-tooltip__row {
+  font-weight: 600;
+}
+
+/* Variante oscura (PerformanceChart.jsx líneas 19-31) */
+.mon-tooltip--dark {
+  background: #1F1F1F;
+  border: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.22);
+  line-height: 1.8;
+}
+
+.mon-tooltip--dark .mon-tooltip__label {
+  color: var(--mon-text-muted, #9B9590);
+  font-weight: 500;
+}
+
+/* ── KPIBig (DynamicChart, tipo='kpi') ──────────────────────── */
+/* DynamicChart.jsx líneas 39-49 */
+.mon-kpi-big {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  gap: 8px;
+}
+
+.mon-kpi-big__label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.mon-kpi-big__value {
+  font-size: 48px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mon-kpi-big__unit {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-left: 6px;
+}
+
+.mon-kpi-big__delta {
+  font-size: 14px;
+}
+
+/* ── Leyenda de gráficas (filas de swatch + label) ───────────── */
+/* Registro pie chart, auditoría dist chart, RendimientoEquipos */
+.mon-legend-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.mon-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.mon-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Estado de carga / vacío ─────────────────────────────────── */
+/* Patrón repetido ~8 veces: flex centrado + color gris + font 13 */
+.mon-state-empty {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.mon-state-empty--sm {
+  height: 160px;
+}
+
+.mon-state-empty--lg {
+  height: 220px;
+}
+
+/* ── PerformanceChart header ─────────────────────────────────── */
+/* PerformanceChart.jsx líneas 37-44 */
+.mon-perf-header {
+  margin-bottom: 16px;
+}
+
+.mon-perf-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.mon-perf-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ── AnalisisFlujo page-level card wrappers ─────────────────── */
+/* AnalisisFlujo.jsx líneas 20-24 */
+.mon-flow-card {
+  padding: 0;
+  margin-bottom: 20px;
+}
+
+/* ── Grid de header del Dashboard (tabs + section header) ───── */
+/* Dashboard.jsx líneas 3090-3101 */
+.mon-header-grid {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+/* ── Distribución almacén: pie + leyenda lateral ─────────────── */
+/* Dashboard.jsx líneas 2426-2456 */
+.mon-pie-legend-layout {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mon-pie-legend-list {
+  flex: 1;
+  display: grid;
+  gap: 10px;
+}
+
+.mon-pie-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mon-pie-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.mon-pie-legend-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mon-pie-legend-detail {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.mon-pie-legend-total {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .mon-chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mon-section-header {
+    flex-direction: column;
+  }
+
+  .mon-section-title {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 600px) {
+  .mon-page {
+    padding: 16px;
+  }
+
+  .mon-popup {
+    padding: 20px;
+  }
+
+  .mon-pie-legend-layout {
+    flex-direction: column;
+  }
+}

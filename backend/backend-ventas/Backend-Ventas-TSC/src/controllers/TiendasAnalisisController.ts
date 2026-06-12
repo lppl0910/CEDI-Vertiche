@@ -1,3 +1,15 @@
+/**
+ * Controlador de análisis comparativo entre tiendas.
+ *
+ * Rutas montadas bajo `/analisis/tiendas`:
+ *  - `GET /ticket-zona`       → Ticket promedio por período para las zonas Norte y Sur.
+ *  - `GET /ranking-tiendas`   → Ranking de tiendas por ingresos con delta YoY en K.
+ *  - `GET /ventas-estado`     → Ingresos, ticket y unidades agrupados por estado y región.
+ *
+ * Todos los endpoints aceptan los query params estándar (`zona`, `temporada`, `period`)
+ * definidos en `AbstractController.buildWhere()`.
+ * Todas las rutas requieren token JWT de Supabase.
+ */
 import { Request, Response } from "express";
 import AbstractController from "./AbstractController";
 import db from "../models";
@@ -6,6 +18,7 @@ const { fn, col } = require("sequelize");
 export default class TiendasAnalisisController extends AbstractController {
   private static _instance: TiendasAnalisisController;
 
+  /** Singleton: devuelve la única instancia del controlador. */
   public static get instance(): TiendasAnalisisController {
     return this._instance || (this._instance = new this("analisis/tiendas"));
   }
@@ -25,6 +38,11 @@ export default class TiendasAnalisisController extends AbstractController {
     );
   }
 
+  /**
+   * GET /analisis/tiendas/ticket-zona — Ticket promedio por período para Norte y Sur.
+   * Devuelve `{ labels, norte: number[], sur: number[] }` alineados por el mismo eje X.
+   * La granularidad del eje X es la misma que en `/tendencias/performance`.
+   */
   private async getTicketZona(req: Request, res: Response) {
     try {
       const { productoWhere, tiempoWhere, dias, period } = this.buildWhere(req);
@@ -87,6 +105,11 @@ export default class TiendasAnalisisController extends AbstractController {
     }
   }
 
+  /**
+   * GET /analisis/tiendas/ranking-tiendas — Tiendas ordenadas de mayor a menor ingreso (K).
+   * Incluye el delta YoY por tienda (diferencia de ingresos vs el año anterior) formateado
+   * como `"+XK"` o `"-XK"`.  Respeta los filtros de `zona`, `temporada` y `period`.
+   */
   private async getRankingTiendas(req: Request, res: Response) {
     try {
       const { tiendaWhere, productoWhere, tiempoWhere, dias } = this.buildWhere(req);
@@ -143,6 +166,10 @@ export default class TiendasAnalisisController extends AbstractController {
     }
   }
 
+  /**
+   * GET /analisis/tiendas/ventas-estado — Ingresos (K), ticket promedio y unidades
+   * agrupados por estado y región geográfica, para alimentar un mapa de calor.
+   */
   private async getVentasEstado(req: Request, res: Response) {
     try {
       const { tiendaWhere, productoWhere, tiempoWhere, dias } = this.buildWhere(req);

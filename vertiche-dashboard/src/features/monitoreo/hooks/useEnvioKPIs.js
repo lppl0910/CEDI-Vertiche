@@ -1,3 +1,10 @@
+/**
+ * Devuelve los KPIs generales de la etapa de Envío y el desglose por turno.
+ * Refresca automáticamente cada 60 s.
+ *
+ * @returns {{ kpis: Object, porTurno: Array, loading: boolean }}
+ * @author Miguel Angel Argumedo
+ */
 import { API_URLS } from '../../../config/api.js';
 import { useState, useEffect } from 'react'
 

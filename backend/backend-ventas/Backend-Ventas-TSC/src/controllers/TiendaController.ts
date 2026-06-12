@@ -1,3 +1,14 @@
+/**
+ * Controlador CRUD para la dimensión `Dim_Tienda`.
+ *
+ * Rutas montadas bajo `/tiendas`:
+ *  - `GET  /`      → Lista todas las tiendas.
+ *  - `GET  /:id`   → Detalle de una tienda por PK.
+ *  - `POST /`      → Crea una nueva tienda.
+ *  - `PUT  /:id`   → Actualiza una tienda existente.
+ *
+ * Todas las rutas requieren token JWT de Supabase válido.
+ */
 import { Request, Response } from "express";
 import AbstractController from "./AbstractController";
 import db from "../models";
@@ -5,6 +16,7 @@ import db from "../models";
 export default class TiendaController extends AbstractController {
   private static _instance: TiendaController;
 
+  /** Singleton: devuelve la única instancia del controlador. */
   public static get instance(): TiendaController {
     return this._instance || (this._instance = new this("tiendas"));
   }
@@ -28,6 +40,7 @@ export default class TiendaController extends AbstractController {
     );
   }
 
+  /** GET /tiendas — Devuelve todas las tiendas del catálogo. */
   private async getAll(req: Request, res: Response) {
     try {
       const tiendas = await db.Dim_Tienda.findAll();
@@ -37,6 +50,7 @@ export default class TiendaController extends AbstractController {
     }
   }
 
+  /** GET /tiendas/:id — Detalle de una tienda. Devuelve 404 si no existe. */
   private async getById(req: Request, res: Response) {
     try {
       const tienda = await db.Dim_Tienda.findByPk(req.params.id);
@@ -47,6 +61,7 @@ export default class TiendaController extends AbstractController {
     }
   }
 
+  /** POST /tiendas — Crea una nueva tienda. */
   private async create(req: Request, res: Response) {
     try {
       const tienda = await db.Dim_Tienda.create(req.body);
@@ -56,6 +71,7 @@ export default class TiendaController extends AbstractController {
     }
   }
 
+  /** PUT /tiendas/:id — Actualiza los campos enviados en el body. Devuelve 404 si no existe. */
   private async update(req: Request, res: Response) {
     try {
       const tienda = await db.Dim_Tienda.findByPk(req.params.id);

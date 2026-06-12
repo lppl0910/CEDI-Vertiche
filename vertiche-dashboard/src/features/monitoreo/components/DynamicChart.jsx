@@ -1,8 +1,22 @@
+/**
+ * Componente dinámico de gráficas para la feature de monitoreo.
+ * Renderiza un gráfico de líneas, barras o pie según el tipo recibido,
+ * e incluye KPIBig para métricas destacadas y CustomTooltip para tooltips
+ * personalizados de Recharts.
+ *
+ * @param {Object} props
+ * @param {'line'|'bar'|'pie'} props.tipo     - Tipo de gráfica a renderizar
+ * @param {Array}              props.grafica   - Datos para el gráfico
+ * @param {Object}             [props.dato]    - KPI adicional a mostrar sobre la gráfica
+ * @returns {JSX.Element}
+ * @author Miguel Angel Argumedo
+ */
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar,
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
 import { mockChartData, kpiData } from '../../data/mockData';
+import '../monitoreo.css';
 
 const COLORS = ['#111111', '#A48F7A', '#D8C3A5'];
 
@@ -12,13 +26,10 @@ const gridStyle = { stroke: '#E7E2DC', strokeDasharray: '3 3' };
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{
-      background: '#FFFFFF', border: '1px solid #E7E2DC', borderRadius: 8,
-      padding: '8px 12px', fontSize: 12, fontFamily: 'Inter',
-    }}>
-      <div style={{ color: '#6B6B6B', marginBottom: 4 }}>{label}</div>
+    <div className="mon-tooltip">
+      <div className="mon-tooltip__label">{label}</div>
       {payload.map((p, i) => (
-        <div key={i} style={{ color: p.color || '#1F1F1F', fontWeight: 500 }}>
+        <div key={i} className="mon-tooltip__row" style={{ color: p.color || '#1F1F1F' }}>
           {p.name}: {p.value}
         </div>
       ))}
@@ -37,13 +48,13 @@ function KPIBig({ dato }) {
   const arrow = info.delta > 0 ? '↑' : info.delta < 0 ? '↓' : '→';
   const deltaColor = info.delta === 0 ? '#6B6B6B' : info.delta > 0 ? '#6E8B6B' : '#B65E4A';
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: 200, gap: 8 }}>
-      <div style={{ fontSize: 12, color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{info.label}</div>
-      <div style={{ fontSize: 48, fontWeight: 600, color: '#1F1F1F' }}>
+    <div className="mon-kpi-big">
+      <div className="mon-kpi-big__label">{info.label}</div>
+      <div className="mon-kpi-big__value">
         {info.valor}
-        <span style={{ fontSize: 18, fontWeight: 400, color: '#6B6B6B', marginLeft: 6 }}>{info.unidad}</span>
+        <span className="mon-kpi-big__unit">{info.unidad}</span>
       </div>
-      <div style={{ fontSize: 14, color: deltaColor }}>{arrow} {Math.abs(info.delta)} {info.unidad}</div>
+      <div className="mon-kpi-big__delta" style={{ color: deltaColor }}>{arrow} {Math.abs(info.delta)} {info.unidad}</div>
     </div>
   );
 }

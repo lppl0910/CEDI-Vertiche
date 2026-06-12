@@ -1,3 +1,17 @@
+"""
+Módulo de integración con LM Studio para el chatbot de Vertiche.
+
+Expone funciones para comunicarse con un modelo de lenguaje local (LLM) alojado
+en LM Studio a través de su API compatible con OpenAI.  Soporta tanto llamadas
+síncronas como streaming SSE.
+
+Flujo típico de una consulta:
+  1. generate_sql()      → el LLM convierte la pregunta del usuario a SQL.
+  2. execute_query()     → (en database.py) ejecuta el SQL contra MySQL.
+  3. stream_llm()        → el LLM narra los resultados en lenguaje natural vía streaming.
+  4. parse_suggestions() → extrae preguntas de seguimiento de la narrativa generada.
+"""
+
 import requests
 import os
 import re
@@ -16,6 +30,19 @@ def strip_think_tags(text: str) -> str:
 
 
 def build_messages(system_prompt: str, user_message: str, history: list[dict] = None) -> list[dict]:
+    """Construye la lista de mensajes en formato OpenAI-chat para enviar al LLM.
+
+    Incluye el prompt del sistema, los últimos 6 turnos del historial (ventana
+    de contexto reducida para no exceder el límite de tokens) y el mensaje actual.
+
+    Args:
+        system_prompt: Instrucciones de comportamiento para el modelo.
+        user_message:  Pregunta o instrucción del usuario en el turno actual.
+        history:       Historial de mensajes anteriores [{role, content}, ...].
+
+    Returns:
+        Lista de mensajes lista para pasarse al campo ``messages`` de la API.
+    """
     messages = [{"role": "system", "content": system_prompt}]
     if history:
         for msg in history[-6:]:
@@ -150,7 +177,22 @@ def generate_narrative(
     results: list[dict],
     history: list[dict] = None,
 ) -> tuple[str, str | None]:
-    """Genera narrativa de los resultados. Retorna (narrative, reasoning)."""
+    """Genera una narrativa en lenguaje natural que explica los resultados de la consulta.
+
+    Construye un mensaje contextualizado con la pregunta, el SQL ejecutado y
+    una muestra de los resultados (máx. 20 filas) y llama al LLM con temperatura
+    alta (0.3) para obtener una respuesta más fluida.
+
+    Args:
+        question: Pregunta original del usuario.
+        sql:      Consulta SQL ejecutada contra la base de datos.
+        results:  Lista de filas retornadas por la consulta.
+        history:  Historial de mensajes anteriores de la conversación.
+
+    Returns:
+        Tupla (narrativa, reasoning) donde reasoning puede ser None si el modelo
+        no expone su cadena de pensamiento.
+    """
     from prompts import NARRATIVE_SYSTEM_PROMPT
 
     results_str = str(results[:20]) if results else "Sin resultados"
@@ -168,7 +210,18 @@ Explica estos resultados de forma clara."""
 
 
 def parse_suggestions(narrative: str) -> tuple[str, list[str]]:
-    """Separa el texto narrativo de las sugerencias."""
+    """Separa el texto narrativo de las preguntas de seguimiento embebidas.
+
+    El NARRATIVE_SYSTEM_PROMPT instruye al LLM a incluir las sugerencias al
+    final del texto con el prefijo ``SUGERENCIAS:`` y separadas por ``|``.
+    Esta función divide el texto en esas dos partes.
+
+    Args:
+        narrative: Texto completo generado por el LLM, incluyendo sugerencias.
+
+    Returns:
+        Tupla (texto_limpio, sugerencias) donde sugerencias contiene hasta 3 preguntas.
+    """
     suggestions = []
     clean_text = narrative
 

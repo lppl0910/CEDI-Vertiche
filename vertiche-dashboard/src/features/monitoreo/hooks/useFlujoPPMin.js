@@ -1,3 +1,12 @@
+/**
+ * Devuelve el flujo de pp/min en tiempo real para todas las etapas
+ * (Preregistro, QA, Registro, Sorter, Bahías, Auditoría, Envío)
+ * y los datos históricos de performance del turno actual.
+ *
+ * @param {number} [ventana=5] - Minutos de ventana de agregación para el cálculo de pp/min
+ * @returns {{ flowData: Array, performanceData: Array, loading: boolean }}
+ * @author Miguel Angel Argumedo
+ */
 import { useState, useEffect } from 'react'
 
 const DEFAULT_ETAPAS = {
@@ -18,8 +27,8 @@ export function useFlujoPPMin(ventana = 5) {
   const fetchAll = async () => {
     try {
       const [ppminRes, perfRes] = await Promise.all([
-        fetch(`http://localhost:3001/api/flujo/ppmin?ventana=${ventana}`),
-        fetch('http://localhost:3001/api/flujo/performance'),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/flujo/ppmin?ventana=${ventana}`),
+        fetch(`${import.meta.env.VITE_MONITOREO_API_URL}/api/flujo/performance`),
       ])
       if (!ppminRes.ok || !perfRes.ok) throw new Error('Error en el servidor')
       const [ppminData, perfData] = await Promise.all([

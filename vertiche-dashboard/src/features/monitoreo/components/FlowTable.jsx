@@ -1,4 +1,16 @@
+/**
+ * Tabla de flujo de prepacks por minuto para la etapa de Análisis de Flujo.
+ * Incluye indicadores de estado por etapa (PpMinCircle), popup de detalle
+ * de bahías (BahiasPopup) y columnas de throughput con semáforo visual.
+ *
+ * @param {Object} props
+ * @param {Array}  props.data - Filas de datos de flujo; cada fila representa
+ *                             el throughput de una ventana de tiempo por etapa
+ * @returns {JSX.Element}
+ * @author Miguel Angel Argumedo
+ */
 import { useState } from 'react';
+import '../monitoreo.css';
 
 const STATUS_COLOR = {
   success: '#6E8B6B',
@@ -145,41 +157,29 @@ function PpMinCircle({ valor, status }) {
 
   return (
     <div
-      style={{ position: 'relative', display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
+      className="mon-pp-circle"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {hovered && (
-        <div style={{
-          position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%',
-          transform: 'translateX(-50%)', background: '#1F1F1F', color: '#FFFFFF',
-          borderRadius: 6, padding: '5px 10px', fontSize: 11, whiteSpace: 'nowrap',
-          pointerEvents: 'none', zIndex: 10, fontFamily: 'var(--font)',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
-        }}>
+        <div className="mon-pp-tooltip">
           {valor} pp/min · {STATUS_LABEL[status]}
-          <div style={{
-            position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
-            width: 0, height: 0, borderLeft: '4px solid transparent',
-            borderRight: '4px solid transparent', borderTop: '4px solid #1F1F1F',
-          }} />
+          <div className="mon-pp-tooltip__arrow" />
         </div>
       )}
-      <div style={{
-        width: 48, height: 48, borderRadius: '50%',
-        border: `3px solid ${color}`,
-        background: hovered ? bg : '#FFFFFF',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        cursor: 'help', transition: 'background 0.15s, transform 0.15s',
-        transform: hovered ? 'scale(1.08)' : 'scale(1)',
-      }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: hovered ? color : '#1F1F1F', fontFamily: 'var(--font)' }}>
+      <div
+        className="mon-pp-circle__ring"
+        style={{
+          border: `3px solid ${color}`,
+          background: hovered ? bg : '#FFFFFF',
+          transform: hovered ? 'scale(1.08)' : 'scale(1)',
+        }}
+      >
+        <span className="mon-pp-circle__value" style={{ color: hovered ? color : '#1F1F1F' }}>
           {valor}
         </span>
       </div>
-      <span style={{ fontSize: 10, color: '#9B9590', fontFamily: 'var(--font)', letterSpacing: '0.04em' }}>
-        pp/min
-      </span>
+      <span className="mon-pp-circle__label">pp/min</span>
     </div>
   );
 }
@@ -187,34 +187,26 @@ function PpMinCircle({ valor, status }) {
 // ─── Bahías popup ─────────────────────────────────────────────────────────────
 function BahiasPopup({ bahias, onClose }) {
   return (
-    <div onClick={onClose} style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100,
-    }}>
-      <div onClick={e => e.stopPropagation()} style={{
-        background: '#FFFFFF', borderRadius: 12, padding: 28,
-        minWidth: 320, maxWidth: 400, width: '90%',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.16)', fontFamily: 'var(--font)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+    <div className="mon-overlay" onClick={onClose}>
+      <div className="mon-popup" onClick={e => e.stopPropagation()}>
+        <div className="mon-popup__header">
           <div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: '#1F1F1F' }}>Bahías — Ocupación</div>
-            <div style={{ fontSize: 12, color: '#6B6B6B', marginTop: 2 }}>Todas las bahías activas</div>
+            <div className="mon-popup__title">Bahías — Ocupación</div>
+            <div className="mon-popup__subtitle">Todas las bahías activas</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#6B6B6B', lineHeight: 1, padding: 2 }}>×</button>
+          <button className="mon-popup__close" onClick={onClose}>×</button>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="mon-popup__list">
           {bahias.map(bahia => (
             <div key={bahia.id}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                 <span style={{ fontSize: 12, fontWeight: 500, color: '#1F1F1F' }}>{bahia.id}</span>
                 <span style={{ fontSize: 12, color: STATUS_COLOR[bahia.status], fontWeight: 600 }}>{bahia.porcentaje}%</span>
               </div>
-              <div style={{ height: 8, background: '#F0EDE9', borderRadius: 4, overflow: 'hidden' }}>
-                <div style={{
-                  height: '100%', width: `${bahia.porcentaje}%`,
-                  background: STATUS_COLOR[bahia.status], borderRadius: 4,
-                  transition: 'width 0.4s ease',
+              <div className="mon-progress--track">
+                <div className="mon-progress__fill" style={{
+                  width: `${bahia.porcentaje}%`,
+                  background: STATUS_COLOR[bahia.status],
                 }} />
               </div>
             </div>
@@ -233,18 +225,18 @@ export default function FlowTable({ data }) {
 
   return (
     <>
-      <div style={{ overflowX: 'auto' }}>
+      <div className="table-scroll">
         <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font)' }}>
           <thead>
             <tr style={{ background: '#F8F6F3' }}>
               {COLUMNAS.map(c => (
-                <th key={c.key} style={thStyle}>
+                <th key={c.key} className="mon-flow-th">
                   <button
                     onClick={() => goToPath(c.path)}
                     onMouseEnter={() => setHoveredCol(c.key)}
                     onMouseLeave={() => setHoveredCol(null)}
+                    className="mon-flow-th-btn"
                     style={{
-                      ...thLinkStyle,
                       color: hoveredCol === c.key ? '#1F1F1F' : 'inherit',
                       borderBottomColor: hoveredCol === c.key ? '#A48F7A' : 'transparent',
                     }}
@@ -261,7 +253,8 @@ export default function FlowTable({ data }) {
               {COLUMNAS.map(c => (
                 <td
                   key={c.key}
-                  style={{ ...tdInner, textAlign: 'center', cursor: c.key === 'bahias' ? 'pointer' : 'default' }}
+                  className="mon-flow-td"
+                  style={{ textAlign: 'center', cursor: c.key === 'bahias' ? 'pointer' : 'default' }}
                   onClick={c.key === 'bahias' ? () => setBahiasOpen(true) : undefined}
                 >
                   <PpMinCircle valor={etapas[c.key].ppMin} status={etapas[c.key].status} />
@@ -275,9 +268,9 @@ export default function FlowTable({ data }) {
                 const sec = getSecondary(etapas, c.key);
                 const color = sec.useStatusColor ? STATUS_COLOR[etapas[c.key].status] : '#1F1F1F';
                 return (
-                  <td key={c.key} style={{ ...tdInner, textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: '#9B9590', marginBottom: 3, fontFamily: 'var(--font)' }}>{sec.label}</div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color, fontFamily: 'var(--font)' }}>{sec.value}</div>
+                  <td key={c.key} className="mon-flow-td" style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, color: '#9B9590', marginBottom: 3 }}>{sec.label}</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color }}>{sec.value}</div>
                   </td>
                 );
               })}
@@ -288,9 +281,9 @@ export default function FlowTable({ data }) {
               {COLUMNAS.map(c => {
                 const ter = getTertiary(etapas, c.key);
                 return (
-                  <td key={c.key} style={{ ...tdInner, borderBottom: 'none', textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: '#9B9590', marginBottom: 3, fontFamily: 'var(--font)' }}>{ter.label}</div>
-                    <div style={{ fontSize: 15, fontWeight: 500, color: '#6B6B6B', fontFamily: 'var(--font)' }}>{ter.value}</div>
+                  <td key={c.key} className="mon-flow-td mon-td--no-border" style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, color: '#9B9590', marginBottom: 3 }}>{ter.label}</div>
+                    <div style={{ fontSize: 15, fontWeight: 500, color: '#6B6B6B' }}>{ter.value}</div>
                   </td>
                 );
               })}
@@ -306,33 +299,3 @@ export default function FlowTable({ data }) {
   );
 }
 
-const thStyle = {
-  padding: '12px 16px',
-  textAlign: 'center',
-  fontSize: 12,
-  color: '#6B6B6B',
-  textTransform: 'uppercase',
-  letterSpacing: '0.08em',
-  fontWeight: 500,
-  borderBottom: '2px solid #E7E2DC',
-  whiteSpace: 'nowrap',
-};
-
-const thLinkStyle = {
-  background: 'none',
-  border: 'none',
-  borderBottom: '1px solid transparent',
-  padding: 0,
-  cursor: 'pointer',
-  color: 'inherit',
-  font: 'inherit',
-  letterSpacing: 'inherit',
-  textTransform: 'inherit',
-  transition: 'color 0.15s, border-color 0.15s',
-};
-
-const tdInner = {
-  padding: '14px 16px',
-  borderBottom: '1px solid #F0EDE9',
-  verticalAlign: 'middle',
-};
