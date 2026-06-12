@@ -10,9 +10,7 @@ app.use(express.json());
 
 app.use('/users', usersRouter);
 
-app.get("/health", (req, res) => {
-  res.status(200).send("OK");
-});
+app.get('/health', (_req, res) => res.json({ ok: true }));
 
 const PORT = process.env.PORT ?? 3003;
 app.listen(PORT, () => console.log(`backend-auth corriendo en http://localhost:${PORT}`));

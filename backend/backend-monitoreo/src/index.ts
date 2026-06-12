@@ -27,10 +27,6 @@ app.use('/api/bahias', bahiasRoutes)
 app.use('/api/auditoria', auditoriaRoutes)
 app.use('/api/flujo', flujoRoutes)
 
-app.get("/health", (req, res) => {
-  res.status(200).send("OK");
-});
-
 const PORT = process.env.PORT ?? 3001
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`)
