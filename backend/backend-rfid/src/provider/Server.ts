@@ -15,6 +15,9 @@ import { inicializarOrdenesDesdeDB } from '../data/generacionDatosEnMemoria';
 // import { procesarEnvioCaja } from './services/ordenService.js';
 import type AbstractController from '../controllers/AbstractController';
 
+const allowedOrigins = process.env.FRONTEND_URL    ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim())
+    : ['http://localhost:5173'];
+
 class ServerRFID {
     private app: express.Application;
     private port: number;
@@ -28,7 +31,7 @@ class ServerRFID {
         this.env = appInit.env;
         this.httpServer = createServer(this.app);
         this.io = new SocketIOServer(this.httpServer, {
-            cors: { origin: process.env.FRONTEND_URL ?? 'http://localhost:5173' },
+            cors: { origin: allowedOrigins },
         });
         this.initMiddlewares(appInit.middlewares);
         this.initControllers(appInit.controllers);
