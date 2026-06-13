@@ -25,6 +25,7 @@ class ServerRFID {
     constructor(appInit:{port:number; env:string; middlewares: any[]; controllers: AbstractController[]}) {
         this.app = express();
         this.port = appInit.port;
+        this.app.set('trust proxy', 1);
         this.env = appInit.env;
         this.httpServer = createServer(this.app);
         this.io = new SocketIOServer(this.httpServer, {
@@ -52,6 +53,7 @@ class ServerRFID {
           res.status(200).send("OK");
         });
         controllers.forEach(controller => {
+            controller.setSocketIO(this.io);
             this.app.use("/"+controller.prefix,controller.router);
         });
     }
