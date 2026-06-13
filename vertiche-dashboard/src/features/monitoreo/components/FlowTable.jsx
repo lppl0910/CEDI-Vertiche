@@ -44,9 +44,9 @@ function goToPath(path) {
 }
 
 // ─── Aggregation helpers ──────────────────────────────────────────────────────
-function avg(arr)    { return Math.round(arr.reduce((s, v) => s + v, 0) / arr.length); }
-function sum(arr)    { return arr.reduce((s, v) => s + v, 0); }
-function avgPct(arr) { return parseFloat((arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(1)); }
+function avg(arr)    { const nums = arr.filter(n => Number.isFinite(n)); return nums.length ? Math.round(nums.reduce((s, v) => s + v, 0) / nums.length) : 0; }
+function sum(arr)    { return arr.reduce((s, v) => s + (Number.isFinite(v) ? v : 0), 0); }
+function avgPct(arr) { const nums = arr.filter(n => Number.isFinite(n)); return nums.length ? parseFloat((nums.reduce((s, v) => s + v, 0) / nums.length).toFixed(1)) : 0; }
 
 function worstStatus(statuses) {
   if (statuses.includes('error'))   return 'error';
@@ -56,14 +56,19 @@ function worstStatus(statuses) {
 
 function avgTime(strings) {
   // e.g. ["11 min", "14 min", "9 min"] → "11 min"
-  const nums = strings.map(s => parseFloat(s));
-  const unit = strings[0].replace(/[\d.]+\s*/, '');
-  return `${(nums.reduce((s, v) => s + v, 0) / nums.length).toFixed(1).replace('.0', '')} ${unit}`;
+  if (!Array.isArray(strings) || strings.length === 0) return '0 min';
+  const nums = strings.map(s => parseFloat(s)).filter(n => Number.isFinite(n));
+  if (nums.length === 0) return strings[0] || '0 min';
+  const unit = (strings[0] || '').replace(/[\d.]+\s*/, '') || 'min';
+  const avgVal = (nums.reduce((s, v) => s + v, 0) / nums.length).toFixed(1).replace('.0', '');
+  return `${avgVal} ${unit}`;
 }
 
 function avgBahias(allBahiasArrays) {
   // Flatten and average across all bahia arrays
-  const flat = allBahiasArrays.flat();
+  if (!Array.isArray(allBahiasArrays) || allBahiasArrays.length === 0) return 0;
+  const flat = allBahiasArrays.flat().filter(b => b && Number.isFinite(b.porcentaje));
+  if (flat.length === 0) return 0;
   return flat.reduce((s, b) => s + b.porcentaje, 0) / flat.length;
 }
 
@@ -163,7 +168,7 @@ function PpMinCircle({ valor, status }) {
     >
       {hovered && (
         <div className="mon-pp-tooltip">
-          {valor} pp/min · {STATUS_LABEL[status]}
+          {Number.isFinite(valor) ? valor : 0} pp/min · {STATUS_LABEL[status]}
           <div className="mon-pp-tooltip__arrow" />
         </div>
       )}
@@ -176,7 +181,7 @@ function PpMinCircle({ valor, status }) {
         }}
       >
         <span className="mon-pp-circle__value" style={{ color: hovered ? color : '#1F1F1F' }}>
-          {valor}
+          {Number.isFinite(valor) ? valor : 0}
         </span>
       </div>
       <span className="mon-pp-circle__label">pp/min</span>

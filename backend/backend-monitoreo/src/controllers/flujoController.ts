@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import Orden from '../models/ordenModel'
+import RfidEvent from '../models/rfidEventModel'
 
 const ETAPAS = ['preregistro', 'qa', 'registro', 'sorter', 'bahias', 'auditoria', 'envio'] as const
 type Etapa = typeof ETAPAS[number]
@@ -18,37 +19,60 @@ function ppMinStatus(ppmin: number): 'success' | 'warning' | 'error' {
 
 export const getPPMin = async (req: Request, res: Response): Promise<void> => {
   try {
-    const ventana = Math.max(1, Math.min(60, parseInt(req.query.ventana as string) || 5))
+    const ventana = Math.max(1, parseInt(req.query.ventana as string) || 5)
     const ahora = new Date()
     const inicioVentana = new Date(ahora.getTime() - ventana * 60 * 1000)
-    const inicioHoy = new Date(ahora)
-    inicioHoy.setHours(0, 0, 0, 0)
+
+    const periodoStart: Date = inicioVentana
+    const periodoEnd: Date = ahora
 
     const [
-      ppminResult,
+      ppminVentanaResult,
       [totalOrdenesHoy, ordenesIncompletasHoy],
       qaResult,
       bahiasOcupacionResult,
       auditoriaResult,
       ordenesConRetraso,
     ] = await Promise.all([
-      // pp/min: count prepacks by estado_actual in the time window
-      Orden.aggregate([
-        { $match: { fecha_creacion: { $gte: inicioVentana } } },
-        { $unwind: '$prepacks' },
-        { $group: { _id: '$prepacks.estado_actual', count: { $sum: 1 } } },
+      // pp/min: count rfidevents by etapa in the selected ventana (live throughput)
+      RfidEvent.aggregate([
+        { $match: { timestamp: { $gte: inicioVentana, $lte: ahora } } },
+        {
+          $addFields: {
+            etapa_lower: { $toLower: { $trim: { input: '$etapa' } } },
+          },
+        },
+        {
+          $addFields: {
+            etapa_normalizada: {
+              $switch: {
+                branches: [
+                  { case: { $regexMatch: { input: '$etapa_lower', regex: 'preregistro' } }, then: 'preregistro' },
+                  { case: { $regexMatch: { input: '$etapa_lower', regex: 'qa' } }, then: 'qa' },
+                  { case: { $regexMatch: { input: '$etapa_lower', regex: 'registro' } }, then: 'registro' },
+                  { case: { $regexMatch: { input: '$etapa_lower', regex: 'sorter' } }, then: 'sorter' },
+                  { case: { $regexMatch: { input: '$etapa_lower', regex: 'bahia|bahías|bahias' } }, then: 'bahias' },
+                  { case: { $regexMatch: { input: '$etapa_lower', regex: 'auditoria' } }, then: 'auditoria' },
+                  { case: { $regexMatch: { input: '$etapa_lower', regex: 'envio' } }, then: 'envio' },
+                ],
+                default: '$etapa_lower',
+              },
+            },
+          },
+        },
+        { $group: { _id: '$etapa_normalizada', count: { $sum: 1 } } },
       ]),
       // Preregistro KPIs (hoy completo)
       Promise.all([
-        Orden.countDocuments({ fecha_creacion: { $gte: inicioHoy } }),
+        Orden.countDocuments({ fecha_creacion: { $gte: periodoStart, $lte: periodoEnd } }),
         Orden.countDocuments({
-          fecha_creacion: { $gte: inicioHoy },
+          fecha_creacion: { $gte: periodoStart, $lte: periodoEnd },
           $expr: { $lt: [{ $size: '$prepacks' }, '$total_prepacks'] },
         }),
       ]),
       // QA: tasa aceptacion hoy
       Orden.aggregate([
-        { $match: { fecha_creacion: { $gte: inicioHoy } } },
+        { $match: { fecha_creacion: { $gte: periodoStart, $lte: periodoEnd } } },
         { $unwind: '$prepacks' },
         {
           $group: {
@@ -68,14 +92,14 @@ export const getPPMin = async (req: Request, res: Response): Promise<void> => {
       ]),
       // Bahias: ocupacion por bahia hoy
       Orden.aggregate([
-        { $match: { fecha_creacion: { $gte: inicioHoy } } },
+        { $match: { fecha_creacion: { $gte: periodoStart, $lte: periodoEnd } } },
         { $unwind: '$prepacks' },
         { $match: { 'prepacks.bahia_asignada': { $ne: null } } },
         { $group: { _id: '$prepacks.bahia_asignada', procesando: { $sum: 1 } } },
       ]),
       // Auditoria: tasa exito hoy
       Orden.aggregate([
-        { $match: { fecha_creacion: { $gte: inicioHoy } } },
+        { $match: { fecha_creacion: { $gte: periodoStart, $lte: periodoEnd } } },
         { $unwind: '$prepacks' },
         {
           $group: {
@@ -92,13 +116,13 @@ export const getPPMin = async (req: Request, res: Response): Promise<void> => {
       // Envio: ordenes activas con mas de 30 min sin completar
       Orden.countDocuments({
         estado: 'en_proceso',
-        fecha_creacion: { $gte: inicioHoy, $lte: new Date(ahora.getTime() - 30 * 60 * 1000) },
+        fecha_creacion: { $gte: periodoStart, $lte: new Date(ahora.getTime() - 30 * 60 * 1000) },
       }),
     ])
 
-    // Build ppmin map from aggregation result
+    // Build ppmin map from ventana result
     const rawCounts: Record<string, number> = {}
-    for (const item of ppminResult) {
+    for (const item of ppminVentanaResult) {
       rawCounts[item._id] = item.count
     }
     const ppminMap: Record<string, number> = {}
@@ -122,7 +146,7 @@ export const getPPMin = async (req: Request, res: Response): Promise<void> => {
 
     // Sorter: paquetes en bahia incorrecta (ordenes con mas de 1 bahia distinta por orden)
     const sorterBahiasResult = await Orden.aggregate([
-      { $match: { fecha_creacion: { $gte: inicioHoy } } },
+      { $match: { fecha_creacion: { $gte: periodoStart, $lte: periodoEnd } } },
       { $unwind: '$prepacks' },
       { $match: { 'prepacks.estado_actual': { $in: ['bahias', 'auditoria', 'envio'] } } },
       { $group: { _id: '$prepacks.bahia_asignada', paquetes: { $sum: 1 } } },
@@ -208,6 +232,7 @@ export const getPPMin = async (req: Request, res: Response): Promise<void> => {
       ventana_min: ventana,
       ventana_inicio: inicioVentana.toISOString(),
       ventana_fin: ahora.toISOString(),
+      period: 'ventana', // the UI no longer uses this, but we keep it to not break interfaces
       etapas,
       raw: Object.fromEntries(
         ETAPAS.map((e) => [e, { count: rawCounts[e] ?? 0, ppmin: ppminMap[e] }]),
@@ -222,17 +247,40 @@ export const getPPMin = async (req: Request, res: Response): Promise<void> => {
 export const getPerformance = async (req: Request, res: Response): Promise<void> => {
   try {
     const ahora = new Date()
-    const inicioHoy = new Date(ahora)
-    inicioHoy.setHours(0, 0, 0, 0)
+    // period: 'today' | '7d' (default '7d')
+    const period = (req.query.period as string) || '7d'
+    let periodoStart: Date
+    let periodoEnd: Date = ahora
+    if (period === 'today') {
+      periodoStart = new Date(ahora)
+      periodoStart.setHours(0, 0, 0, 0)
+    } else {
+      periodoStart = new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000)
+    }
 
-    const resultado = await Orden.aggregate([
-      { $match: { fecha_creacion: { $gte: inicioHoy } } },
-      { $unwind: '$prepacks' },
-      {
-        $group: {
+    const resultado = await RfidEvent.aggregate([
+      { $match: { timestamp: { $gte: periodoStart, $lte: periodoEnd } } },
+      { $addFields: { etapa_lower: { $toLower: { $trim: { input: '$etapa' } } } } },
+      { $addFields: {
+          etapa_normalizada: {
+            $switch: {
+              branches: [
+                { case: { $regexMatch: { input: '$etapa_lower', regex: 'preregistro' } }, then: 'preregistro' },
+                { case: { $regexMatch: { input: '$etapa_lower', regex: 'qa' } }, then: 'qa' },
+                { case: { $regexMatch: { input: '$etapa_lower', regex: 'registro' } }, then: 'registro' },
+                { case: { $regexMatch: { input: '$etapa_lower', regex: 'sorter' } }, then: 'sorter' },
+                { case: { $regexMatch: { input: '$etapa_lower', regex: 'bahia|bahías|bahias' } }, then: 'bahias' },
+                { case: { $regexMatch: { input: '$etapa_lower', regex: 'auditoria' } }, then: 'auditoria' },
+                { case: { $regexMatch: { input: '$etapa_lower', regex: 'envio' } }, then: 'envio' },
+              ],
+              default: '$etapa_lower',
+            },
+          },
+        } },
+      { $group: {
           _id: {
-            hora: { $hour: '$fecha_creacion' },
-            etapa: '$prepacks.estado_actual',
+            hora: { $hour: '$timestamp' },
+            etapa: '$etapa_normalizada',
           },
           count: { $sum: 1 },
         },
@@ -248,10 +296,11 @@ export const getPerformance = async (req: Request, res: Response): Promise<void>
     for (let h = TURNO_INICIO; h <= horaActual; h++) {
       byHora[h] = {}
     }
+    const days = period === 'today' ? 1 : 7;
     for (const item of resultado) {
       const h = item._id.hora
       if (h >= TURNO_INICIO && h <= horaActual) {
-        byHora[h][item._id.etapa] = Math.round(item.count / 60)
+        byHora[h][item._id.etapa] = Math.round(item.count / (days * 60))
       }
     }
 
